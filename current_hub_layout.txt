@@ -1,0 +1,221 @@
+        {scene === 'hub' ? (
+          <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start">
+            
+            {/* Esquerda: Status & Navegação */}
+            {hubTab !== 'geral' && (
+<div className="w-full lg:w-[30%] xl:w-[28%] min-w-[320px] space-y-6 shrink-0 transition-all duration-300">
+              
+{/* Player Status Panel */}
+              <div className="system-panel">
+                <div className="tech-panel-header px-4 py-3 flex justify-between items-center">
+                  <span className="font-bold text-cyan-50 tracking-widest uppercase text-sm">Status do Jogador</span>
+                  <span className="text-cyan-400 font-mono text-sm font-bold shadow-cyan-400/50">Nv {player.level}</span>
+                </div>
+                
+                <div className="p-4 space-y-4 text-sm font-mono">
+                  <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded border border-cyan-900/50">
+                    <span className="text-cyan-200/60 uppercase text-xs tracking-wider">Classe</span>
+                    <span className="text-emerald-400 font-bold uppercase">{CLASSES[player.currentClassId].name}</span>
+                  </div>
+
+                  {/* XP Bar */}
+                  <div className="bg-slate-900/50 p-2 rounded border border-cyan-900/50">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-cyan-200/60 uppercase text-xs tracking-wider">XP</span>
+                      <span className="text-blue-400 text-[10px] font-bold">{player.currentXp} <span className="text-cyan-200/40">/</span> {getXpRequiredForNextLevel(player.level)}</span>
+                    </div>
+                    <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden flex relative border border-slate-700">
+                      <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player.currentXp / getXpRequiredForNextLevel(player.level)) * 100}%` }}></div>
+                      {/* Markings */}
+                      <div className="absolute inset-0 flex justify-between px-2">
+                        <div className="w-px h-full bg-slate-900/80"></div>
+                        <div className="w-px h-full bg-slate-900/80"></div>
+                        <div className="w-px h-full bg-slate-900/80"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gold */}
+                  <div className="flex justify-between items-center bg-amber-950/20 p-2 rounded border border-amber-500/20">
+                    <span className="text-amber-500/70 uppercase text-xs tracking-wider">Ouro</span>
+                    <span className="text-amber-400 font-bold tracking-wider">{player.gold} <span className="text-amber-500/50 text-xs">CRD</span></span>
+                  </div>
+                  
+                  <div className="pt-2">
+                    <span className="text-cyan-200/60 block mb-2 text-xs uppercase tracking-widest text-center">Biometria e Atributos</span>
+                    
+                    {/* HP and EP Bars */}
+                    <div className="space-y-3 mb-4">
+                      {/* HP */}
+                      <div className="bg-slate-900/50 p-2 rounded border border-red-900/30 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-1 text-xs relative z-10">
+                          <span className="text-red-400/80 uppercase tracking-wider">HP (Integridade)</span>
+                          <span className="text-red-400 font-bold">
+                            {scene === 'combat' && combatState ? combatState.playerHp : calculatePlayerStats(player).hp} 
+                            <span className="text-red-900 mx-1">/</span> 
+                            {calculatePlayerStats(player).hp}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-950 h-2 rounded overflow-hidden relative z-10 border border-red-950">
+                          <div className="bg-red-600 h-full transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.5)]" 
+                               style={{ width: `${((scene === 'combat' && combatState ? combatState.playerHp : calculatePlayerStats(player).hp) / calculatePlayerStats(player).hp) * 100}%` }}></div>
+                        </div>
+                      </div>
+                      
+                      {/* EP */}
+                      <div className="bg-slate-900/50 p-2 rounded border border-cyan-900/30 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-1 text-xs relative z-10">
+                          <span className="text-cyan-400/80 uppercase tracking-wider">EP (Energia)</span>
+                          <span className="text-cyan-400 font-bold">
+                            {scene === 'combat' && combatState ? combatState.playerMp : calculatePlayerStats(player).mp}
+                            <span className="text-cyan-900 mx-1">/</span>
+                            {calculatePlayerStats(player).mp}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-950 h-2 rounded overflow-hidden relative z-10 border border-cyan-950">
+                          <div className="bg-cyan-500 h-full transition-all duration-300 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
+                               style={{ width: `${((scene === 'combat' && combatState ? combatState.playerMp : calculatePlayerStats(player).mp) / calculatePlayerStats(player).mp) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {['atk', 'def', 'spd'].map(stat => {
+                        const val = calculatePlayerStats(player)[stat as keyof ReturnType<typeof calculatePlayerStats>];
+                        const statLabels: Record<string, string> = { atk: 'T-ATK', def: 'DEF', spd: 'SPD' };
+                        return (
+                          <div key={stat} className="bg-slate-900/50 p-2 rounded border border-cyan-900/50 flex flex-col items-center justify-center">
+                            <span className="text-cyan-500/60 uppercase text-[10px] tracking-widest mb-1">{statLabels[stat]}</span>
+                            <span className="text-cyan-100 font-bold">{val}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Floor Selection Panel */}
+              <div className="system-panel overflow-hidden relative group">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,146,60,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                <div className="tech-panel-header px-4 py-3 border-b border-orange-500/30 bg-orange-950/20">
+                  <span className="font-bold text-orange-400 tracking-widest uppercase text-sm flex items-center gap-2">
+                    <Activity className="w-4 h-4" />
+                    Painel de Início de Expedição
+                  </span>
+                </div>
+                <div className="p-5 space-y-6 relative z-10">
+                  <div className="bg-slate-950/50 p-4 rounded border border-slate-800">
+                    <label className="text-[10px] uppercase tracking-widest text-slate-400 block mb-3 font-mono text-center">Calibração de Rota</label>
+                    <div className="flex justify-center mb-4">
+                      <div className="text-center">
+                        {(() => {
+  const sector = getSectorForFloor(selectedFloor);
+  return (
+    <>
+      <span className="block text-[10px] font-mono text-slate-500 mb-1">SETOR: <span className={sector.color}>{sector.name}</span></span>
+      <span className="block text-[10px] font-mono text-orange-500/70 mb-1 mt-2">THREAT LEVEL</span>
+      <span className="text-orange-400 font-bold font-mono drop-shadow-[0_0_8px_rgba(251,146,60,0.8)] text-2xl">
+        FLOOR {selectedFloor.toString().padStart(2, '0')}
+      </span>
+    </>
+  );
+})()}
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max={player.highestFloorUnlocked} 
+                      value={selectedFloor} 
+                      onChange={(e) => setSelectedFloor(Number(e.target.value))}
+                      className="w-full accent-orange-500 hover:accent-orange-400 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
+                    />
+                    <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-2">
+                      <span>MIN: 01</span>
+                      <span>MAX: {player.highestFloorUnlocked.toString().padStart(2, '0')}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleStartDive(selectedFloor)}
+                    className="w-full bg-orange-600/20 hover:bg-orange-600/30 border-2 border-orange-500/50 text-orange-400 hover:text-orange-300 font-bold py-4 rounded uppercase tracking-widest transition-all hover:shadow-[0_0_25px_rgba(251,146,60,0.4)] cursor-pointer animate-pulse active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Flame className="w-5 h-5" />
+                    INICIAR MERGULHO
+                  </button>
+                </div>
+              </div>
+              
+              {/* Evolution Panel */}
+              {getAvailableEvolutions(player.currentClassId, player.level).length > 0 && (
+                <div className="system-panel">
+                  <div className="border-b border-cyan-500/20 bg-amber-950/40 px-4 py-3">
+                    <span className="font-bold text-amber-400 tracking-widest uppercase text-sm">Evolução Disponível</span>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <p className="text-xs text-amber-200/70 font-mono">Seu poder atingiu um novo patamar. Escolha seu caminho:</p>
+                    {getAvailableEvolutions(player.currentClassId, player.level).map(cls => (
+                      <button
+                        key={cls.id}
+                        onClick={() => handleEvolveClass(cls.id)}
+                        className="w-full bg-amber-950/30 hover:bg-amber-900/50 border border-amber-500/50 text-amber-100 font-bold py-2 px-3 rounded uppercase tracking-wider transition-all text-sm text-left flex flex-col cursor-pointer hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+                      >
+                        <span>{cls.name}</span>
+                        <span className="text-[10px] text-amber-200/50 normal-case tracking-normal mt-1">{cls.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Menu de Módulos (Sidebar Navigation) */}
+              <div className="system-panel">
+                <div className="tech-panel-header px-4 py-3">
+                  <span className="font-bold text-cyan-50 tracking-widest uppercase text-sm">Painel de Módulos</span>
+                </div>
+                <div className="flex flex-col p-2 gap-1 bg-slate-900/50">
+                  <button onClick={() => setHubTab('geral')} className={`tech-tab ${hubTab === 'geral' ? 'bg-cyan-900/40 text-cyan-400 border border-cyan-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-cyan-200 border border-transparent'}`}>
+                    <Shield className="w-4 h-4 inline-block mr-2" /> Equipamentos
+                  </button>
+                  <button onClick={() => setHubTab('habilidades')} className={`tech-tab ${hubTab === 'habilidades' ? 'bg-cyan-900/40 text-cyan-400 border border-cyan-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-cyan-200 border border-transparent'}`}>
+                    <Activity className="w-4 h-4 inline-block mr-2" /> Matriz Neural
+                  </button>
+                  <button onClick={() => setHubTab('forja')} className={`tech-tab ${hubTab === 'forja' ? 'bg-amber-900/40 text-amber-400 border border-amber-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-amber-200 border border-transparent'}`}>
+                    <Flame className="w-4 h-4 inline-block mr-2" /> Forja Arcana
+                  </button>
+                  <button onClick={() => setHubTab('soldagem')} className={`tech-tab ${hubTab === 'soldagem' ? 'bg-indigo-900/40 text-indigo-400 border border-indigo-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-indigo-200 border border-transparent'}`}>
+                    <Cpu className="w-4 h-4 inline-block mr-2" /> Bancada de Soldagem
+                  </button>
+                  <button onClick={() => setHubTab('reliquias')} className={`tech-tab ${hubTab === 'reliquias' ? 'bg-rose-900/40 text-rose-400 border border-rose-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-rose-200 border border-transparent'}`}>
+                    <Settings className="w-4 h-4 inline-block mr-2" /> Sistema de Relíquias
+                  </button>
+                  <button onClick={() => setHubTab('adaptacoes')} className={`tech-tab ${hubTab === 'adaptacoes' ? 'bg-blue-900/40 text-blue-400 border border-blue-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-blue-200 border border-transparent'}`}>
+                    <Fingerprint className="w-4 h-4 inline-block mr-2" /> Adaptações Biomec.
+                  </button>
+                  <div className="h-px bg-slate-800 my-1"></div>
+                  <button onClick={() => setHubTab('auto')} className={`tech-tab ${hubTab === 'auto' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-emerald-200 border border-transparent'}`}>
+                    <Zap className="w-4 h-4 inline-block mr-2" /> Módulos Auto
+                  </button>
+                  <button onClick={() => setHubTab('conquistas')} className={`tech-tab ${hubTab === 'conquistas' ? 'bg-purple-900/40 text-purple-400 border border-purple-500/50' : 'text-slate-400 hover:bg-slate-800 hover:text-purple-200 border border-transparent'}`}>
+                    <Trophy className="w-4 h-4 inline-block mr-2" /> Parede de Troféus
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            )}
+            {/* Direita: Inventário, Equipamentos & Forja */}
+            <div className={`w-full ${hubTab === 'geral' ? 'lg:flex-1 min-w-0' : 'lg:w-[70%] xl:w-[72%] min-w-0'} space-y-6 transition-all duration-300`}>
+              
+              {hubTab === 'geral' && (
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-2 custom-scrollbar system-panel p-2">
+                  <button onClick={() => setHubTab('geral')} className="whitespace-nowrap px-4 py-2 rounded bg-cyan-900/40 text-cyan-400 border border-cyan-500/50 text-xs font-bold uppercase tracking-wider"><Shield className="w-4 h-4 inline-block mr-2" /> Equipamentos</button>
+                  <button onClick={() => setHubTab('habilidades')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-cyan-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Activity className="w-4 h-4 inline-block mr-2" /> Matriz Neural</button>
+                  <button onClick={() => setHubTab('forja')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-amber-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Flame className="w-4 h-4 inline-block mr-2" /> Forja Arcana</button>
+                  <button onClick={() => setHubTab('soldagem')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-indigo-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Cpu className="w-4 h-4 inline-block mr-2" /> Bancada de Soldagem</button>
+                  <button onClick={() => setHubTab('reliquias')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-rose-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Settings className="w-4 h-4 inline-block mr-2" /> Sistema de Relíquias</button>
+                  <button onClick={() => setHubTab('adaptacoes')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-blue-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Fingerprint className="w-4 h-4 inline-block mr-2" /> Adaptações Biomec.</button>
+                  <button onClick={() => setHubTab('auto')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-emerald-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Zap className="w-4 h-4 inline-block mr-2" /> Módulos Auto</button>
+                  <button onClick={() => setHubTab('conquistas')} className="whitespace-nowrap px-4 py-2 rounded text-slate-400 hover:bg-slate-800 hover:text-purple-200 border border-transparent text-xs font-bold uppercase tracking-wider"><Trophy className="w-4 h-4 inline-block mr-2" /> Parede de Troféus</button>
+                </div>
+              )}
+              {hubTab === 'geral' && (
+                <EquipmentTerminal 

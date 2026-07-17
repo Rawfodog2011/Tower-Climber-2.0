@@ -1,0 +1,142 @@
+
+=== F25 BATTLE START ===
+PStats: HP 530 ATK 125 DEF 110 SPD 100
+MStats: HP 559 ATK 259 DEF 186 SPD 244 (BOSS: false)
+Round 1 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 530, MP 158] | Monster: [HP 559]
+  LOG: --- Turno 1 ---
+  LOG: Drone Defeituoso (Nv 25) ataca e causa 226 de dano! (HP alvo restante: 304)
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 13 de dano! (HP alvo restante: 546)
+Round 2 - Action: attack
+State Before Turn -> Player: [HP 304, MP 138] | Monster: [HP 546]
+  LOG: --- Turno 2 ---
+  LOG: Drone Defeituoso (Nv 25) ataca e causa 285 de dano! (HP alvo restante: 19)
+  LOG: Jogador ataca e causa 1 de dano! (HP alvo restante: 545)
+Round 3 - Action: reparo_emergencia
+State Before Turn -> Player: [HP 19, MP 138] | Monster: [HP 545]
+  LOG: --- Turno 3 ---
+  LOG: Drone Defeituoso (Nv 25) ataca e causa 283 de dano! (HP alvo restante: 0)
+  LOG: O jogador sucumbiu aos ferimentos...
+  LOG: Penalidade de Morte aplicada: Você perdeu 20% do seu Ouro e XP atual.
+Result: MONSTER WINS
+
+
+=== F25 BATTLE START ===
+PStats: HP 530 ATK 125 DEF 110 SPD 100
+MStats: HP 559 ATK 259 DEF 186 SPD 244 (BOSS: false)
+Round 1 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 530, MP 158] | Monster: [HP 559]
+  LOG: --- Turno 1 ---
+  LOG: Drone Defeituoso (Nv 25) ataca e causa 286 de dano! (HP alvo restante: 244)
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 18 de dano! (HP alvo restante: 541)
+Round 2 - Action: attack
+State Before Turn -> Player: [HP 244, MP 138] | Monster: [HP 541]
+  LOG: --- Turno 2 ---
+  LOG: Drone Defeituoso (Nv 25) ataca e causa 279 de dano! (HP alvo restante: 0)
+  LOG: O jogador sucumbiu aos ferimentos...
+  LOG: Penalidade de Morte aplicada: Você perdeu 20% do seu Ouro e XP atual.
+Result: MONSTER WINS
+
+
+=== F25 BATTLE START ===
+PStats: HP 530 ATK 125 DEF 110 SPD 100
+MStats: HP 768 ATK 306 DEF 227 SPD 150 (BOSS: false)
+Round 1 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 530, MP 158] | Monster: [HP 768]
+  LOG: --- Turno 1 ---
+  LOG: Mutante Biomecânico (Nv 25) ataca e causa 319 de dano! (HP alvo restante: 211)
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 5 de dano! (HP alvo restante: 763)
+Round 2 - Action: attack
+State Before Turn -> Player: [HP 211, MP 138] | Monster: [HP 763]
+  LOG: --- Turno 2 ---
+  LOG: Mutante Biomecânico (Nv 25) ataca e causa 361 de dano! (HP alvo restante: 0)
+  LOG: O jogador sucumbiu aos ferimentos...
+  LOG: Penalidade de Morte aplicada: Você perdeu 20% do seu Ouro e XP atual.
+Result: MONSTER WINS
+
+
+=== F25 BATTLE START ===
+PStats: HP 530 ATK 125 DEF 110 SPD 100
+MStats: HP 838 ATK 188 DEF 165 SPD 94 (BOSS: false)
+Round 1 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 530, MP 158] | Monster: [HP 838]
+  LOG: --- Turno 1 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 22 de dano! (HP alvo restante: 816)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 140 de dano! (HP alvo restante: 390)
+Round 2 - Action: attack
+State Before Turn -> Player: [HP 390, MP 138] | Monster: [HP 816]
+  LOG: --- Turno 2 ---
+  LOG: Jogador ataca e causa 1 de dano! (HP alvo restante: 815)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 120 de dano! (HP alvo restante: 270)
+Round 3 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 270, MP 138] | Monster: [HP 815]
+  LOG: --- Turno 3 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 18 de dano! (HP alvo restante: 797)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 127 de dano! (HP alvo restante: 143)
+Round 4 - Action: reparo_emergencia
+State Before Turn -> Player: [HP 143, MP 118] | Monster: [HP 797]
+  LOG: --- Turno 4 ---
+  LOG: Jogador usou Reparo de Emergência! Curou 132 HP. (-20 EP)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 131 de dano! (HP alvo restante: 144)
+Round 5 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 144, MP 98] | Monster: [HP 797]
+  LOG: --- Turno 5 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 24 de dano! (HP alvo restante: 773)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 132 de dano! (HP alvo restante: 12)
+Round 6 - Action: attack
+State Before Turn -> Player: [HP 12, MP 78] | Monster: [HP 773]
+  LOG: --- Turno 6 ---
+  LOG: Jogador ataca e causa 1 de dano! (HP alvo restante: 772)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 128 de dano! (HP alvo restante: 0)
+  LOG: O jogador sucumbiu aos ferimentos...
+  LOG: Penalidade de Morte aplicada: Você perdeu 20% do seu Ouro e XP atual.
+Result: MONSTER WINS
+
+
+=== F25 BATTLE START ===
+PStats: HP 530 ATK 125 DEF 110 SPD 100
+MStats: HP 838 ATK 188 DEF 165 SPD 94 (BOSS: false)
+Round 1 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 530, MP 158] | Monster: [HP 838]
+  LOG: --- Turno 1 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 22 de dano! (HP alvo restante: 816)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 129 de dano! (HP alvo restante: 401)
+Round 2 - Action: attack
+State Before Turn -> Player: [HP 401, MP 138] | Monster: [HP 816]
+  LOG: --- Turno 2 ---
+  LOG: Jogador ataca e causa 1 de dano! (HP alvo restante: 815)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 130 de dano! (HP alvo restante: 271)
+Round 3 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 271, MP 138] | Monster: [HP 815]
+  LOG: --- Turno 3 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 22 de dano! (HP alvo restante: 793)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 140 de dano! (HP alvo restante: 131)
+Round 4 - Action: reparo_emergencia
+State Before Turn -> Player: [HP 131, MP 118] | Monster: [HP 793]
+  LOG: --- Turno 4 ---
+  LOG: Jogador usou Reparo de Emergência! Curou 132 HP. (-20 EP)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 128 de dano! (HP alvo restante: 135)
+Round 5 - Action: mira_laser_calibrada
+State Before Turn -> Player: [HP 135, MP 98] | Monster: [HP 793]
+  LOG: --- Turno 5 ---
+  LOG: Jogador usou Mira Laser Calibrada! (-20 EP)
+  LOG: Jogador (Skill) ataca e causa 22 de dano! (HP alvo restante: 771)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 130 de dano! (HP alvo restante: 5)
+Round 6 - Action: attack
+State Before Turn -> Player: [HP 5, MP 78] | Monster: [HP 771]
+  LOG: --- Turno 6 ---
+  LOG: Jogador ataca e causa 1 de dano! (HP alvo restante: 770)
+  LOG: Parasita Ácido (Nv 25) ataca e causa 149 de dano! (HP alvo restante: 0)
+  LOG: O jogador sucumbiu aos ferimentos...
+  LOG: Penalidade de Morte aplicada: Você perdeu 20% do seu Ouro e XP atual.
+Result: MONSTER WINS
+
+Floor 25: 0.0% win rate

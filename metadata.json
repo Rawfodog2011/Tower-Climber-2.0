@@ -1,0 +1,6 @@
+{
+  "name": "Tower Climber RPG",
+  "description": "Um RPG Isométrico 2D focado na escalada de uma torre infinita com sistema de evolução de classes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,70 @@
+            {/* Painel de Ações Esquerdo */}
+            <div className="system-panel flex flex-col w-full lg:w-1/3">
+              <div className="system-panel-header px-4 py-3">
+                <span className="font-bold text-cyan-50 tracking-widest uppercase text-sm">Comandos Táticos</span>
+              </div>
+              
+              <div className="p-4 space-y-3 flex-1 flex flex-col">
+                {combatState && combatState.isActive ? (
+                  <>
+                    <button 
+                      onClick={() => handleCombatAction({ type: 'attack' })}
+                      className="w-full bg-slate-800/80 hover:bg-slate-700/80 border border-cyan-700/50 text-white font-bold py-3 px-4 rounded transition-all text-left flex justify-between items-center cursor-pointer hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                    >
+                      <span className="uppercase tracking-widest">Ataque Básico</span>
+                      <span className="text-cyan-400 text-xs font-mono">T-ATK</span>
+                    </button>
+                    
+                    <div className="w-full h-px bg-cyan-900/50 my-2"></div>
+                    
+                    {player.learnedSkills.map(skillId => {
+                      const skill = SKILLS_DATABASE[skillId];
+                      const canUseClass = canClassUseSkill(player.currentClassId, skill);
+                      const cd = combatState.cooldowns[skill.id] || 0;
+                      const noMp = combatState.playerMp < skill.mpCost;
+                      
+                      return (
+                        <button 
+                          key={skill.id}
+                          disabled={!canUseClass || cd > 0 || noMp}
+                          onClick={() => handleCombatAction({ type: 'skill', skillId: skill.id })}
+                          className={`w-full text-left font-bold py-3 px-4 rounded transition-all flex justify-between items-center border ${
+                            !canUseClass ? 'bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed' :
+                            cd > 0 ? 'bg-orange-950/30 border-orange-900/50 text-orange-600/50 cursor-not-allowed' :
+                            noMp ? 'bg-blue-950/30 border-blue-900/50 text-blue-600/50 cursor-not-allowed' :
+                            'bg-indigo-950/50 hover:bg-indigo-900/60 border-indigo-500/50 text-indigo-200 cursor-pointer hover:shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                          }`}
+                          title={!canUseClass ? `Requer classe: ${CLASSES[skill.allowedClassId].name}` : skill.description}
+                        >
+                          <div className="flex flex-col">
+                            <span className="uppercase tracking-wide">{skill.name}</span>
+                            <span className="text-[10px] font-mono text-cyan-200/50">{skill.mpCost} EP COST</span>
+                          </div>
+                          {cd > 0 && <span className="text-xs font-mono text-orange-500">CD: {cd}T</span>}
+                        </button>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+                    {combatEndMessage && (
+                      <div className={`p-4 border rounded ${combatEndMessage.isVictory ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-red-950/30 border-red-500/50'}`}>
+                        <h4 className={`text-xl uppercase tracking-widest font-bold mb-2 ${combatEndMessage.isVictory ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {combatEndMessage.title}
+                        </h4>
+                        <p className="text-sm font-mono text-cyan-100">{combatEndMessage.subtitle}</p>
+                      </div>
+                    )}
+                    <button 
+                      onClick={handleReturnToHub}
+                      className="w-full bg-cyan-950 hover:bg-cyan-900 border border-cyan-500 text-cyan-50 font-bold py-3 rounded uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer"
+                    >
+                      Voltar ao Hub
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Arena Central & Logs */}
+            <div className="flex flex-col w-full lg:w-2/3 space-y-4">

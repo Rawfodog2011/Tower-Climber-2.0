@@ -1,0 +1,349 @@
+117-}
+118-
+119:export const ITEMS_DATABASE: Record<string, Item> = {
+120-  // --- Armas ---
+121-  espada_enferrujada: {
+122-    id: 'espada_enferrujada',
+123-    name: 'Chave Inglesa Velha',
+124-    type: 'weapon',
+125-    rarity: 'common',
+126-    description: 'Ferramenta básica de manutenção. Melhor que os punhos.',
+127-    allowedClassIds: [],
+128-    statModifiers: { atk: 5 },
+129-    value: 10,
+130-  },
+131-  espada_longa: {
+132-    id: 'espada_longa',
+133-    name: 'Espada de Plasma Pesada',
+134-    type: 'weapon',
+135-    rarity: 'rare',
+136-    description: 'Arma pesada que requer proficiência de mecatrônico.',
+137-    allowedClassIds: ['mecatronico'],
+138-    statModifiers: { atk: 25, spd: -2 },
+139-    value: 150,
+140-  },
+141-  cajado_iniciante: {
+142-    id: 'cajado_iniciante',
+143-    name: 'Bastão Condutor',
+144-    type: 'weapon',
+145-    rarity: 'common',
+146-    description: 'Canaliza energia elétrica básica.',
+147-    allowedClassIds: ['eletromante'],
+148-    statModifiers: { atk: 12, mp: 20 },
+149-    value: 80,
+150-  },
+151-  arco_caca: {
+152-    id: 'arco_caca',
+153-    name: 'Rifle Magnético',
+154-    type: 'weapon',
+155-    rarity: 'rare',
+156-    description: 'Flexível e rápido. Ideal para operadores de drones.',
+157-    allowedClassIds: ['operador_drones'],
+158-    statModifiers: { atk: 18, spd: 10 },
+159-    value: 140,
+160-  },
+161-
+162-  // --- Armaduras ---
+163-  tunica_velha: {
+164-    id: 'tunica_velha',
+165-    name: 'Macacão Padrão',
+166-    type: 'armor',
+167-    rarity: 'common',
+168-    description: 'Traje de proteção básica padrão da corporação.',
+169-    allowedClassIds: [],
+170-    statModifiers: { def: 3 },
+171-    value: 5,
+172-  },
+173-  armadura_ferro: {
+174-    id: 'armadura_ferro',
+175-    name: 'Placas de Titânio',
+176-    type: 'armor',
+177-    rarity: 'rare',
+178-    description: 'Blindagem pesada que protege muito, mas compromete a mobilidade.',
+179-    allowedClassIds: ['mecatronico'],
+180-    statModifiers: { def: 30, spd: -5 },
+181-    value: 200,
+182-  },
+183-
+184-  // --- Acessórios ---
+185-  anel_da_vitalidade: {
+186-    id: 'anel_da_vitalidade',
+187-    name: 'Núcleo de Regeneração',
+188-    type: 'accessory',
+189-    rarity: 'epic',
+190-    description: 'Um núcleo de energia de um andróide antigo.',
+191-    allowedClassIds: [],
+192-    statModifiers: { hp: 100, def: 5 },
+193-    value: 500,
+194-  },
+195-  amuleto_do_vento: {
+196-    id: 'amuleto_do_vento',
+197-    name: 'Acelerador Sináptico',
+198-    type: 'accessory',
+199-    rarity: 'rare',
+200-    description: 'Aumenta consideravelmente o tempo de reação.',
+201-    allowedClassIds: ['operador_drones', 'tecno_aprendiz'],
+202-    statModifiers: { spd: 15 },
+203-    value: 300,
+204-  },
+205-
+206-  // --- Capacetes (Helmet) ---
+207-  capacete_trabalho: {
+208-    id: 'capacete_trabalho',
+209-    name: 'Capacete de Obra',
+210-    type: 'helmet',
+211-    rarity: 'common',
+212-    description: 'Protege contra detritos caindo do teto da torre.',
+213-    allowedClassIds: [],
+214-    statModifiers: { def: 2, hp: 10 },
+215-    value: 15,
+216-  },
+217-  visor_tactico: {
+218-    id: 'visor_tactico',
+219-    name: 'Visor Tático HUD',
+220-    type: 'helmet',
+221-    rarity: 'rare',
+222-    description: 'Oferece dados do ambiente em tempo real.',
+223-    allowedClassIds: ['operador_drones', 'eletromante'],
+224-    statModifiers: { def: 10, spd: 5, atk: 5 },
+225-    value: 120,
+226-  },
+227-  elmo_juggernaut: {
+228-    id: 'elmo_juggernaut',
+229-    name: 'Elmo de Combate Pesado',
+230-    type: 'helmet',
+231-    rarity: 'epic',
+232-    description: 'Blindagem total para a cabeça, suporta impactos balísticos.',
+233-    allowedClassIds: ['mecatronico', 'juggernaut_industrial'],
+234-    statModifiers: { def: 25, hp: 50 },
+235-    value: 350,
+236-  },
+237-
+238-  // --- Calças (Pants) ---
+239-  calca_jeans: {
+240-    id: 'calca_jeans',
+241-    name: 'Calça Sintética',
+242-    type: 'pants',
+243-    rarity: 'common',
+244-    description: 'Calça padrão com tecido resistente a rasgos.',
+245-    allowedClassIds: [],
+246-    statModifiers: { def: 2 },
+247-    value: 10,
+248-  },
+249-  perneira_titanio: {
+250-    id: 'perneira_titanio',
+251-    name: 'Exoesqueleto de Pernas',
+252-    type: 'pants',
+253-    rarity: 'rare',
+254-    description: 'Aumenta a força das pernas para carregar equipamentos pesados.',
+255-    allowedClassIds: ['mecatronico'],
+256-    statModifiers: { def: 15, hp: 20 },
+257-    value: 180,
+258-  },
+259-  calca_fio_prata: {
+260-    id: 'calca_fio_prata',
+261-    name: 'Malha Condutora',
+262-    type: 'pants',
+263-    rarity: 'epic',
+264-    description: 'Dissipa energia elétrica, ideal para conjuradores.',
+265-    allowedClassIds: ['eletromante', 'tecnomante'],
+266-    statModifiers: { def: 10, mp: 60, spd: 8 },
+267-    value: 400,
+268-  },
+269-
+270-  // --- Botas (Boots) ---
+271-  bota_couro: {
+272-    id: 'bota_couro',
+273-    name: 'Botas de Trabalho',
+274-    type: 'boots',
+275-    rarity: 'common',
+276-    description: 'Botas de bico de aço. Proteção simples.',
+277-    allowedClassIds: [],
+278-    statModifiers: { def: 1, spd: 1 },
+279-    value: 15,
+280-  },
+281-  bota_propulsao: {
+282-    id: 'bota_propulsao',
+283-    name: 'Botas a Jato',
+284-    type: 'boots',
+285-    rarity: 'rare',
+286-    description: 'Pequenos jatos impulsionam o usuário rapidamente.',
+287-    allowedClassIds: ['operador_drones', 'atirador_optico'],
+288-    statModifiers: { def: 5, spd: 20 },
+289-    value: 200,
+290-  },
+291-  bota_magnetica: {
+292-    id: 'bota_magnetica',
+293-    name: 'Sapatos de Mag-Lev',
+294-    type: 'boots',
+295-    rarity: 'epic',
+296-    description: 'Permite deslizar sob o metal da torre.',
+297-    allowedClassIds: [],
+298-    statModifiers: { def: 15, spd: 30, hp: 25 },
+299-    value: 450,
+300-  },
+301-
+302-  // --- Braçadeiras (Bracers) ---
+303-  bracadeira_pano: {
+304-    id: 'bracadeira_pano',
+305-    name: 'Faixas de Pano',
+306-    type: 'bracers',
+307-    rarity: 'common',
+308-    description: 'Apenas pano para absorver o suor.',
+309-    allowedClassIds: [],
+310-    statModifiers: { def: 1 },
+311-    value: 5,
+312-  },
+313-  manopla_energia: {
+314-    id: 'manopla_energia',
+315-    name: 'Manoplas de Força',
+316-    type: 'bracers',
+317-    rarity: 'rare',
+318-    description: 'Aumentam o impacto dos golpes.',
+319-    allowedClassIds: ['mecatronico', 'ciborgue_combate'],
+320-    statModifiers: { atk: 15, def: 8 },
+321-    value: 150,
+322-  },
+323-  luva_holografica: {
+324-    id: 'luva_holografica',
+325-    name: 'Luvas de Interface',
+326-    type: 'bracers',
+327-    rarity: 'epic',
+328-    description: 'Melhoram a velocidade de digitação e cast de feitiços digitais.',
+329-    allowedClassIds: ['eletromante', 'arquiteto_sistemas'],
+330-    statModifiers: { mp: 40, atk: 10, spd: 10 },
+331-    value: 380,
+332-  },
+333-
+334-  // --- Mais Acessórios (Accessory) ---
+335-  bateria_extra: {
+336-    id: 'bateria_extra',
+337-    name: 'Bateria de Íon-Lítio',
+338-    type: 'accessory',
+339-    rarity: 'common',
+340-    description: 'Uma carga extra de energia.',
+341-    allowedClassIds: [],
+342-    statModifiers: { mp: 25 },
+343-    value: 40,
+344-  },
+345-  chip_militar: {
+346-    id: 'chip_militar',
+347-    name: 'Módulo de Mira Auxiliar',
+348-    type: 'accessory',
+349-    rarity: 'rare',
+350-    description: 'Corrige as rotas de disparos automaticamente.',
+351-    allowedClassIds: ['operador_drones', 'atirador_optico'],
+352-    statModifiers: { atk: 20 },
+353-    value: 220,
+354-  },
+355-  amuleto_ouro: {
+356-    id: 'amuleto_ouro',
+357-    name: 'Colar de Condutores de Ouro',
+358-    type: 'accessory',
+359-    rarity: 'epic',
+360-    description: 'Maximiza toda a fluidez energética do usuário.',
+361-    allowedClassIds: [],
+362-    statModifiers: { hp: 40, mp: 40, atk: 10, def: 10, spd: 10 },
+363-    value: 800,
+364-  },
+365-};
+366-
+367-/**
+368- * Verifica recursivamente se a classe fornecida (ou seus ancestrais)
+369- * corresponde à lista de classes permitidas do item.
+370- */
+371-export function canClassEquipItem(playerClassId: string, item: Item): boolean {
+372-  // Se não houver restrição, permite
+373-  if (!item.allowedClassIds || item.allowedClassIds.length === 0) {
+374-    return true;
+375-  }
+376-
+377-  let currentClass: ClassDefinition | undefined = CLASSES[playerClassId];
+378-
+379-  // Percorre a árvore de classes de baixo para cima
+380-  while (currentClass) {
+381-    if (item.allowedClassIds.includes(currentClass.id)) {
+382-      return true; // Encontrou permissão nesta classe ou em algum ancestral
+383-    }
+384-    
+385-    // Sobe para o parent
+386-    if (currentClass.parentClassId) {
+387-      currentClass = CLASSES[currentClass.parentClassId];
+388-    } else {
+389-      break;
+390-    }
+391-  }
+392-
+393-  return false;
+394-}
+395-
+396-export function getRandomItemByRarityAndClass(rarity: Rarity, classId: string): Item | null {
+397-  const pool = Object.values(ITEMS_DATABASE).filter(item => 
+398-    item.rarity === rarity && canClassEquipItem(classId, item)
+399-  );
+400-
+401-  if (pool.length === 0) return null;
+402-  const item = pool[Math.floor(Math.random() * pool.length)];
+403-  return applyManufacturer(item);
+404-}
+405-
+406-/**
+407- * Retorna um item aleatório baseado em uma determinada raridade.
+408- */
+409-export function getRandomItemByRarity(rarity: Rarity): Item | null {
+410-  const items = Object.values(ITEMS_DATABASE).filter(i => i.rarity === rarity);
+411-  if (items.length === 0) return null;
+412-  const index = Math.floor(Math.random() * items.length);
+413-  return items[index];
+414-}
+415-
+416-export function getItemTier(item: Item): number {
+417-  if (!item.allowedClassIds || item.allowedClassIds.length === 0) return 1;
+418-  let maxLevel = 1;
+419-  for (const classId of item.allowedClassIds) {
+420-    const classDef = CLASSES[classId];
+421-    if (classDef && classDef.requiredLevel > maxLevel) {
+422-      maxLevel = classDef.requiredLevel;
+423-    }
+424-  }
+425-  return maxLevel;
+426-}
+427-
+428-export function getRandomItemForFloor(rarity: Rarity, floor: number): Item | null {
+429-  const itemsOfRarity = Object.values(ITEMS_DATABASE).filter(i => i.rarity === rarity);
+430-  if (itemsOfRarity.length === 0) return null;
+431-
+432-  const weightedItems = itemsOfRarity.map(item => {
+433-    const tier = getItemTier(item);
+434-    const diff = floor - tier;
+435-    let weight = 10;
+436-    
+437-    if (diff < 0) {
+438-       weight = Math.max(1, Math.floor(10 / Math.abs(diff)));
+439-    } else if (diff < 20) {
+440-       weight = 20 + diff * 4;
+441-    } else if (diff < 40) {
+442-       weight = 100;
+443-    } else {
+444-       weight = Math.max(5, 100 - (diff - 40) * 2);
+445-    }
+446-    
+447-    return { item, weight };
+448-  });
+449-
+450-  const validItems = weightedItems.filter(i => i.weight > 0);
+451-  if (validItems.length === 0) {
+452-    const index = Math.floor(Math.random() * itemsOfRarity.length);
+453-    return applyManufacturer(itemsOfRarity[index]);
+454-  }
+455-
+456-  const totalWeight = validItems.reduce((acc, curr) => acc + curr.weight, 0);
+457-  let roll = Math.random() * totalWeight;
+458-
+459-  for (const { item, weight } of validItems) {
+460-    roll -= weight;
+461-    if (roll <= 0) return applyManufacturer(item);
+462-  }
+463-
+464-  return applyManufacturer(validItems[validItems.length - 1].item);
+465-}
