@@ -102,12 +102,28 @@ function simulateCombat(playerLevel: number, floor: number, debug: boolean = fal
 }
 
 const floorsToTest = [25];
-const iters = 5;
+const iters = 100;
 
+console.log(`--- SIMULATION: Under-leveled (Level 20 at Floor 25) ---`);
 for (const floor of floorsToTest) {
   let wins = 0;
+  console.log(`Running 1 debug battle:`);
+  simulateCombat(20, floor, true);
+  
   for (let i = 0; i < iters; i++) {
-    if (simulateCombat(20, floor, true)) wins++;
+    if (simulateCombat(20, floor, false)) wins++;
   }
-  console.log(`Floor ${floor}: ${((wins/iters)*100).toFixed(1)}% win rate`);
+  console.log(`Floor ${floor} (Level 20): ${((wins/iters)*100).toFixed(1)}% win rate over ${iters} runs\n`);
+}
+
+console.log(`--- SIMULATION: Normal Progression (Level 25 at Floor 25) ---`);
+for (const floor of floorsToTest) {
+  let wins = 0;
+  console.log(`Running 1 debug battle:`);
+  simulateCombat(25, floor, true);
+  
+  for (let i = 0; i < iters; i++) {
+    if (simulateCombat(25, floor, false)) wins++;
+  }
+  console.log(`Floor ${floor} (Level 25): ${((wins/iters)*100).toFixed(1)}% win rate over ${iters} runs\n`);
 }

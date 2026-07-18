@@ -1,3 +1,5 @@
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from './storage';
+
 export interface OriginTimelineEntry {
   completed: boolean;
   completedAt?: number; // timestamp do momento em que completou
@@ -11,7 +13,6 @@ export interface TimelineCodex {
   secretClassUnlocked: boolean;
 }
 
-const CODEX_KEY = 'towerclimber_timeline_codex';
 export const CURRENT_CODEX_VERSION = 1;
 
 export function createDefaultCodex(): TimelineCodex {
@@ -64,11 +65,11 @@ export function migrateCodex(data: any): TimelineCodex {
 
 export function loadTimelineCodex(): TimelineCodex {
   try {
-    const data = localStorage.getItem(CODEX_KEY);
+    const data = getStorageItem<any | null>(STORAGE_KEYS.TIMELINE_CODEX, null);
     if (!data) {
       return createDefaultCodex();
     }
-    return migrateCodex(JSON.parse(data));
+    return migrateCodex(data);
   } catch (error) {
     console.error('Erro ao carregar o Códice Temporal:', error);
     return createDefaultCodex();
@@ -78,7 +79,7 @@ export function loadTimelineCodex(): TimelineCodex {
 export function saveTimelineCodex(codex: TimelineCodex): void {
   try {
     codex.saveVersion = CURRENT_CODEX_VERSION;
-    localStorage.setItem(CODEX_KEY, JSON.stringify(codex));
+    setStorageItem(STORAGE_KEYS.TIMELINE_CODEX, codex);
   } catch (error) {
     console.error('Erro ao salvar o Códice Temporal:', error);
   }

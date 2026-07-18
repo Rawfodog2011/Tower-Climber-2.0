@@ -1,6 +1,14 @@
 import { Player, Item, Rarity } from '../../types';
 import { getRandomItemByRarityAndClass } from '../entities/items';
 
+export const GOLD_VALUES: Record<Rarity, number> = {
+  common: 5,
+  rare: 20,
+  epic: 100,
+  legendary: 500,
+  mythic: 2000
+};
+
 export const CRAFTING_COSTS = {
   common: { materials: 3, gold: 50, materialType: 'common' as const },
   rare: { materials: 3, gold: 200, materialType: 'rare' as const },
@@ -35,8 +43,7 @@ export function dismantleItem(player: Player, inventoryIndex: number): { success
   let message = `Desmanchado! +1 ${matName}`;
   
   if (updatedPlayer.materials[matKey] >= MAX_FRAGMENTS) {
-     const goldValues = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
-     const goldEarned = goldValues[item.rarity] || 5;
+     const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
      updatedPlayer.gold += goldEarned;
      message = `Desmanchado! Limite de ${matName} alcançado (+ ${goldEarned}G compensação)`;
   } else {
@@ -134,8 +141,7 @@ export function sellItem(player: Player, inventoryIndex: number): { success: boo
   
   updatedPlayer.inventory.splice(inventoryIndex, 1);
 
-  const goldValues: Record<Rarity, number> = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
-  const goldEarned = item.value || goldValues[item.rarity] || 5;
+  const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
   updatedPlayer.gold += goldEarned;
 
   return {
@@ -157,7 +163,6 @@ export function dismantleItemsBatch(player: Player, itemsToDismantle: Item[]): {
   };
 
   const MAX_FRAGMENTS = 300;
-  const goldValues: Record<Rarity, number> = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
   
   const matsAdded: Record<string, number> = { common: 0, rare: 0, epic: 0 };
   let extraGoldEarned = 0;
@@ -166,7 +171,7 @@ export function dismantleItemsBatch(player: Player, itemsToDismantle: Item[]): {
     const matKey = (item.rarity === 'legendary' || item.rarity === 'mythic') ? 'epic' : item.rarity;
     
     if (updatedPlayer.materials[matKey] >= MAX_FRAGMENTS) {
-      const goldEarned = goldValues[item.rarity] || 5;
+      const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
       updatedPlayer.gold += goldEarned;
       extraGoldEarned += goldEarned;
     } else {
@@ -208,11 +213,10 @@ export function sellItemsBatch(player: Player, itemsToSell: Item[]): { success: 
     inventory: [...player.inventory]
   };
 
-  const goldValues: Record<Rarity, number> = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
   let totalGoldEarned = 0;
 
   for (const item of itemsToSell) {
-    const goldEarned = item.value || goldValues[item.rarity] || 5;
+    const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
     updatedPlayer.gold += goldEarned;
     totalGoldEarned += goldEarned;
   }

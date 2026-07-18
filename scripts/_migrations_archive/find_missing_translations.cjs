@@ -105,12 +105,79 @@ function main() {
   const missing = [];
   const found = [];
 
+  const baseItems = new Set([
+    "Lâmina", "Rifle", "Disparador", "Ferramenta", "Canhão", "Bastão", "Colete",
+    "Chassi", "Capacete", "Calça", "Bota", "Botas", "Braçadeira", "Grevas", "Luva",
+    "Macacão", "Manopla", "Máscara", "Módulo", "Interface", "Núcleo", "Perneira",
+    "Pisante", "Placa", "Propulsor", "Protetor", "Solado", "Sensor", "Visor",
+    "Coroa", "Estabilizador", "Exo-Braço", "Chip", "Bateria", "Blindagem", "Capacitor",
+    "Chave"
+  ]);
+
+  const types = new Set([
+    "Universal", "Voltaico", "Matricial", "Mutante", "Iniciante", "Engrenado",
+    "Remoto", "Orgânico", "Massivo", "Necro-Sintético", "Telescópico", "Furtivo", "Cirúrgico",
+    "Letal"
+  ]);
+
+  const conditions = new Set([
+    "Enferrujado", "Padrão", "Usado", "Sucateado", "Genérico", "Reforçado",
+    "Militar", "Avançado", "Otimizado", "Customizado", "Experimental", "Sintético",
+    "Quântico", "Protótipo"
+  ]);
+
+  function isProceduralItem(s) {
+    let rest = s;
+    if (s.startsWith("Kinetix ")) rest = s.substring(8);
+    else if (s.startsWith("AeroDynamics ")) rest = s.substring(13);
+    else if (s.startsWith("OmniCorp ")) rest = s.substring(9);
+
+    const words = rest.split(" ");
+    if (words.length === 4 && words[0] === "Chassi" && words[1] === "Inferior") {
+      return types.has(words[2]) && conditions.has(words[3]);
+    }
+    if (words.length === 5 && words[0] === "Protetor" && words[1] === "de" && words[2] === "Pulso") {
+      return types.has(words[3]) && conditions.has(words[4]);
+    }
+    if (words.length === 3 && words[0] === "Chave" && words[1] === "Letal") {
+      return conditions.has(words[2]);
+    }
+    if (words.length === 5 && words[2] === "Obsoleto" && words[3] === "e" && words[4] === "Letal") {
+      return baseItems.has(words[0]) && types.has(words[1]);
+    }
+    if (words.length === 6 && words[0] === "Chassi" && words[1] === "Inferior" && words[3] === "Obsoleto" && words[4] === "e" && words[5] === "Letal") {
+      return types.has(words[2]);
+    }
+    if (words.length === 3) {
+      return baseItems.has(words[0]) && types.has(words[1]) && conditions.has(words[2]);
+    }
+    return false;
+  }
+
+  // Parse all dictionary keys from translationContent and unescape them
+  const dictKeys = new Set();
+  const keyRegex = /^\s*(["'])((?:\\.|(?!\1)[^\\])*)\1\s*:/gm;
+  let keyMatch;
+  while ((keyMatch = keyRegex.exec(translationContent)) !== null) {
+    const rawKey = keyMatch[2];
+    const unescapedKey = rawKey.replace(/\\(.)/g, '$1');
+    dictKeys.add(unescapedKey);
+  }
+
   for (const str of allStrings) {
-    // Verifica se a string aparece como CHAVE no dicionário (formato "string": ou 'string':)
-    const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const keyRegexDouble = new RegExp(`"${escaped}"\\s*:`);
-    const keyRegexSingle = new RegExp(`'${escaped}'\\s*:`);
-    if (keyRegexDouble.test(translationContent) || keyRegexSingle.test(translationContent)) {
+    if (str.startsWith("//") || str.startsWith("/*")) {
+      continue;
+    }
+
+    if (isProceduralItem(str)) {
+      found.push(str);
+      continue;
+    }
+
+    // Unescape the extracted string so we compare standard strings
+    const unescapedStr = str.replace(/\\(.)/g, '$1');
+
+    if (dictKeys.has(unescapedStr)) {
       found.push(str);
     } else {
       missing.push(str);

@@ -2,6 +2,7 @@ import React from 'react';
 import { Player } from '../types';
 import { Activity, Flame, Crosshair, Cpu } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
+import { getSectorForFloor } from '../core/math/worldScaling';
 
 interface Props {
   player: Player;
@@ -11,17 +12,9 @@ interface Props {
   setPlayer: React.Dispatch<React.SetStateAction<Player>>;
 }
 
-// Helper to get Sector info
-function getSectorForFloor(floor: number) {
-  const idx = Math.floor((floor - 1) / 10) % 3;
-  if (idx === 0) return { name: 'Refinaria Tóxica', color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30', rgb: '34, 197, 94', icon: Activity };
-  if (idx === 1) return { name: 'Data-Core Congelado', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', rgb: '59, 130, 246', icon: Activity };
-  return { name: 'Fornalha de Plasma', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', rgb: '239, 68, 68', icon: Flame };
-}
-
 export const ExpeditionPanel: React.FC<Props> = ({ player, selectedFloor, setSelectedFloor, handleStartDive, setPlayer }) => {
   const sector = getSectorForFloor(selectedFloor);
-  const SectorIcon = sector.icon;
+  const SectorIcon = sector.hazard === 'plasma_furnace' ? Flame : Activity;
   const { t } = useTranslation();
 
   return (

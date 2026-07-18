@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
+import { STORAGE_KEYS, getStorageString, setStorageString } from '../core/engine/storage';
 
 interface Props {
   onComplete: () => void;
@@ -26,7 +27,7 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const countStr = localStorage.getItem('intro_seen_count') || '0';
+    const countStr = getStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, '0');
     const count = parseInt(countStr, 10);
     if (count > 0 || isContinue) {
       setIsRepeatIntro(true);
@@ -34,9 +35,9 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
   }, [isContinue]);
 
   const handleComplete = () => {
-    const countStr = localStorage.getItem('intro_seen_count') || '0';
+    const countStr = getStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, '0');
     const count = parseInt(countStr, 10);
-    localStorage.setItem('intro_seen_count', (count + 1).toString());
+    setStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, (count + 1).toString());
     onComplete();
   };
 

@@ -1,3 +1,5 @@
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from './storage';
+
 export type MemoryNodeKey = `${string}:${string}` | string;
 
 export interface MemoryArchive {
@@ -5,7 +7,6 @@ export interface MemoryArchive {
   unlockedKeys: string[];
 }
 
-const MEMORY_ARCHIVE_KEY = 'towerclimber_memory_archive';
 export const CURRENT_MEMORY_ARCHIVE_VERSION = 1;
 
 export function createDefaultMemoryArchive(): MemoryArchive {
@@ -27,11 +28,11 @@ export function migrateMemoryArchive(data: any): MemoryArchive {
 
 export function loadMemoryArchive(): MemoryArchive {
   try {
-    const data = localStorage.getItem(MEMORY_ARCHIVE_KEY);
+    const data = getStorageItem<any | null>(STORAGE_KEYS.MEMORY_ARCHIVE, null);
     if (!data) {
       return createDefaultMemoryArchive();
     }
-    return migrateMemoryArchive(JSON.parse(data));
+    return migrateMemoryArchive(data);
   } catch (error) {
     console.error('Erro ao carregar o Arquivo de Memórias:', error);
     return createDefaultMemoryArchive();
@@ -41,7 +42,7 @@ export function loadMemoryArchive(): MemoryArchive {
 export function saveMemoryArchive(archive: MemoryArchive): void {
   try {
     archive.saveVersion = CURRENT_MEMORY_ARCHIVE_VERSION;
-    localStorage.setItem(MEMORY_ARCHIVE_KEY, JSON.stringify(archive));
+    setStorageItem(STORAGE_KEYS.MEMORY_ARCHIVE, archive);
   } catch (error) {
     console.error('Erro ao salvar o Arquivo de Memórias:', error);
   }

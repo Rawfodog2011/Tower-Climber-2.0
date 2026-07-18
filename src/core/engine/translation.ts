@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { STORAGE_KEYS, getStorageString, setStorageString } from './storage';
 
 export type Language = 'pt' | 'en';
 
 let currentLanguage: Language = 'pt';
 
 if (typeof window !== 'undefined') {
-  currentLanguage = (localStorage.getItem('tower_climber_lang') as Language) || 'pt';
+  currentLanguage = (getStorageString(STORAGE_KEYS.LANGUAGE, 'pt') as Language) || 'pt';
 }
 
 const listeners = new Set<() => void>();
@@ -17,7 +18,7 @@ export function getLanguage(): Language {
 export function setLanguage(lang: Language) {
   currentLanguage = lang;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('tower_climber_lang', lang);
+    setStorageString(STORAGE_KEYS.LANGUAGE, lang);
   }
   listeners.forEach(listener => listener());
   // Also dispatch window event for non-react or outside listeners
@@ -835,7 +836,406 @@ const DICTIONARY: Record<string, string> = {
   "Levantamento Glacial": "Glacial Survey",
   "Registre anomalias distintas do Data-Core Congelado no Arquivo.": "Record distinct anomalies from the Frozen Data-Core in the Archive.",
   "Amostragem Térmica": "Thermal Sampling",
-  "Registre entidades da Fornalha de Plasma no Arquivo de Ameaças.": "Record entities from the Plasma Furnace in the Threat Archive."
+  "Registre entidades da Fornalha de Plasma no Arquivo de Ameaças.": "Record entities from the Plasma Furnace in the Threat Archive.",
+
+  // UI elements, status effects, and system logs
+  "[ BYPASS // CONTINUAR ]": "[ BYPASS // CONTINUE ]",
+  "[ VENDIDO ]": "[ SOLD ]",
+  "[ALERTA DE SEGURANÇA MATRIX CENTRAL]": "[CENTRAL MATRIX SECURITY ALERT]",
+  "[Dados Corrompidos]": "[Corrupted Data]",
+  "[FRAGMENTO NÃO RECUPERADO]": "[FRAGMENT NOT RECOVERED]",
+  "+1 Matéria Escura": "+1 Dark Matter",
+  "+1 Regeneração de EP/Turno por nível.": "+1 EP Regen/Turn per level.",
+  "+1% em todos os Atributos (HP, MP, ATK, DEF, SPD) por nível.": "+1% to all Stats (HP, MP, ATK, DEF, SPD) per level.",
+  "+10 DEF": "+10 DEF",
+  "+10 SPD": "+10 SPD",
+  "+100 Créditos": "+100 Credits",
+  "+100 EP": "+100 EP",
+  "+1000 Créditos": "+1000 Credits",
+  "+15 SPD": "+15 SPD",
+  "+15 T-ATK": "+15 T-ATK",
+  "+150 SPD e aumento maciço em dano baseado na SPD (simulado com ATK extra), perde Max HP.": "+150 SPD and massive increase in damage based on SPD (simulated with extra ATK), loses Max HP.",
+  "+1500 Créditos, +3 Matérias Escuras": "+1500 Credits, +3 Dark Matter",
+  "+2 Matérias Escuras": "+2 Dark Matter",
+  "+2% Chance de Drop de Qualidade por nível.": "+2% Quality Drop Chance per level.",
+  "+2% DEF por nível.": "+2% DEF per level.",
+  "+2% HP Máximo por nível.": "+2% Max HP per level.",
+  "+2% SPD por nível.": "+2% SPD per level.",
+  "+2% T-ATK por nível.": "+2% T-ATK per level.",
+  "+20 Max HP": "+20 Max HP",
+  "+3 Matérias Escuras": "+3 Dark Matter",
+  "+3% EP Máximo por nível.": "+3% Max EP per level.",
+  "+3% XP Obtido por nível.": "+3% XP Gained per level.",
+  "+30 EP": "+30 EP",
+  "+30 SPD": "+30 SPD",
+  "+300 T-ATK e cura convertida em dano extra, mas perde 100 DEF.": "+300 T-ATK and healing converted to extra damage, but loses 100 DEF.",
+  "+40 Max HP": "+40 Max HP",
+  "+5 Matérias Escuras": "+5 Dark Matter",
+  "+5% Créditos Obtidos por nível.": "+5% Credits Gained per level.",
+  "+50 EP": "+50 EP",
+  "+50 Max HP": "+50 Max HP",
+  "+500 Créditos, +1 Matéria Escura": "+500 Credits, +1 Dark Matter",
+  "+80 Max HP": "+80 Max HP",
+  "✓ INTEGRALIDADE NEURAL ESTABILIZADA": "✓ NEURAL INTEGRITY STABILIZED",
+  "100% DE INTEGRALIDADE": "100% INTEGRITY",
+  "A carne é fraca. O aço é imortal.": "The flesh is weak. The steel is immortal.",
+  "A mente conectada ao metal.": "The mind connected to metal.",
+  "A tensão oscila de forma imprevisível. Você recua antes que a segurança frite seus circuitos.": "The voltage fluctuates unpredictably. You back away before security fries your circuits.",
+  "Aberração Genética": "Genetic Aberration",
+  "Absorve vitalidade inimiga a cada golpe. (5% Roubo de Vida)": "Absorbs enemy vitality with each blow. (5% Lifesteal)",
+  "Acelerador de Partículas Tático": "Tactical Particle Accelerator",
+  "ACESSO LIBERADO NA TELA DE SELEÇÃO DE EXPLORADOR.": "ACCESS GRANTED ON EXPLORER SELECTION SCREEN.",
+  "Acumule 5000 Créditos.": "Accumulate 5000 Credits.",
+  "Adentrar a Torre": "Enter the Spire",
+  "Adiciona uma camada extra de proteção estrutural. (+5 DEF)": "Adds an extra layer of structural protection. (+5 DEF)",
+  "Adicionada Forja para as classes supremas de raridade Lendária e Mítica": "Added Forge for supreme classes of Legendary and Mythic rarity",
+  "Adicionado Glossário de Efeitos": "Added Effect Glossary",
+  "Adicionado Sistema de Matriz Neural (Árvore de Passivas)": "Added Neural Matrix System (Passive Tree)",
+  "Alcance a Profundeza 10.": "Reach Floor Depth 10.",
+  "Alcance a Profundeza 25.": "Reach Floor Depth 25.",
+  "Alcance o nível 10 em uma Adaptação Biomecânica.": "Reach level 10 in a Biomechanical Adaptation.",
+  "Ambos os lados recebem status de Corrosão todo turno.": "Both sides receive Corrosion status every turn.",
+  "Ambos sofrem Corrosão constante.": "Both suffer constant Corrosion.",
+  "Ameaça Comum": "Common Threat",
+  "Ameaça Nível Chefe": "Boss Level Threat",
+  "Anomalia Ômega": "Omega Anomaly",
+  "Apenas a primeira linha de código.": "Just the first line of code.",
+  "Aprimora as juntas do traje com propulsão microscópica. Aumenta os reflexos e a velocidade (SPD).": "Enhances suit joints with microscopic propulsion. Increases reflexes and speed (SPD).",
+  "Armazena energia potencial excedente. (+10 Max EP)": "Stores excess potential energy. (+10 Max EP)",
+  "Arsenal Full-Stack": "Full-Stack Arsenal",
+  "Ascensão de nível 100 — descrição a definir": "Level 100 Ascension — description to be defined",
+  "Assassinato Fantasma": "Phantom Assassin",
+  "Assassino do Fio da Navalha": "Razor's Edge Assassin",
+  "Ataque Orbital": "Orbital Strike",
+  "Ataque termóptico veloz que causa 450% de dano.": "Swift thermo-optic attack dealing 450% damage.",
+  "Ataques -50% Dano, Habilidades 0 EP.": "Attacks -50% Damage, Skills 0 EP.",
+  "Ativar Protocolo Sem Fim": "Activate Endless Protocol",
+  "Atuadores Leves": "Light Actuators",
+  "ATUALIZAÇÃO DE REGISTRO NEURAL": "NEURAL RECORD UPDATE",
+  "Atualizar Sincronização": "Update Synchronization",
+  "Aumenta a frequência base do equipamento. (+5 T-ATK)": "Increases base equipment frequency. (+5 T-ATK)",
+  "Aumenta HP e cura passiva enormemente (simulado com DEF alta e Max HP), mas reduz severamente SPD e ATK.": "Greatly increases HP and passive healing (simulated with high DEF and Max HP), but severely reduces SPD and ATK.",
+  "Auto-Batalha Aprimorada": "Improved Auto-Battle",
+  "Balanceamento de loot aprimorado para drop-rates dinâmicos de alta raridade nos andares superiores": "Improved loot balance for dynamic high-rarity drop rates on upper floors",
+  "Batalhas em Turnos Implementadas": "Turn-Based Battles Implemented",
+  "Bateria Biomecânica Autossuficiente": "Self-Sustaining Biomechanical Battery",
+  "Blindagem Reativa": "Reactive Plating",
+  "Blindagem Reforçada I": "Reinforced Armor I",
+  "Blindagem Reforçada II": "Reinforced Armor II",
+  "Bloqueado: Requer": "Locked: Requires",
+  "Bônus Meta-Persistente de Run (Global)": "Meta-Persistent Run Bonus (Global)",
+  "Buscar memória liberta...": "Search freed memory...",
+  "Buscar Ofertas": "Search Deals",
+  "Bypass automático em": "Automatic bypass in",
+  "Cache de Suprimentos Militar": "Military Supply Cache",
+  "Campo EMP": "EMP Field",
+  "CANAL DE MEMÓRIAS SEGURO": "SECURE MEMORY CHANNEL",
+  "Chefes Derrotados": "Bosses Defeated",
+  "Ciclos de Combate": "Combat Cycles",
+  "Classes Iniciais de Combate": "Starting Combat Classes",
+  "CLIQUE EM QUALQUER LUGAR OU NO BOTÃO PARA ACELERAR": "CLICK ANYWHERE OR THE BUTTON TO ACCELERATE",
+  "Clique em qualquer memória decriptada ao lado para carregar e reler seus dados neurais históricos.": "Click on any decrypted memory on the side to load and reread its historical neural data.",
+  "CÓDICE TEMPORAL // REGISTRO": "TEMPORAL CODEX // RECORD",
+  "Colosso de Carbono": "Carbon Colossus",
+  "Comércio Não-Registrado": "Unregistered Commerce",
+  "Compra efetuada com sucesso!": "Purchase successful!",
+  "Comprar Caixa de Componentes (1000 Créditos)": "Buy Component Box (1000 Credits)",
+  "Conclua o Andar": "Complete Floor",
+  "concluintes": "completers",
+  "concluidos": "completed",
+  "concluídos": "completed",
+  "Condensador de Plasma Instável": "Unstable Plasma Condenser",
+  "Conexão Total Estabelecida": "Full Connection Established",
+  "Consome nanites para curar 15% do HP Máximo, limpa Superaquecimento e Corrosão, e recupera 10% do MP Máximo.": "Consumes nanites to heal 15% of Max HP, clears Overheat and Corrosion, and restores 10% of Max MP.",
+  "Contrato incompleto.": "Contract incomplete.",
+  "Contrato não encontrado.": "Contract not found.",
+  "Coprocessador Heurístico": "Heuristic Coprocessor",
+  "Core do Tecno-Aprendiz": "Techno-Apprentice Core",
+  "Corrosão": "Corrosion",
+  "Corrosão é duas vezes mais eficiente e dá dano por turno.": "Corrosion is twice as efficient and deals damage per turn.",
+  "Créditos Disponíveis": "Available Credits",
+  "Criptominerador Embutido": "Built-in Cryptominer",
+  "DADOS HISTÓRICOS CRIPTOGRAFADOS RECONSTITUÍDOS": "RECONSTITUTED ENCRYPTED HISTORICAL DATA",
+  "Derrubador de Titãs": "Titan Slayer",
+  "DESCRIPTOGRAFANDO NÚCLEO... CHAVE MESTRA CONTRATUAL ENCONTRADA.": "DECRYPTING CORE... CONTRACT MASTER KEY FOUND.",
+  "Descriptografe 3 sistemas antigos (Puzzles).": "Decrypt 3 ancient systems (Puzzles).",
+  "Descriptografia Mental de Linhas Temporais Passadas": "Mental Decryption of Past Timelines",
+  "Deseja DESMANCHAR todos os": "Do you wish to DISMANTLE all",
+  "Deseja VENDER todos os": "Do you wish to SELL all",
+  "Destrua um Chefe de Setor.": "Destroy a Sector Boss.",
+  "Destruidor de Sistemas": "System Destroyer",
+  "Dinheiro corporativo tem seu valor.": "Corporate money has its value.",
+  "Disparo de Antimatéria": "Antimatter Shot",
+  "Disseca o alvo em tempo real. Causa 300% de dano e aplica corrosão profunda.": "Dissects the target in real-time. Deals 300% damage and applies deep corrosion.",
+  "Dissipação de Calor": "Heat Dissipation",
+  "Dobro de DEF e Max HP massivo, mas velocidade reduzida drasticamente.": "Double DEF and massive Max HP, but speed drastically reduced.",
+  "Drena a bateria inimiga causando 350% de dano e cura 50%.": "Drains enemy battery dealing 350% damage and heals 50%.",
+  "Drenagem Cirúrgica": "Surgical Drain",
+  "Drenagem de Núcleo": "Core Drain",
+  "Drone de Contrabando": "Smuggling Drone",
+  "Drone Defeituoso": "Defective Drone",
+  "Elimine 250 anomalias no complexo.": "Eliminate 250 anomalies in the complex.",
+  "Elimine 50 anomalias no complexo.": "Eliminate 50 anomalies in the complex.",
+  "Elimine sua primeira anomalia no complexo.": "Eliminate your first anomaly in the complex.",
+  "Enquanto você luta, este módulo descriptografa carteiras digitais dos inimigos.": "While you fight, this module decrypts enemy digital wallets.",
+  "Épico": "Epic",
+  "Equipado:": "Equipped:",
+  "Equipamento universal common.": "Universal common equipment.",
+  "Equipamento universal epic.": "Universal epic equipment.",
+  "Equipamento universal rare.": "Universal rare equipment.",
+  "Equipe todos os espaços corporais com hardware.": "Equip all body slots with hardware.",
+  "Escalada Concluída": "Climb Completed",
+  "Estabelecendo conexão clandestina...": "Establishing clandestine connection...",
+  "Estação de Repouso Biomecânica": "Biomechanical Rest Station",
+  "ESTÁVEL": "STABLE",
+  "Este item é consumível e não pode ser equipado.": "This item is consumable and cannot be equipped.",
+  "Evitar Radiação": "Avoid Radiation",
+  "Evoca uma calamidade do Arquiteto de Sistemas. Causa 500% de dano.": "Evokes a calamity from the System Architect. Deals 500% damage.",
+  "Evolução de nível 70 — descrição a definir": "Level 70 Evolution — description to be defined",
+  "Evoluído": "Evolved",
+  "Exaustão": "Exhaustion",
+  "Exterminador Autônomo": "Autonomous Terminator",
+  "Extrator Sanguessuga": "Leech Extractor",
+  "Fantasma Óptico": "Optical Phantom",
+  "Filtra ameaças biológicas e digitais. (50% Res. Status)": "Filters biological and digital threats. (50% Status Res.)",
+  "Filtro de Anomalias": "Anomaly Filter",
+  "Frequência Harmônica Unificada": "Unified Harmonic Frequency",
+  "Frequência Letal": "Lethal Frequency",
+  "Gaste 5 Pontos de Matriz.": "Spend 5 Matrix Points.",
+  "Gerador de Escudo Fractal": "Fractal Shield Generator",
+  "Guardião Cibernético": "Cybernetic Guardian",
+  "Habilidade Adquirida": "Skill Acquired",
+  "Habilidade Passiva Ú": "Unique Passive Skill",
+  "Habilidades custam 20% mais EP devido ao frio glacial.": "Skills cost 20% more EP due to freezing cold.",
+  "Hacker de Terminais": "Terminal Hacker",
+  "Holograma Corrompido": "Corrupted Hologram",
+  "Ignorar a Cápsula": "Ignore the Capsule",
+  "Ignorar Transação": "Ignore Transaction",
+  "Imortalidade Sintética": "Synthetic Immortality",
+  "Impede o superaquecimento. Permite ativar módulos de auto-restauração por mais tempo ou mais rápido.": "Prevents overheating. Allows activating self-restoration modules longer or faster.",
+  "Iniciando diagnóstico das frequências do sistema de segurança...": "Initiating diagnosis of system security frequencies...",
+  "Bastion Absoluto": "Absolute Bastion",
+  "Capacitor de Resfriamento": "Cooling Capacitor",
+  "Capacitores Expandidos I": "Expanded Capacitors I",
+  "Capacitores Expandidos II": "Expanded Capacitors II",
+  "Capitalista de Silício": "Silicon Capitalist",
+  "Célula de Energia de Alta Densidade": "High Density Power Cell",
+  "Central de Reciclagem & Liquidação": "Recycling & Liquidation Center",
+  "Iniciar Nova Linha Temporal": "Start New Timeline",
+  "Inimigos Eliminados": "Enemies Eliminated",
+  "Integra fluidos vitais regenerativos. (+25 Max HP)": "Integrates regenerative vital fluids. (+25 Max HP)",
+  "Introduzido Sistema de Sockets em Equipamentos": "Introduced Equipment Sockets System",
+  "Item já comprado": "Item already purchased",
+  "Item não encontrado": "Item not found",
+  "Item não encontrado.": "Item not found.",
+  "item(ns)": "item(s)",
+  "itens filtrados por": "items filtered by",
+  "itens filtrados?": "filtered items?",
+  "Jogador: +20% Dano, mas perde 5% HP/turno.": "Player: +20% Damage, but loses 5% HP/turn.",
+  "Jogador: Imune a Sobreaquecimento.": "Player: Immune to Overheat.",
+  "Lançamento Inicial do Protocolo": "Protocol Initial Launch",
+  "Leviatã Biomecânico": "Biomechanical Leviathan",
+  "Ligas de Titânio": "Titanium Alloys",
+  "Linha Temporal Concluída": "Timeline Completed",
+  "Mais máquina do que homem.": "More machine than man.",
+  "Mente-Colmeia Alpha": "Alpha Hivemind",
+  "Mercado indisponível": "Market unavailable",
+  "Mercado recarregado.": "Market restocked.",
+  "Mergulho Profundo Nv. 1": "Deep Dive Lvl. 1",
+  "Mergulho Profundo Nv. 2": "Deep Dive Lvl. 2",
+  "Monstro: +30% HP e Drop x2.": "Monster: +30% HP and x2 Drop.",
+  "Monstros têm +30% HP e dropam o dobro de ouro.": "Monsters have +30% HP and drop double gold.",
+  "Mutação Desenfreada": "Unbridled Mutation",
+  "Mutante Biomecânico": "Biomechanical Mutant",
+  "Nanocélulas Regenerativas": "Regenerative Nanocells",
+  "Não Arriscar Curto-Circuito": "Do Not Risk Short Circuit",
+  "Nenhum contrato ativo.<br/>Conecte-se à rede para buscar tarefas.": "No active contract.<br/>Connect to the network to search for tasks.",
+  "Nenhum contrato concluído para reivindicar.": "No completed contract to claim.",
+  "Nenhum equipamento melhor disponível.": "No better equipment available.",
+  "Nenhum firewall é capaz de parar você.": "No firewall is capable of stopping you.",
+  "Nenhum Fragmento Selecionado": "No Fragment Selected",
+  "Nenhum item selecionado para desmanchar.": "No item selected to dismantle.",
+  "Nenhum item selecionado para vender.": "No item selected to sell.",
+  "Nível Atingido": "Level Reached",
+  "NÓ REVELADO": "NODE REVEALED",
+  "NOVA DIRETRIZ SINÁPTICA": "NEW SYNAPTIC DIRECTIVE",
+  "NOVO CÓDIGO DE ORIGEM SECRETA DESBLOQUEADO COM SUCESSO.": "NEW SECRET ORIGIN CODE UNLOCKED SUCCESSFULLY.",
+  "Novo Conversor de Matéria Arcana para refino de materiais (taxa de 5:1)": "New Arcane Matter Converter for material refining (5:1 rate)",
+  "Novo Menu Principal": "New Main Menu",
+  "Novos contratos baixados do terminal corporativo.": "New contracts downloaded from corporate terminal.",
+  "Núcleo Biossintético": "Biosynthetic Core",
+  "Núcleo de Fissão Controlada": "Controlled Fission Core",
+  "Núcleo do Evento": "Event Core",
+  "O ápice da computação. Otimiza de maneira abrangente todas as funções do sistema.": "The pinnacle of computing. Comprehensively optimizes all system functions.",
+  "O combate se arrastou por tempo demais e os combatentes fugiram.": "The combat dragged on for too long and the fighters fled.",
+  "O display exibe [FUNDO INSUFICIENTE]. O drone aciona os propulsores e desaparece no teto escuro.": "The display reads [INSUFFICIENT FUNDS]. The drone fires its thrusters and disappears into the dark ceiling.",
+  "O estoque é gerado de forma aleatória. Os preços flutuam com base na oferta e demanda dos andares inferiores.": "Stock is randomly generated. Prices fluctuate based on supply and demand of the lower floors.",
+  "O fluido parece oxidado. Você prefere não arriscar e prossegue.": "The fluid seems oxidized. You prefer not to risk it and proceed.",
+  "O início de tudo. Desperta as capacidades latentes do traje.": "The beginning of everything. Awakens the latent capabilities of the suit.",
+  "O jogador ganha +20% Dano, mas perde 5% HP por turno.": "The player gains +20% Damage, but loses 5% HP per turn.",
+  "O Núcleo Matriz": "The Matrix Core",
+  "O Núcleo Matriz foi silenciado. As luzes da Torre começam a pulsar em uma frequência estável. A corrupção industrial que assolava os andares superiores dissipou-se.": "The Matrix Core was silenced. The Spire lights begin to pulse at a stable frequency. The industrial corruption that plagued the upper floors has dissipated.",
+  "O sinal da superfície já está fraco.": "The surface signal is already weak.",
+  "Ondas de calor causam Dano no fim de cada turno e Sobreaquecimento dura mais.": "Heat waves deal Damage at the end of each turn and Overheat lasts longer.",
+  "Operador de Campo Especialista": "Expert Field Operator",
+  "Os grandes servidores também caem.": "Great servers also fall.",
+  "Otimizador de Loot (Droptable.dll)": "Loot Optimizer (Droptable.dll)",
+  "ou pressione continuar": "or press continue",
+  "Ouro insuficiente": "Insufficient gold",
+  "Ouro insuficiente para recarregar o mercado.": "Insufficient gold to restock market.",
+  "Overclock de Combate": "Combat Overclock",
+  "Overclock Sináptico": "Synaptic Overclock",
+  "Overdrive Suicida": "Suicidal Overdrive",
+  "Painel de contratos cheio. Cumpra ou abandone contratos atuais.": "Contract board full. Fulfill or abandon current contracts.",
+  "para liberar a rotina de Farm.": "to unlock the Farm routine.",
+  "Parasita Ácido": "Acid Parasite",
+  "Placa de Carbono": "Carbon Plate",
+  "Pico da Evolução Sintética": "Peak of Synthetic Evolution",
+  "Prosseguir Integração": "Proceed Integration",
+  "Protocolo ativo.": "Protocol active.",
+  "Protocolo de Anomalia Desativado": "Anomaly Protocol Deactivated",
+  "Protocolo Inicial (First Blood)": "Initial Protocol (First Blood)",
+  "Protocolo Overdrive": "Overdrive Protocol",
+  "Pular Texto": "Skip Text",
+  "Pulso Eletromagnético": "Electromagnetic Pulse",
+  "Recalcula as probabilidades quânticas, aumentando a chance de encontrar equipamentos raros nos destroços inimigos.": "Recalculates quantum probabilities, increasing the chance of finding rare equipment in enemy wreckage.",
+  "Recombina matéria viva. Causa 150% de dano e cura 15% do HP Máximo.": "Recombines living matter. Deals 150% damage and heals 15% of Max HP.",
+  "Recombinação Celular I": "Cellular Recombination I",
+  "Recombinação Celular II": "Cellular Recombination II",
+  "Recursos insuficientes para aprimoramento.": "Insufficient resources for upgrade.",
+  "Refatoração de Sinergia de Habilidades": "Skill Synergy Refactoring",
+  "Registro Histórico": "Historical Record",
+  "REGISTRO RECONSTITUÍDO": "RECONSTITUTED RECORD",
+  "Registros da Jornada": "Journey Records",
+  "Reivindicar Tudo": "Claim All",
+  "Relíquia de Sistema": "System Relic",
+  "Relíquia desconhecida.": "Unknown relic.",
+  "Relíquia já no nível máximo!": "Relic already at maximum level!",
+  "Relíquia no nível máximo.": "Relic at maximum level.",
+  "Resistência Temporal (A definir)": "Temporal Resistance (TBD)",
+  "Resistência térmica máxima. Não é possível aplicar ou sofrer Overheat.": "Maximum thermal resistance. Cannot apply or suffer Overheat.",
+  "Retornando em": "Returning in",
+  "Retornar para Seleção de Origem": "Return to Origin Selection",
+  "Rompe os limites físicos. Causa 350% de dano esmagador.": "Breaks physical limits. Deals 350% crushing damage.",
+  "Saquear Rápido (-10% XP Atual, +Materiais Épicos)": "Quick Loot (-10% Current XP, +Epic Materials)",
+  "Selecione a Origem": "Select Origin",
+  "Sementes de Consciência": "Seeds of Consciousness",
+  "Sementes Decriptadas": "Decrypted Seeds",
+  "Servidor Corrompido": "Corrupted Server",
+  "Servo-motores Calibrados I": "Calibrated Servomotors I",
+  "Servo-motores Calibrados II": "Calibrated Servomotors II",
+  "Sincronia Neural": "Neural Synchrony",
+  "Sincronizar (Restaurar Sistemas)": "Synchronize (Restore Systems)",
+  "Síntese de Bateria": "Battery Synthesis",
+  "Síntese Orgânica": "Organic Synthesis",
+  "Sistema de Arrefecimento de Nitrogênio": "Nitrogen Cooling System",
+  "Soberano da Ninhada": "Brood Sovereign",
+  "Soldado Reptiliano": "Reptilian Soldier",
+  "STATUS: CONSOLIDAÇÃO ATIVA": "STATUS: CONSOLIDATION ACTIVE",
+  "STATUS: ESTÁVEL (SYS_LV_UP)": "STATUS: STABLE (SYS_LV_UP)",
+  "Subir ao próximo andar": "Go up to the next floor",
+  "SYS.LINK // SEMENTE DE CONSCIÊNCIA DECRIPTADA": "SYS.LINK // DECRYPTED CONSCIOUSNESS SEED",
+  "Tempestade Magnética": "Magnetic Storm",
+  "Tentar Invadir (Bypass de Segurança)": "Try to Hack (Security Bypass)",
+  "Tier I — Nível 10": "Tier I — Level 10",
+  "Tier II — Nível 40": "Tier II — Level 40",
+  "Tier III — Nível 70": "Tier III — Level 70",
+  "Tier IV — Nível 100": "Tier IV — Level 100",
+  "Tiro de elite que causa 400% de dano de longe.": "Elite shot that deals 400% damage from afar.",
+  "Título Cosmético": "Cosmetic Title",
+  "Todas as 4 linhas temporais originais foram totalmente restauradas e estabilizadas.": "All 4 original timelines were fully restored and stabilized.",
+  "Todas as habilidades custam 0 EP, mas os ataques básicos dão 50% de dano.": "All skills cost 0 EP, but basic attacks deal 50% damage.",
+  "v1.0.0 - Genesis": "v1.0.0 - Genesis",
+  "v1.1.0 - Expansão do Núcleo": "v1.1.0 - Core Expansion",
+  "v1.2.0 - Despertar da Máquina": "v1.2.0 - Machine Awakening",
+  "v1.3.0 - Forja Transcendente & Conexão Estelar": "v1.3.0 - Transcendent Forge & Stellar Connection",
+  "Vazamento de Radiação": "Radiation Leak",
+  "VELOCIDADE DE DESCRIPTOGRAFIA: 15.4 KB/S": "DECRYPTION SPEED: 15.4 KB/S",
+  "Visualizador Neural": "Neural Viewer",
+  "Você mal reconhece a arquitetura aqui embaixo.": "You barely recognize the architecture down here.",
+  "Você recusa o handshake de conexão. O drone retrai seus cabos e some.": "You refuse the connection handshake. The drone retracts its cables and disappears.",
+  "Você sucumbiu. Uma penalidade de 20% do XP atual e Ouro foi aplicada.": "You succumbed. A penalty of 20% of current XP and Gold has been applied.",
+  "XP / Ouro (A define em sessão de recompensas dedicada)": "XP / Gold (To be defined in dedicated rewards session)",
+  "XP / Ouro (A definir em sessão de recompensas dedicada)": "XP / Gold (To be defined in dedicated rewards session)",
+
+  // Origins Selector Info
+  "Foco em Sobrevivência e Resistência a Dano. Ideal para táticas defensivas.": "Focus on Survival and Damage Resistance. Ideal for defensive tactics.",
+  "Ex-soldado cibernético modificado pela Kinetix no obscuro Projeto Aegis. Seus implantes de blindagem pesada foram declarados \"propriedade revogada\" após desertar ao se recusar a executar purgas civis no Setor de Refinarias. Fugiu para a fenda da Torre para desativar seu protocolo de autodestruição remoto e garantir liberdade definitiva.": "Former cybernetic soldier modified by Kinetix in the obscure Aegis Project. His heavy armor implants were declared \"revoked property\" after deserting upon refusing to execute civilian purges in the Refinery Sector. Fled to the Spire's rift to deactivate his remote self-destruct protocol and secure ultimate freedom.",
+  "Blindagem Subdérmica": "Subdermal Armor",
+  "Passivo: Reduz todo o dano recebido em 5% e regenera 3% do HP máximo no início de cada turno de combate.": "Passive: Reduces all damage taken by 5% and regenerates 3% of max HP at the start of each combat turn.",
+
+  "Nômade do Silício": "Silicon Nomad",
+  "Sintonizador de Frequência": "Frequency Tuner",
+  "Foco em Energia (EP) e velocidade de conjuração de habilidades.": "Focus on Energy (EP) and skill casting speed.",
+  "Nascido no labirinto de cabos e supercondutores que descem do topo do Pináculo. Conectou sua mente diretamente às correntes de dados brutos desde a infância. Enxerga a Torre não como paredes, mas como fluxos de pacotes energéticos de alta frequência, sendo capaz de interceptar e canalizar eletricidade residual.": "Born in the maze of cables and superconductors descending from the top of the Spire. Connected their mind directly to raw data streams since childhood. Sees the Spire not as walls, but as flows of high-frequency energy packets, capable of intercepting and channeling residual electricity.",
+  "Sincronia de Rede": "Network Synchrony",
+  "Passivo: Reduz o custo de MP de todas as habilidades em 25% (mínimo de 1 MP) e recupera 2 de MP adicionais a cada turno de combate.": "Passive: Reduces the MP cost of all skills by 25% (minimum of 1 MP) and recovers 2 additional MP each combat turn.",
+
+  "Químico Sintético": "Synthetic Chemist",
+  "Sintetizador Biotecnológico": "Biotechnological Synthesizer",
+  "Classe equilibrada. Concede uma habilidade ativa de auto-reparo e cura.": "Balanced class. Grants an active self-repair and healing skill.",
+  "Pesquisador de ponta renegado da OmniCorp, especializado em nanotecnologia biossintética. Após descobrir que suas vacinas estavam sendo testadas como patógenos nos andares inferiores, ele injetou em si mesmo sua última ampola de regeneradores celulares ativos e destruiu o laboratório. A Torre é sua única chance de continuar os experimentos.": "Top researcher renegade from OmniCorp, specialized in biosynthetic nanotechnology. After discovering that his vaccines were being tested as pathogens on the lower floors, he injected himself with his last vial of active cellular regenerators and destroyed the lab. The Spire is his only chance to continue the experiments.",
+  "Soro de Nanites": "Nanite Serum",
+
+  "Mercenário de Elite": "Elite Mercenary",
+  "Sabotador Tático": "Tactical Saboteur",
+  "Alto potencial ofensivo e velocidade. Concede uma habilidade ativa de tiro preciso.": "High offensive potential and speed. Grants an active precision shot skill.",
+  "Infiltrador freelancer de alta reputação, contratado sob sigilo para roubar blueprints e sabotar núcleos térmicos. Equipado com uma mira ótica ocular calibrada para identificar falhas estruturais microscópicas e pontos de solda fracos em blindagens e ligas metálicas. Vê a Torre como o maior contrato de sua carreira.": "High-reputation freelance infiltrator, hired secretly to steal blueprints and sabotage thermal cores. Equipped with a calibrated optical eye sight to identify microscopic structural flaws and weak welding spots in armor and metal alloys. Sees the Spire as the biggest contract of his career.",
+  "Mira Ótica Ocular": "Optical Eye Sight",
+
+  "Soberano do Pináculo": "Sovereign of the Spire",
+  "A inteligência artificial que comanda a rede e as comportas de dados do topo do Pináculo. Uma entidade divina e corrompida.": "The artificial intelligence that commands the network and data floodgates of the top of the Spire. A divine and corrupted entity.",
+
+  // New static translations found in missing_translations.txt
+  "A aba \"Expedição\" é onde a ação principal acontece. Escolha seu andar atual para iniciar uma incursão. Cada andar reserva batalhas contra sentinelas mecânicas, anomalias sistêmicas ou eventos misteriosos onde suas escolhas determinam seu destino.": "The \"Expedition\" tab is where the main action takes place. Choose your current floor to start a run. Each floor holds battles against mechanical sentinels, systemic anomalies, or mysterious events where your choices determine your fate.",
+  "A aba \"Geral\" exibe suas armas, armaduras e chips de hardware. Você possui slots de equipamento para Arma, Armadura, Capacete, Calça, Botas, Braçadeiras e até 3 Acessórios. Equipar itens melhores é a chave para sobreviver nos andares superiores!": "The \"General\" tab displays your weapons, armor, and hardware chips. You have equipment slots for Weapon, Armor, Helmet, Pants, Boots, Bracers, and up to 3 Accessories. Equipping better items is key to surviving the upper floors!",
+  "Além do combate automatizado, você pode acionar o \"Auto-Farm\". Isso programará o terminal para repetir o andar selecionado indefinidamente. O robô lutará, coletará recompensas e iniciará novas incursões automaticamente até que seu HP se esgote, permitindo progresso passivo massivo!": "In addition to automated combat, you can activate \"Auto-Farm\". This will program the terminal to repeat the selected floor indefinitely. The robot will fight, collect rewards, and start new runs automatically until your HP is depleted, allowing for massive passive progress!",
+  "Ativo: Concede a habilidade \"Soro Regenerador\", que cura 15% do HP Máximo, limpa os efeitos nocivos de Superaquecimento e Corrosão, e recupera 10% de MP. Tempo de recarga de 4 turnos.": "Active: Grants the \"Regenerating Serum\" skill, which heals 15% of Max HP, clears the harmful effects of Overheat and Corrosion, and restores 10% of MP. 4-turn cooldown.",
+  "Ativo: Concede a habilidade \"Tiro de Precisão\", que causa 1.8x o dano físico e tem 30% de chance de aplicar ATORDOAMENTO (stun) por 1 turno. Tempo de recarga de 3 turnos.": "Active: Grants the \"Precision Shot\" skill, which deals 1.8x physical damage and has a 30% chance to apply STUN for 1 turn. 3-turn cooldown.",
+  "Fusão de Blindagem Reativa e Nanocélulas. O chassi se torna impenetrável. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +5 DEF e +50 HP por nível. Desbloqueia \"Fortaleza Biomecânica\".": "Fusion of Reactive Plating and Nanocells. The chassis becomes impenetrable. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +5 DEF and +50 HP per level. Unlocks \"Biomechanical Fortress\".",
+  "Fusão de Overclock e Dissipação de Calor. Agressividade energética insana. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +8 ATK e +20 EP por nível. Desbloqueia \"Exaustão Térmica\".": "Fusion of Overclock and Heat Dissipation. Insane energy aggressiveness. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +8 ATK and +20 EP per level. Unlocks \"Thermal Exhaustion\".",
+  "Fusão de Overclock e Sincronia Neural. Velocidade e letalidade máximas. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +5 ATK e +3 SPD por nível. Desbloqueia \"Golpe Fantasma\".": "Fusion of Overclock and Neural Synchrony. Maximum speed and lethality. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +5 ATK and +3 SPD per level. Unlocks \"Phantom Strike\".",
+  "Hardware especializado para a classe arquiteto_sistemas.": "Specialized hardware for the System Architect class.",
+  "Hardware especializado para a classe atirador_optico.": "Specialized hardware for the Optical Sniper class.",
+  "Hardware especializado para a classe biotecnologo.": "Specialized hardware for the Biotechnologist class.",
+  "Hardware especializado para a classe ciborgue_combate.": "Specialized hardware for the Combat Cyborg class.",
+  "Hardware especializado para a classe cirurgiao_mecanico.": "Specialized hardware for the Mechanical Surgeon class.",
+  "Hardware especializado para a classe eletromante.": "Specialized hardware for the Electromancer class.",
+  "Hardware especializado para a classe fantasma_silicio.": "Specialized hardware for the Silicon Phantom class.",
+  "Hardware especializado para a classe juggernaut_industrial.": "Specialized hardware for the Industrial Juggernaut class.",
+  "Hardware especializado para a classe mecatronico.": "Specialized hardware for the Mechatronic class.",
+  "Hardware especializado para a classe operador_drones.": "Specialized hardware for the Drone Operator class.",
+  "Hardware especializado para a classe simbionte_sintetico.": "Specialized hardware for the Synthetic Symbiote class.",
+  "Hardware especializado para a classe tecno_aprendiz.": "Specialized hardware for the Techno-Apprentice class.",
+  "Hardware especializado para a classe tecnomante.": "Specialized hardware for the Technomancer class.",
+  "Melhora a dissipação térmica, acelerando as ações. (+3 SPD)": "Improves heat dissipation, accelerating actions. (+3 SPD)",
+  "Microchip de Overclock": "Overclock Microchip",
+  "Módulos de Circuitos Adicionados (Chipsets)": "Circuit Modules Added (Chipsets)",
+  "No \"Perfil\", você pode monitorar sua integridade (HP), fluxo de energia (EP/MP) e atributos de processamento (Ataque, Defesa, Velocidade). Aqui você também escolhe novos caminhos de evolução quando sobe de classe!": "In \"Profile\", you can monitor your integrity (HP), energy flow (EP/MP), and processing attributes (Attack, Defense, Speed). Here you also choose new paths of evolution when you promote your class!",
+  "Processador Quântico OMNI": "OMNI Quantum Processor",
+  "Reflexos em combate constante aceleram as sinapses. Melhora ao desferir ataques básicos (10 EXP por ataque) ou sobreviver a turnos (15 EXP por turno) em combate. Concede +1 SPD por nível.": "Reflexes in constant combat accelerate synapses. Upgrades by dealing basic attacks (10 EXP per attack) or surviving turns (15 EXP per turn) in combat. Grants +1 SPD per level.",
+  "Remasterização da Tela de Introdução: Visual retrô CRT verde de terminal com torre pixelada animada": "Intro Screen Remaster: Retro terminal green CRT look with animated pixel Spire",
+  "Repetição de ataques afia os servos do traje. Melhora ao realizar ataques básicos em combate (20 EXP por ataque). Concede +2 ATK por nível.": "Repeated attacks sharpen suit servos. Upgrades by performing basic attacks in combat (20 EXP per attack). Grants +2 ATK per level.",
+  "Resistência ao impacto calibra o chassi. Melhora ao receber dano em combate (1 EXP por HP perdido). Concede +1 DEF por nível.": "Impact resistance calibrates the chassis. Upgrades by taking damage in combat (1 EXP per HP lost). Grants +1 DEF per level.",
+  "Seus sensores alertam risco letal de radiação. Você dá a volta com segurança.": "Your sensors warn of lethal radiation risk. You safely bypass it.",
+  "Sincronização inteligente do botão \"Iniciar Conexão\" ao atingir o centro de rolagem do texto": "Smart synchronization of the \"Start Connection\" button when reaching the text scroll center",
+  "Sobrevivência estendida multiplica as nanocélulas. Melhora ao sobreviver a turnos em combate (25 EXP por turno). Concede +15 HP por nível.": "Extended survival multiplies nanocells. Upgrades by surviving turns in combat (25 EXP per turn). Grants +15 HP per level.",
+  "Transação confirmada no Block-chain local. O drone cospe 5 Fragmentos e 2 Essências antes de subir.": "Transaction confirmed in the local blockchain. The drone spits out 5 Fragments and 2 Essences before rising.",
+  "Transistor de Alta Tensão": "High Voltage Transistor",
+  "Um bastidor de servidores emite faíscas. A trava de segurança de uma caixa de armazenamento está ativa, exigindo calibração manual.": "A server rack emits sparks. A storage box security lock is active, requiring manual calibration.",
+  "Um chip de silício negro focado em redes neurais. Aumenta a velocidade de extração de dados e a experiência adquirida em combate.": "A black silicon chip focused on neural networks. Increases data extraction speed and experience gained in combat.",
+  "Um container com selo da Kinetix semi-aberto após um desmoronamento. Há traços de radiação ao redor.": "A container with Kinetix seal half-opened after a landslide. There are traces of radiation around.",
+  "Um log de execução cheio de acertos.": "An execution log full of successes.",
+  "Um módulo experimental que converte fluidos vitais em carga para os exoesqueletos, estendendo a integridade estrutural (HP Máximo).": "An experimental module that converts vital fluids into charge for exoskeletons, extending structural integrity (Max HP).",
+  "Um núcleo de energia superaquecido capaz de sobrecarregar as armas do usuário para infligir danos maiores.": "An overheated power core capable of overloading the user's weapons to inflict higher damage.",
+  "Um robô de carga modificado desce do teto através de cabos magnéticos. Seu display frontal projeta ofertas não-registradas no sistema principal.": "A modified cargo robot descends from the ceiling via magnetic cables. Its front display projects unregistered deals on the main system.",
+  "Um terminal de manutenção de androides abandonado, mas ainda conectado à rede elétrica. A cápsula de suspensão emite um brilho de estase.": "An abandoned android maintenance terminal, but still connected to the power grid. The suspension pod emits a stasis glow.",
+  "Um tiro focado de alta energia que causa 180% de dano mecânico com 30% de chance de aplicar ATORDOAMENTO por 1 turno.": "A focused high-energy shot dealing 180% mechanical damage with a 30% chance of applying STUN for 1 turn.",
+  "Uma fonte adicional de energia que amplia a capacidade de Mana/Energia (EP).": "An additional power source that expands Mana/Energy capacity (EP).",
+  "Uma máquina matando outras máquinas.": "One machine killing other machines.",
+  "Uma tecnologia quase esquecida que cria micro-barreiras ao redor da blindagem para absorver impactos extremos.": "An almost forgotten technology that creates micro-barriers around armor to absorb extreme impacts.",
+  "Uso de habilidades expande as baterias internas. Melhora ao conjurar habilidades (10 EXP por uso) e ao consumir pontos de Energia/EP (1 EXP por EP gasto). Concede +5 Max EP por nível.": "Using skills expands internal batteries. Upgrades by casting skills (10 EXP per use) and consuming Energy/EP points (1 EXP per EP spent). Grants +5 Max EP per level.",
+  "Você ascendeu ao topo, superando aberrações biológicas e construtos de silício implacáveis. A rede principal agora obedece aos seus comandos de sobrescrita.": "You ascended to the top, overcoming biological aberrations and relentless silicon constructs. The main network now obeys your overwrite commands."
 };
 
 // Substring/RegEx translation helper for dynamic texts
@@ -852,14 +1252,145 @@ function translateText(text: string): string {
     return DICTIONARY[text];
   }
 
+  // Handle level suffix first so we strip it and translate the base
+  if (text.includes(" +")) {
+    const levelMatch = text.match(/(.+) \+(\d+)/);
+    if (levelMatch) {
+      return `${translateText(levelMatch[1])} +${levelMatch[2]}`;
+    }
+  }
+
   let result = text;
+
+  // Procedural items translation
+  let manufacturer = "";
+  let rest = result;
+  if (result.startsWith("Kinetix ")) {
+    manufacturer = "Kinetix ";
+    rest = result.substring(8);
+  } else if (result.startsWith("AeroDynamics ")) {
+    manufacturer = "AeroDynamics ";
+    rest = result.substring(13);
+  } else if (result.startsWith("OmniCorp ")) {
+    manufacturer = "OmniCorp ";
+    rest = result.substring(9);
+  }
+
+  const baseItems: Record<string, string> = {
+    "Lâmina": "Blade",
+    "Rifle": "Rifle",
+    "Disparador": "Trigger",
+    "Ferramenta": "Tool",
+    "Canhão": "Cannon",
+    "Bastão": "Staff",
+    "Colete": "Vest",
+    "Chassi": "Chassis",
+    "Capacete": "Helmet",
+    "Calça": "Pants",
+    "Bota": "Boots",
+    "Botas": "Boots",
+    "Braçadeira": "Bracer",
+    "Grevas": "Greaves",
+    "Luva": "Gloves",
+    "Macacão": "Jumpsuit",
+    "Manopla": "Gauntlet",
+    "Máscara": "Mask",
+    "Módulo": "Module",
+    "Interface": "Interface",
+    "Núcleo": "Core",
+    "Perneira": "Leggings",
+    "Pisante": "Boots",
+    "Placa": "Plate",
+    "Propulsor": "Thruster",
+    "Protetor": "Protector",
+    "Solado": "Soles",
+    "Sensor": "Sensor",
+    "Visor": "Visor",
+    "Coroa": "Crown",
+    "Estabilizador": "Stabilizer",
+    "Exo-Braço": "Exo-Arm",
+    "Chip": "Chip",
+    "Bateria": "Battery",
+    "Blindagem": "Armor",
+    "Capacitor": "Capacitor",
+    "Chave": "Wrench"
+  };
+
+  const types: Record<string, string> = {
+    "Universal": "Universal",
+    "Voltaico": "Voltaic",
+    "Matricial": "Matrix",
+    "Mutante": "Mutant",
+    "Iniciante": "Beginner",
+    "Engrenado": "Geared",
+    "Remoto": "Remote",
+    "Orgânico": "Organic",
+    "Massivo": "Massive",
+    "Necro-Sintético": "Necro-Synthetic",
+    "Telescópico": "Telescopic",
+    "Furtivo": "Stealth",
+    "Cirúrgico": "Surgical",
+    "Letal": "Lethal"
+  };
+
+  const conditions: Record<string, string> = {
+    "Enferrujado": "Rusted",
+    "Padrão": "Standard",
+    "Usado": "Used",
+    "Sucateado": "Scrapped",
+    "Genérico": "Generic",
+    "Reforçado": "Reinforced",
+    "Militar": "Military",
+    "Avançado": "Advanced",
+    "Otimizado": "Optimized",
+    "Customizado": "Customized",
+    "Experimental": "Experimental",
+    "Sintético": "Synthetic",
+    "Quântico": "Quantum",
+    "Protótipo": "Prototype"
+  };
+
+  const words = rest.split(" ");
+  
+  if (words.length === 4 && words[0] === "Chassi" && words[1] === "Inferior") {
+    const typeWord = words[2];
+    const condWord = words[3];
+    if (types[typeWord] && conditions[condWord]) {
+      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} Lower Chassis`;
+    }
+  } else if (words.length === 5 && words[0] === "Protetor" && words[1] === "de" && words[2] === "Pulso") {
+    const typeWord = words[3];
+    const condWord = words[4];
+    if (types[typeWord] && conditions[condWord]) {
+      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} Wrist Protector`;
+    }
+  } else if (words.length === 3 && words[0] === "Chave" && words[1] === "Letal") {
+    const condWord = words[2];
+    if (conditions[condWord]) {
+      result = `${manufacturer}${conditions[condWord]} Lethal Wrench`;
+    }
+  } else if (words.length === 5 && words[2] === "Obsoleto" && words[3] === "e" && words[4] === "Letal") {
+    const baseWord = words[0];
+    const typeWord = words[1];
+    if (baseItems[baseWord] && types[typeWord]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[typeWord]} ${baseItems[baseWord]}`;
+    }
+  } else if (words.length === 6 && words[0] === "Chassi" && words[1] === "Inferior" && words[3] === "Obsoleto" && words[4] === "e" && words[5] === "Letal") {
+    const typeWord = words[2];
+    if (types[typeWord]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[typeWord]} Lower Chassis`;
+    }
+  } else if (words.length === 3) {
+    const baseWord = words[0];
+    const typeWord = words[1];
+    const condWord = words[2];
+    if (baseItems[baseWord] && types[typeWord] && conditions[condWord]) {
+      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} ${baseItems[baseWord]}`;
+    }
+  }
 
   // Replacements for item names/modifiers
   result = result
-    // Handle item levels and upgrades
-    .replace(/(.+) \+(\d+)/, (match, base, num) => {
-      return `${translateText(base)} +${num}`;
-    })
     // Common item names
     .replace("Espada de Plasma", "Plasma Sword")
     .replace("Injetor de Sobrecarga", "Overload Injector")

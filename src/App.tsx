@@ -19,7 +19,7 @@ import { NEURAL_MATRIX_DATABASE } from './core/entities/neuralMatrix';
 import { NeuralMatrix } from './components/NeuralMatrix';
 import { canClassEquipItem } from './core/entities/items';
 import { saveGame, loadGame } from './core/engine/saveGame';
-import { dismantleItem, craftItem, convertMaterials, CRAFTING_COSTS, MATERIAL_NAMES, sellItem, dismantleItemsBatch, sellItemsBatch } from './core/engine/crafting';
+import { dismantleItem, craftItem, convertMaterials, CRAFTING_COSTS, MATERIAL_NAMES, sellItem, dismantleItemsBatch, sellItemsBatch, GOLD_VALUES } from './core/engine/crafting';
 import { RELICS_DATABASE, upgradeRelic, getRelicUpgradeCost } from './core/entities/relics';
 import { getAutoBattleAction } from './core/engine/autobattle';
 import { processAdaptationTrackers, ADAPTATIONS_DATABASE } from './core/entities/adaptations';
@@ -47,39 +47,8 @@ import { MemoryFragmentScreen } from './components/MemoryFragmentScreen';
 import { MemoryArchivePanel } from './components/MemoryArchivePanel';
 import { useTranslation, translate, setLanguage, getLanguage, Language } from './core/engine/translation';
 
-// Helper to get Sector info
-function getSectorForFloor(floor: number) {
-  const idx = Math.floor((floor - 1) / 10) % 3;
-  const cycle = Math.floor((floor - 1) / 30) + 1;
-  const numerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
-  const suffix = cycle > 1 ? ` ${numerals[cycle] || cycle}` : '';
-  
-  // Sutil color scaling: we can multiply RGB values to make them slightly brighter/more intense or shift them.
-  // Actually, keeping the RGB simple but altering the base is better.
-  const scale = (val: number) => Math.min(255, Math.floor(val + (cycle - 1) * 15));
-  
-  if (idx === 0) return { 
-    name: `${translate("Refinaria Tóxica")}${suffix}`, 
-    color: 'text-green-400', 
-    bg: 'bg-green-500/10', 
-    border: 'border-green-500/30', 
-    rgb: `${scale(34)}, ${scale(197)}, ${scale(94)}` 
-  };
-  if (idx === 1) return { 
-    name: `${translate("Data-Core Congelado")}${suffix}`, 
-    color: 'text-blue-400', 
-    bg: 'bg-blue-500/10', 
-    border: 'border-blue-500/30', 
-    rgb: `${scale(59)}, ${scale(130)}, ${scale(246)}` 
-  };
-  return { 
-    name: `${translate("Fornalha de Plasma")}${suffix}`, 
-    color: 'text-orange-400', 
-    bg: 'bg-orange-500/10', 
-    border: 'border-orange-500/30', 
-    rgb: `${scale(249)}, ${scale(115)}, ${scale(22)}` 
-  };
-}
+import { getSectorForFloor } from './core/math/worldScaling';
+import { STORAGE_KEYS, getStorageString, setStorageString } from './core/engine/storage';
 
 function getPendingTutorials(player: Player): string[] {
   const completed = player.completedTutorials || [];
@@ -272,13 +241,13 @@ export default function App() {
   const [selectedEquipmentForSocketing, setSelectedEquipmentForSocketing] = useState<{item: import('./types').Item, source: string, index: number} | null>(null);
   
   const [combatSpeed, setCombatSpeed] = useState<'normal' | 'fast'>(() => {
-    return (localStorage.getItem('combat_speed') as 'normal' | 'fast') || 'normal';
+    return (getStorageString(STORAGE_KEYS.COMBAT_SPEED, 'normal') as 'normal' | 'fast') || 'normal';
   });
 
   const toggleCombatSpeed = () => {
     setCombatSpeed(prev => {
       const next = prev === 'normal' ? 'fast' : 'normal';
-      localStorage.setItem('combat_speed', next);
+      setStorageString(STORAGE_KEYS.COMBAT_SPEED, next);
       return next;
     });
   };
@@ -949,7 +918,7 @@ export default function App() {
     
     return (
       <div className={`mt-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded inline-block ${isCompatible ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-800/50' : 'bg-red-900/30 text-red-400 border border-red-800/50'}`}>
-        [COMPATIBILIDADE: ${classNames}]
+        [COMPATIBILIDADE: {classNames}]
       </div>
     );
   };
@@ -1559,8 +1528,7 @@ export default function App() {
                           return true;
                         });
 
-                        const goldValues: Record<string, number> = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
-                        const totalBatchGold = filteredInventory.reduce((acc, item) => acc + (item.value || goldValues[item.rarity] || 5), 0);
+                        const totalBatchGold = filteredInventory.reduce((acc, item) => acc + (item.value || GOLD_VALUES[item.rarity] || 5), 0);
 
                         return (
                           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
@@ -1637,12 +1605,10 @@ export default function App() {
                           );
                         }
 
-                        const goldValues: Record<string, number> = { common: 5, rare: 20, epic: 100, legendary: 500, mythic: 2000 };
-
                         return (
                           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {filteredInventory.map(({ item, originalIndex }) => {
-                              const goldEarned = item.value || goldValues[item.rarity] || 5;
+                              const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
                               return (
                                 <li key={originalIndex} className={`flex justify-between items-center text-sm p-2 rounded border ${getRarityStyle(item.rarity)} hover:brightness-110 transition-all group relative overflow-hidden bg-slate-950/40`}>
                                   <div className="flex items-center gap-3 overflow-hidden mr-2 relative z-10">
@@ -2409,7 +2375,7 @@ export default function App() {
                         <div className="flex gap-1 justify-center flex-wrap mb-1 w-[120%] -ml-[10%]">
                           {combatState.playerStatuses?.map((s, i) => (
                             <span key={i} className={`text-[8px] px-1 rounded font-bold ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`}>
-                              ${s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}${s.duration}t]
+                              {s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}{s.duration}t]
                             </span>
                           ))}
                         </div>
@@ -2440,7 +2406,7 @@ export default function App() {
                         <div className="flex gap-1 justify-center flex-wrap mb-1 w-[120%] -ml-[10%]">
                           {combatState.monsterStatuses?.map((s, i) => (
                             <span key={i} className={`text-[8px] px-1 rounded font-bold ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`}>
-                              ${s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}${s.duration}t]
+                              {s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}{s.duration}t]
                             </span>
                           ))}
                         </div>

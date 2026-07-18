@@ -1,4 +1,5 @@
 import { random } from '../engine/rng';
+import { translate } from '../engine/translation';
 /**
  * math/worldScaling.ts
  * Contém a matemática de escalonamento do mundo (monstros, ouro, xp, loot) baseada no andar da torre.
@@ -140,4 +141,54 @@ export function rollLootRarity(floor: number, isBoss: boolean = false): Rarity {
   if (roll <= probs.mythic + probs.legendary + probs.epic) return 'epic';
   if (roll <= probs.mythic + probs.legendary + probs.epic + probs.rare) return 'rare';
   return 'common';
+}
+
+/**
+ * Retorna as informações completas do setor para um determinado andar.
+ */
+export function getSectorForFloor(floor: number) {
+  const idx = Math.floor((floor - 1) / 10) % 3;
+  const cycle = Math.floor((floor - 1) / 30) + 1;
+  const numerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+  const suffix = cycle > 1 ? ` ${numerals[cycle] || cycle}` : '';
+  
+  const scale = (val: number) => Math.min(255, Math.floor(val + (cycle - 1) * 15));
+  
+  if (idx === 0) {
+    return {
+      id: 'sector_1',
+      name: `${translate("Refinaria Tóxica")}${suffix}`,
+      hazard: 'toxic_refinery' as const,
+      description: translate('Corrosão é duas vezes mais eficiente e dá dano por turno.'),
+      colorTheme: 'green',
+      color: 'text-green-400',
+      bg: 'bg-green-500/10',
+      border: 'border-green-500/30',
+      rgb: `${scale(34)}, ${scale(197)}, ${scale(94)}`
+    };
+  }
+  if (idx === 1) {
+    return {
+      id: 'sector_2',
+      name: `${translate("Data-Core Congelado")}${suffix}`,
+      hazard: 'frozen_datacore' as const,
+      description: translate('Habilidades custam 20% mais EP devido ao frio glacial.'),
+      colorTheme: 'blue',
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/30',
+      rgb: `${scale(59)}, ${scale(130)}, ${scale(246)}`
+    };
+  }
+  return {
+    id: 'sector_3',
+    name: `${translate("Fornalha de Plasma")}${suffix}`,
+    hazard: 'plasma_furnace' as const,
+    description: translate('Ondas de calor causam Dano no fim de cada turno e Sobreaquecimento dura mais.'),
+    colorTheme: 'orange',
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/30',
+    rgb: `${scale(249)}, ${scale(115)}, ${scale(22)}`
+  };
 }

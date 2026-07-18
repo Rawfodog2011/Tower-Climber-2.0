@@ -1,7 +1,7 @@
 import { random } from './rng';
 import { Player, Monster, Item, Skill } from '../../types';
 import { calculatePlayerStats, applyDeathPenalty, addXpAndLevelUp } from '../entities/player';
-import { getDropChanceForFloor, rollLootRarity } from '../math/worldScaling';
+import { getDropChanceForFloor, rollLootRarity, getSectorForFloor } from '../math/worldScaling';
 import { getRandomItemForFloor, getRandomCircuitModule } from '../entities/items';
 import { updateHuntContracts, updateCatalogContracts } from './contracts';
 import { NEURAL_MATRIX_DATABASE } from '../entities/neuralMatrix';
@@ -67,17 +67,8 @@ export type CombatAction = { type: 'attack' } | { type: 'skill', skillId: string
 export function startCombat(player: Player, monster: Monster, currentFloor: number = 1): CombatState {
   const pStats = calculatePlayerStats(player);
   
-  // Calcula Setor baseado no andar (ex: 1-10 Setor 1, 11-20 Setor 2, etc.)
-  const sectorIndex = Math.floor((currentFloor - 1) / 10) % 3;
-  let currentSector: import('../../types').SectorDefinition;
-  
-  if (sectorIndex === 0) {
-    currentSector = { id: 'sector_1', name: 'Refinaria Tóxica', hazard: 'toxic_refinery', description: 'Corrosão é duas vezes mais eficiente e dá dano por turno.', colorTheme: 'green' };
-  } else if (sectorIndex === 1) {
-    currentSector = { id: 'sector_2', name: 'Data-Core Congelado', hazard: 'frozen_datacore', description: 'Habilidades custam 20% mais EP devido ao frio glacial.', colorTheme: 'blue' };
-  } else {
-    currentSector = { id: 'sector_3', name: 'Fornalha de Plasma', hazard: 'plasma_furnace', description: 'Ondas de calor causam Dano no fim de cada turno e Sobreaquecimento dura mais.', colorTheme: 'orange' };
-  }
+  // Obtém as informações do Setor unificado e canônico para o andar atual
+  const currentSector: import('../../types').SectorDefinition = getSectorForFloor(currentFloor);
 
   let anomaly: import('../../types').CombatAnomaly | undefined = undefined;
   const logs = [

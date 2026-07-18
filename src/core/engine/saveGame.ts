@@ -1,13 +1,11 @@
 import { Player } from '../../types';
 import { migrateSave, CURRENT_SAVE_VERSION } from './migrations';
-
-const SAVE_KEY = 'tower_rpg_save';
+import { STORAGE_KEYS, getStorageItem, setStorageItem } from './storage';
 
 export function saveGame(player: Player): void {
   try {
     player.saveVersion = CURRENT_SAVE_VERSION;
-    const serializedState = JSON.stringify(player);
-    localStorage.setItem(SAVE_KEY, serializedState);
+    setStorageItem(STORAGE_KEYS.SAVE, player);
   } catch (error) {
     console.error('Erro ao salvar o jogo:', error);
   }
@@ -15,11 +13,11 @@ export function saveGame(player: Player): void {
 
 export function loadGame(): Player | null {
   try {
-    const serializedState = localStorage.getItem(SAVE_KEY);
-    if (serializedState === null) {
+    const state = getStorageItem<any | null>(STORAGE_KEYS.SAVE, null);
+    if (state === null) {
       return null;
     }
-    return migrateSave(JSON.parse(serializedState));
+    return migrateSave(state);
   } catch (error) {
     console.error('Erro ao carregar o jogo:', error);
     return null;
