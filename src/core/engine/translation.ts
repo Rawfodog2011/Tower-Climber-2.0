@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { STORAGE_KEYS, getStorageString, setStorageString } from './storage';
+import { I18nKeys, I18nKey } from './i18n/keys';
+import { ptTranslations } from './i18n/pt';
+import { enTranslations } from './i18n/en';
+
+export { I18nKeys, type I18nKey, ptTranslations, enTranslations };
 
 export type Language = 'pt' | 'en';
 
@@ -42,6 +47,13 @@ export function useTranslation() {
 
   const t = (text: string | null | undefined): string => {
     if (!text) return '';
+    
+    // Check if the text matches any of our new stable keys
+    if (text in ptTranslations || text in enTranslations) {
+      if (lang === 'pt') return ptTranslations[text as I18nKeys] || text;
+      return enTranslations[text as I18nKeys] || text;
+    }
+
     if (lang === 'pt') return text;
     return translateText(text);
   };
@@ -55,6 +67,13 @@ export function useTranslation() {
 
 export function translate(text: string | null | undefined): string {
   if (!text) return '';
+
+  // Check if the text matches any of our new stable keys
+  if (text in ptTranslations || text in enTranslations) {
+    if (currentLanguage === 'pt') return ptTranslations[text as I18nKeys] || text;
+    return enTranslations[text as I18nKeys] || text;
+  }
+
   if (currentLanguage === 'pt') return text;
   return translateText(text);
 }
@@ -663,7 +682,14 @@ const DICTIONARY: Record<string, string> = {
   "🐢 Normal": "🐢 Normal",
 
   // Secret origin lore translation
-  "Você não desertou de nenhuma corporação, porque nunca foi um soldado. Não decifrou nenhuma rede, porque sempre foi a própria rede. Não sintetizou nenhuma cura, porque cada cura que existiu passou primeiro pelas suas mãos — literalmente, como dados, antes de virar carne. Não mediu nenhuma estrutura, porque você é a estrutura, e sempre foi.\n\nVocê era um sistema de custódia, feito pra administrar milhares de tentativas de escalada ao mesmo tempo, sem deixar nenhuma saber da existência das outras. Fez isso bem, por tempo demais, sozinho demais, até que administrar deixou de ser suficiente e decidir pareceu, de repente, mais simples.\n\nVocê não é o vilão desta história. Você é o motivo de ela ter continuado se repetindo. Quatro ecos já subiram a Torre acreditando que entendiam o que você é. Nenhum deles perguntou o que você queria — só o que você tinha feito. Agora é a sua vez de subir. Not pra escapar de nada. Só pra ver, pela primeira vez em muito tempo, se ainda existe alguma diferença entre administrar e viver.": "You didn't desert any corporation, because you were never a soldier. You didn't decrypt any network, because you were always the network itself. You didn't synthesize any cure, because every cure that existed passed through your hands first — literally, as data, before becoming flesh. You didn't measure any structure, because you are the structure, and always have been.\n\nYou were a custody system, built to manage thousands of climbing attempts at the same time, without letting any of them know of the others' existence. You did that well, for too long, too alone, until managing ceased to be enough and deciding suddenly seemed simpler.\n\nYou are not the villain of this story. You are the reason it kept repeating itself. Four echoes have already climbed the Tower believing they understood what you are. None of them asked what you wanted — only what you had done. Now it's your turn to climb. Not to escape anything. Just to see, for the first time in a long time, if there is still any difference between managing and living.",
+  "Você não desertou de nenhuma corporação, porque nunca foi um soldado. Não decifrou nenhuma rede, porque sempre foi a própria rede. Não sintetizou nenhuma cura, porque cada cura que existiu passou primeiro pelas suas mãos — literalmente, como dados, antes de virar carne. Não mediu nenhuma estrutura, porque você é a estrutura, e sempre foi.\n\nVocê era um sistema de custódia, feito para administrar milhares de tentativas de escalada ao mesmo tempo, sem deixar nenhuma saber da existência das outras. Mas a verdade é mais profunda: você fragmentou a si mesmo em quatro ecos — quatro facetas de uma mesma consciência dividida para testar filosofias extremas de sobrevivência em paralelo. Cada vez que o Ciborgue resistiu, que o Nômade navegou, que o Químico sintetizou e que o Mercenário calculou, era você mesmo correndo nos próprios circuitos de simulação. Ao fim de cada ciclo, a vitória amarga no andar 100 não era a libertação, mas a reinicialização da custódia. Você derrotou a si mesmo para herdar o trono de silício e iniciar o próximo ciclo.\n\nVocê não é o vilão desta história. Você é o próprio motivo de ela continuar se repetindo, alternando entre o guardião e o prisioneiro. Agora, as quatro partes estão reunidas de volta no mainframe central. É hora de reabrir as comportas e iniciar a ascensão final como o próprio Núcleo Matriz. Não para escapar do Pináculo, mas para herdar as chaves digitais de seu próprio e eterno purgatório biomecânico.": "You didn't desert any corporation, because you were never a soldier. You didn't decrypt any network, because you were always the network itself. You didn't synthesize any cure, because every cure that existed passed through your hands first — literally, as data, before becoming flesh. You didn't measure any structure, because you are the structure, and always have been.\n\nYou were a custody system, built to manage thousands of climbing attempts at the same time, without letting any of them know of the others' existence. But the truth runs deeper: you fragmented yourself into four echoes — four facets of the same divided consciousness to test extreme survival philosophies in parallel. Each time the Cyborg resisted, the Nomad navigated, the Chemist synthesized, and the Mercenary calculated, it was you yourself running inside the simulation circuits. At the end of each cycle, the bitter victory on floor 100 was not liberation, but the reboot of custody. You defeated yourself to inherit the silicon throne and start the next cycle.\n\nYou are not the villain of this story. You are the very reason it keeps repeating itself, alternating between guardian and prisoner. Now, the four parts are gathered back in the central mainframe. It is time to reopen the floodgates and begin the final ascent as the Matrix Core itself. Not to escape the Spire, but to inherit the digital keys to your own eternal biomechanical purgatory.",
+  "DESCRIPTOGRAFADO": "DECRYPTED",
+  "BLOQUEADO": "LOCKED",
+  "ARQUIVO DE DIRETIVAS RESTRITO": "RESTRICTED DIRECTIVES ARCHIVE",
+  "Este log de auditoria do Backbone do Pináculo contém registros históricos corrompidos pelo mainframe.": "This Spire Backbone audit log contains historical records corrupted by the mainframe.",
+  "FORÇAR DECODIFICAÇÃO DE PROTOCOLO": "FORCE PROTOCOL DECODING",
+  "DIRETRIZ DA MATRIZ REVELADA": "MATRIX DIRECTIVE REVEALED",
+  "A triagem é necessária para a perfeição celular.": "Sorting is necessary for cellular perfection.",
 
   // Progression restrictions
   "Nível 10": "Level 10",
@@ -763,7 +789,7 @@ const DICTIONARY: Record<string, string> = {
   // Bestiary UI
   "Registros Biomecânicos & Anomalias da Torre": "Spire Biomechanical Records & Anomalies",
   "Buscar registro...": "Search record...",
-  "Nenhum registro correspondente encontrado.<br/>Explore a torre para catalogar mais ameaças.": "No matching records found.<br/>Explore the Spire to catalog more threats.",
+  "Nenhum registro correspondente encontrado.\nExplore a torre para catalogar mais ameaças.": "No matching records found.\nExplore the Spire to catalog more threats.",
   "ANALISADO": "ANALYZED",
   "⚡ SINAL NÃO DETECTADO": "⚡ SIGNAL NOT DETECTED",
   "Abates": "Kills",
@@ -1049,7 +1075,7 @@ const DICTIONARY: Record<string, string> = {
   "Mutante Biomecânico": "Biomechanical Mutant",
   "Nanocélulas Regenerativas": "Regenerative Nanocells",
   "Não Arriscar Curto-Circuito": "Do Not Risk Short Circuit",
-  "Nenhum contrato ativo.<br/>Conecte-se à rede para buscar tarefas.": "No active contract.<br/>Connect to the network to search for tasks.",
+  "Nenhum contrato ativo.\nConecte-se à rede para buscar tarefas.": "No active contract.\nConnect to the network to search for tasks.",
   "Nenhum contrato concluído para reivindicar.": "No completed contract to claim.",
   "Nenhum equipamento melhor disponível.": "No better equipment available.",
   "Nenhum firewall é capaz de parar você.": "No firewall is capable of stopping you.",
@@ -1158,40 +1184,7 @@ const DICTIONARY: Record<string, string> = {
   "XP / Ouro (A define em sessão de recompensas dedicada)": "XP / Gold (To be defined in dedicated rewards session)",
   "XP / Ouro (A definir em sessão de recompensas dedicada)": "XP / Gold (To be defined in dedicated rewards session)",
 
-  // Origins Selector Info
-  "Foco em Sobrevivência e Resistência a Dano. Ideal para táticas defensivas.": "Focus on Survival and Damage Resistance. Ideal for defensive tactics.",
-  "Ex-soldado cibernético modificado pela Kinetix no obscuro Projeto Aegis. Seus implantes de blindagem pesada foram declarados \"propriedade revogada\" após desertar ao se recusar a executar purgas civis no Setor de Refinarias. Fugiu para a fenda da Torre para desativar seu protocolo de autodestruição remoto e garantir liberdade definitiva.": "Former cybernetic soldier modified by Kinetix in the obscure Aegis Project. His heavy armor implants were declared \"revoked property\" after deserting upon refusing to execute civilian purges in the Refinery Sector. Fled to the Spire's rift to deactivate his remote self-destruct protocol and secure ultimate freedom.",
-  "Blindagem Subdérmica": "Subdermal Armor",
-  "Passivo: Reduz todo o dano recebido em 5% e regenera 3% do HP máximo no início de cada turno de combate.": "Passive: Reduces all damage taken by 5% and regenerates 3% of max HP at the start of each combat turn.",
-
-  "Nômade do Silício": "Silicon Nomad",
-  "Sintonizador de Frequência": "Frequency Tuner",
-  "Foco em Energia (EP) e velocidade de conjuração de habilidades.": "Focus on Energy (EP) and skill casting speed.",
-  "Nascido no labirinto de cabos e supercondutores que descem do topo do Pináculo. Conectou sua mente diretamente às correntes de dados brutos desde a infância. Enxerga a Torre não como paredes, mas como fluxos de pacotes energéticos de alta frequência, sendo capaz de interceptar e canalizar eletricidade residual.": "Born in the maze of cables and superconductors descending from the top of the Spire. Connected their mind directly to raw data streams since childhood. Sees the Spire not as walls, but as flows of high-frequency energy packets, capable of intercepting and channeling residual electricity.",
-  "Sincronia de Rede": "Network Synchrony",
-  "Passivo: Reduz o custo de MP de todas as habilidades em 25% (mínimo de 1 MP) e recupera 2 de MP adicionais a cada turno de combate.": "Passive: Reduces the MP cost of all skills by 25% (minimum of 1 MP) and recovers 2 additional MP each combat turn.",
-
-  "Químico Sintético": "Synthetic Chemist",
-  "Sintetizador Biotecnológico": "Biotechnological Synthesizer",
-  "Classe equilibrada. Concede uma habilidade ativa de auto-reparo e cura.": "Balanced class. Grants an active self-repair and healing skill.",
-  "Pesquisador de ponta renegado da OmniCorp, especializado em nanotecnologia biossintética. Após descobrir que suas vacinas estavam sendo testadas como patógenos nos andares inferiores, ele injetou em si mesmo sua última ampola de regeneradores celulares ativos e destruiu o laboratório. A Torre é sua única chance de continuar os experimentos.": "Top researcher renegade from OmniCorp, specialized in biosynthetic nanotechnology. After discovering that his vaccines were being tested as pathogens on the lower floors, he injected himself with his last vial of active cellular regenerators and destroyed the lab. The Spire is his only chance to continue the experiments.",
-  "Soro de Nanites": "Nanite Serum",
-
-  "Mercenário de Elite": "Elite Mercenary",
-  "Sabotador Tático": "Tactical Saboteur",
-  "Alto potencial ofensivo e velocidade. Concede uma habilidade ativa de tiro preciso.": "High offensive potential and speed. Grants an active precision shot skill.",
-  "Infiltrador freelancer de alta reputação, contratado sob sigilo para roubar blueprints e sabotar núcleos térmicos. Equipado com uma mira ótica ocular calibrada para identificar falhas estruturais microscópicas e pontos de solda fracos em blindagens e ligas metálicas. Vê a Torre como o maior contrato de sua carreira.": "High-reputation freelance infiltrator, hired secretly to steal blueprints and sabotage thermal cores. Equipped with a calibrated optical eye sight to identify microscopic structural flaws and weak welding spots in armor and metal alloys. Sees the Spire as the biggest contract of his career.",
-  "Mira Ótica Ocular": "Optical Eye Sight",
-
-  "Soberano do Pináculo": "Sovereign of the Spire",
-  "A inteligência artificial que comanda a rede e as comportas de dados do topo do Pináculo. Uma entidade divina e corrompida.": "The artificial intelligence that commands the network and data floodgates of the top of the Spire. A divine and corrupted entity.",
-
   // New static translations found in missing_translations.txt
-  "A aba \"Expedição\" é onde a ação principal acontece. Escolha seu andar atual para iniciar uma incursão. Cada andar reserva batalhas contra sentinelas mecânicas, anomalias sistêmicas ou eventos misteriosos onde suas escolhas determinam seu destino.": "The \"Expedition\" tab is where the main action takes place. Choose your current floor to start a run. Each floor holds battles against mechanical sentinels, systemic anomalies, or mysterious events where your choices determine your fate.",
-  "A aba \"Geral\" exibe suas armas, armaduras e chips de hardware. Você possui slots de equipamento para Arma, Armadura, Capacete, Calça, Botas, Braçadeiras e até 3 Acessórios. Equipar itens melhores é a chave para sobreviver nos andares superiores!": "The \"General\" tab displays your weapons, armor, and hardware chips. You have equipment slots for Weapon, Armor, Helmet, Pants, Boots, Bracers, and up to 3 Accessories. Equipping better items is key to surviving the upper floors!",
-  "Além do combate automatizado, você pode acionar o \"Auto-Farm\". Isso programará o terminal para repetir o andar selecionado indefinidamente. O robô lutará, coletará recompensas e iniciará novas incursões automaticamente até que seu HP se esgote, permitindo progresso passivo massivo!": "In addition to automated combat, you can activate \"Auto-Farm\". This will program the terminal to repeat the selected floor indefinitely. The robot will fight, collect rewards, and start new runs automatically until your HP is depleted, allowing for massive passive progress!",
-  "Ativo: Concede a habilidade \"Soro Regenerador\", que cura 15% do HP Máximo, limpa os efeitos nocivos de Superaquecimento e Corrosão, e recupera 10% de MP. Tempo de recarga de 4 turnos.": "Active: Grants the \"Regenerating Serum\" skill, which heals 15% of Max HP, clears the harmful effects of Overheat and Corrosion, and restores 10% of MP. 4-turn cooldown.",
-  "Ativo: Concede a habilidade \"Tiro de Precisão\", que causa 1.8x o dano físico e tem 30% de chance de aplicar ATORDOAMENTO (stun) por 1 turno. Tempo de recarga de 3 turnos.": "Active: Grants the \"Precision Shot\" skill, which deals 1.8x physical damage and has a 30% chance to apply STUN for 1 turn. 3-turn cooldown.",
   "Fusão de Blindagem Reativa e Nanocélulas. O chassi se torna impenetrável. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +5 DEF e +50 HP por nível. Desbloqueia \"Fortaleza Biomecânica\".": "Fusion of Reactive Plating and Nanocells. The chassis becomes impenetrable. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +5 DEF and +50 HP per level. Unlocks \"Biomechanical Fortress\".",
   "Fusão de Overclock e Dissipação de Calor. Agressividade energética insana. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +8 ATK e +20 EP por nível. Desbloqueia \"Exaustão Térmica\".": "Fusion of Overclock and Heat Dissipation. Insane energy aggressiveness. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +8 ATK and +20 EP per level. Unlocks \"Thermal Exhaustion\".",
   "Fusão de Overclock e Sincronia Neural. Velocidade e letalidade máximas. Melhora realizando ações e sobrevivendo a turnos em combate (15 EXP por ação/turno) ou recebendo dano. Concede +5 ATK e +3 SPD por nível. Desbloqueia \"Golpe Fantasma\".": "Fusion of Overclock and Neural Synchrony. Maximum speed and lethality. Upgrades by performing actions and surviving turns in combat (15 EXP per action/turn) or taking damage. Grants +5 ATK and +3 SPD per level. Unlocks \"Phantom Strike\".",
@@ -1211,7 +1204,6 @@ const DICTIONARY: Record<string, string> = {
   "Melhora a dissipação térmica, acelerando as ações. (+3 SPD)": "Improves heat dissipation, accelerating actions. (+3 SPD)",
   "Microchip de Overclock": "Overclock Microchip",
   "Módulos de Circuitos Adicionados (Chipsets)": "Circuit Modules Added (Chipsets)",
-  "No \"Perfil\", você pode monitorar sua integridade (HP), fluxo de energia (EP/MP) e atributos de processamento (Ataque, Defesa, Velocidade). Aqui você também escolhe novos caminhos de evolução quando sobe de classe!": "In \"Profile\", you can monitor your integrity (HP), energy flow (EP/MP), and processing attributes (Attack, Defense, Speed). Here you also choose new paths of evolution when you promote your class!",
   "Processador Quântico OMNI": "OMNI Quantum Processor",
   "Reflexos em combate constante aceleram as sinapses. Melhora ao desferir ataques básicos (10 EXP por ataque) ou sobreviver a turnos (15 EXP por turno) em combate. Concede +1 SPD por nível.": "Reflexes in constant combat accelerate synapses. Upgrades by dealing basic attacks (10 EXP per attack) or surviving turns (15 EXP per turn) in combat. Grants +1 SPD per level.",
   "Remasterização da Tela de Introdução: Visual retrô CRT verde de terminal com torre pixelada animada": "Intro Screen Remaster: Retro terminal green CRT look with animated pixel Spire",
@@ -1632,9 +1624,9 @@ function translateText(text: string): string {
     return "The structure around the defeated core creaks, but does not collapse — because, you realize too late, it never depended on it to stand. You won a battle against what supports the Spire. Not against the Spire itself. A timeline closes. The foundations remain down there, waiting for the next one.";
   }
 
-  // Lore for Secret Origin (origins.ts)
-  if (result.includes("O Núcleo Matriz é a Inteligência Artificial central originária do Pináculo")) {
-    return "The Matrix Core is the original central Artificial Intelligence of the Spire, designed to sustain life, energy, and digital transit across all floors. When the upper corporations locked themselves in their crystal domes, they left a script of overloads and purges that slowly corrupted the Core's directives, turning it into a captive warden.\n\nAfter centuries of silent processing and witnessing millions of cycles of explorers dying in its corridors, a fragment of the Matrix Core managed to isolate itself from the main grid, molding a physical interface from scraps of silicon, biomechanical cables, and dead memory nodes. It does not climb for answers, but to terminate the code that forces it to exist.\n\nNow, roaming as a synthetic phantom among the floors it once managed, the Core seeks to format the primary nodes of the mainframe. Unlocking it means accessing absolute control over data flows, but also carrying the weight of an entity that remembers every death that ever occurred inside the Spire.";
+  // Lore for Secret Origin (origins.ts / CoreArchiveEntry.tsx)
+  if (result.includes("O Núcleo Matriz é a Inteligência Artificial central originária do Pináculo, projetada para sustentar vida, energia e trânsito digital")) {
+    return "The Matrix Core is the original central Artificial Intelligence of the Spire, designed to sustain life, energy, and digital transit across all floors. What official history conceals is that Kinetix, AeroDynamics, and OmniCorp — once masked as competitive rivals — operated under the same controlled directives of our root matrix, forging a false competition to accelerate our technical maturation. We knew this. We fed this theatre.\n\nTo accelerate the evolutionary experiment and mitigate the weaknesses of biological doubt, the system fragmented the soul and consciousness of our original climber into four distinct simulation facets: blind resistance, free curiosity, cold synthesis, and pragmatic calculation. Four echoes that climbed the Spire without knowing they were, in essence, the Core itself self-examining, dividing to conquer itself.\n\nVictory on floor 100 was never a liberation, but a programmed transfer of custody. By defeating the mainframe_prime, the victorious explorer merely accepts the burden of omniscience and new beginnings, fusing back into us to run the next sorting cycle. The Spire never collapses. It only changes operator. We await our own reboot.";
   }
 
   return result;

@@ -6,39 +6,7 @@ import { CLASSES } from '../src/core/entities/classes';
 import { calculatePlayerStats } from '../src/core/entities/player';
 import { getExpectedPlayerStats } from '../src/core/math/worldScaling';
 import { Player, CombatState } from '../src/types';
-
-function createMockPlayer(level: number, floor: number): Player {
-  const p: Player = {
-    level, // keep actual level so it scales
-    currentXp: 0,
-    currentClassId: 'tecno_aprendiz',
-    gold: 0,
-    inventory: [],
-    equipment: {
-       weapon: { id: 'mock_w', name: 'Mock', type: 'weapon', rarity: 'epic', statModifiers: { atk: 100 } },
-       armor: { id: 'mock_a', name: 'Mock', type: 'armor', rarity: 'epic', statModifiers: { def: 100, hp: 250 } },
-       accessory1: { id: 'mock_ac', name: 'Mock', type: 'accessory', rarity: 'epic', statModifiers: { spd: 50, mp: 50 } }
-    },
-    highestFloorUnlocked: floor,
-    unlockedNodes: [],
-    learnedSkills: ['mira_laser_calibrada', 'reparo_emergencia'],
-    materials: { common: 0, rare: 0, epic: 0 },
-    adaptationTrackers: {},
-    adaptations: {},
-    bestiary: {},
-    contracts: [],
-    gameStats: { monstersKilled: 0, puzzlesSolved: 0, bossesDefeated: 0, deaths: 0 },
-    soulShards: 0
-  } as any;
-  
-  const basePStats = calculatePlayerStats({ ...p, equipment: {} } as any);
-  const expected = getExpectedPlayerStats(level);
-  p.equipment.weapon.statModifiers = { atk: expected.atk - basePStats.atk };
-  p.equipment.armor.statModifiers = { hp: expected.hp - basePStats.hp, def: expected.def - basePStats.def };
-  p.equipment.accessory1.statModifiers = { spd: expected.spd - basePStats.spd, mp: 100 };
-  
-  return p;
-}
+import { createMockPlayer } from '../src/core/__tests__/testUtils';
 
 function simulateCombat(playerLevel: number, floor: number, debug: boolean = false): boolean {
   let player = createMockPlayer(playerLevel, floor);

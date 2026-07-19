@@ -97,13 +97,21 @@ export function grantTimelineRewards(originId: string) {
     mercenario_elite: "O Engenheiro que Encontrou o Ponto Fraco Errado"
   };
 
+  const epilogueHints: Record<string, string> = {
+    ciborgue_foragido: "Você vingou o metal, mas o rastro de sangue sintético aponta para o seu próprio número de série.",
+    nomade_silicio: "O silêncio na rede revelou uma frequência que você jurava ter desligado com suas próprias mãos.",
+    quimico_sintetico: "A cura que você injetou no mainframe tem exatamente a mesma assinatura genética de quem a sintetizou.",
+    mercenario_elite: "O pagamento do contrato foi depositado em uma conta que já acumulava saldo há centenas de ciclos."
+  };
+
   const title = titles[originId] || `Explorador Temporal (${originId})`;
 
   // TODO: valor percentual a definir em sessão de recompensas dedicada
   return {
     title,
     pendingRewardType: 'meta_bonus', // apenas registra que uma recompensa "a definir" foi concedida sem valor numérico associado
-    passiveSkillId: `resistencia_temporal_${originId}` // apenas existe como referência futura, sem efeito mecânico real
+    passiveSkillId: `resistencia_temporal_${originId}`, // apenas existe como referência futura, sem efeito mecânico real
+    epilogueHint: epilogueHints[originId] || ''
   };
 }
 

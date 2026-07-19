@@ -97,7 +97,9 @@ export const ContractsPanel: React.FC<Props> = ({ player, setPlayer }) => {
       {player.contracts.length === 0 ? (
         <div className="system-panel p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
           <AlertTriangle className="w-12 h-12 mb-4 opacity-50" />
-          <p className="font-mono uppercase tracking-widest text-center" dangerouslySetInnerHTML={{ __html: t("Nenhum contrato ativo.<br/>Conecte-se à rede para buscar tarefas.") }} />
+          <p className="font-mono uppercase tracking-widest text-center whitespace-pre-line">
+            {t("Nenhum contrato ativo.\nConecte-se à rede para buscar tarefas.")}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

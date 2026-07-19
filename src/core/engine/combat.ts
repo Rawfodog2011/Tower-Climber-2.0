@@ -8,6 +8,7 @@ import { NEURAL_MATRIX_DATABASE } from '../entities/neuralMatrix';
 import { canClassUseSkill } from '../entities/skills';
 import { SKILLS_DATABASE } from '../entities/skills';
 import { calculateDamage } from '../math/damagePipeline';
+import { getRandomAnomaly } from '../entities/anomalies';
 
 export interface CombatResult {
   winner: 'player' | 'monster' | 'exhausted';
@@ -76,15 +77,9 @@ export function startCombat(player: Player, monster: Monster, currentFloor: numb
       `📍 Você está em: ${currentSector.name}`
   ];
   let mHp = monster.stats.hp;
-  if (random() < 0.4) {
-    const anomalies: import('../../types').CombatAnomaly[] = [
-      { id: 'overdrive', name: 'Protocolo Overdrive', description: 'Jogador: +20% Dano, mas perde 5% HP/turno.', type: 'player_buff' },
-      { id: 'hyper_cool', name: 'Hiper-Resfriamento', description: 'Jogador: Imune a Sobreaquecimento.', type: 'player_buff' },
-      { id: 'magnetic_storm', name: 'Tempestade Magnética', description: 'Monstro: +30% HP e Drop x2.', type: 'monster_buff' },
-      { id: 'emp_field', name: 'Campo EMP', description: 'Ataques -50% Dano, Habilidades 0 EP.', type: 'hazard' },
-      { id: 'radiation_leak', name: 'Vazamento de Radiação', description: 'Ambos sofrem Corrosão constante.', type: 'hazard' }
-    ];
-    anomaly = anomalies[Math.floor(random() * anomalies.length)];
+  const rolledAnomaly = getRandomAnomaly();
+  if (rolledAnomaly) {
+    anomaly = rolledAnomaly;
     logs.push(`✨ [ANOMALIA DETECTADA]: ${anomaly.name} - ${anomaly.description}`);
     if (anomaly.id === 'magnetic_storm') {
       mHp = Math.floor(mHp * 1.3);
@@ -266,8 +261,8 @@ export function processTurn(
           
           if (skill.applyStatus && random() <= skill.applyStatus.chance) {
             let duration = skill.applyStatus.duration;
-            if (skill.applyStatus.type === 'overheat' && state.anomaly?.id === 'hyper_cool' ) {
-              // Wait, the action here is from player executing a skill on monster. Hyper Cool is "Jogador imune a Sobreaquecimento". So player applying it to monster is fine.
+            if (skill.applyStatus.type === 'overheat' && state.anomaly?.id === 'hyper_cooling' ) {
+              // Wait, the action here is from player executing a skill on monster. Hyper Cooling is "Jogador imune a Sobreaquecimento". So player applying it to monster is fine.
             }
             if (skill.applyStatus.type === 'overheat' && state.currentSector?.hazard === 'plasma_furnace') {
               duration += 2; // dura mais na fornalha
@@ -427,7 +422,7 @@ export function processTurn(
     }
   }
 
-  if (state.anomaly?.id === 'hyper_cool') {
+  if (state.anomaly?.id === 'hyper_cooling') {
     nextState.playerStatuses = nextState.playerStatuses.filter(s => s.type !== 'overheat');
   }
   nextState.round++;

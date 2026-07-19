@@ -75,6 +75,15 @@ export const ExpeditionPanel: React.FC<Props> = ({ player, selectedFloor, setSel
                  <span>{t("MIN")}: 01</span>
                  <span>{t("MAX")}: {player.highestFloorUnlocked.toString().padStart(2, '0')}</span>
                </div>
+
+               <div className="mt-6 pt-4 border-t border-slate-800/60 space-y-2 text-center font-mono">
+                 <p className="text-[10px] text-slate-400 italic max-w-lg mx-auto leading-relaxed">
+                   "{sector.flavorText}"
+                 </p>
+                 <p className="text-[9px] text-amber-500 bg-amber-950/20 border border-amber-500/25 rounded py-1.5 px-3 inline-block max-w-md">
+                   <span className="font-bold uppercase tracking-wider">{t("Modificador do Setor")}:</span> {sector.description}
+                 </p>
+               </div>
              </div>
           </div>
 

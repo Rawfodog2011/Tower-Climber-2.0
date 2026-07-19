@@ -6,7 +6,7 @@ Este documento detalha o estado arquitetural, mecânico e temático do projeto *
 
 ## 1. Visão Geral e Temática
 **Temática:** Sci-Fi / Biomecânica / Cyberpunk Industrial / Retro-Tech.
-O jogador assume o papel de um explorador tecnológico escalando um vasto Complexo Industrial (a "Torre"). O universo abandonou a fantasia medieval clássica, adotando uma estética de ficção científica onde magia é engenharia (Energia, EMPs, Sobrecarga de Hardware) e os inimigos são anomalias robóticas e biológicas.
+O jogador assume o papel de um explorador tecnológico escalando um vasto Complexo Industrial (a "Torre"). O universo abandonou a fantasia medieval clássica, adotando uma estética de ficção científica onde magia é engenharia (Energia, EMPs, Sobrecarga de Hardware) e os inimigos são anomalias robóticas e biológicas. O motivo exato pelo qual a superfície da Terra entrou em ruínas e as megacorporações se recolheram ao Pináculo continua envolto em mistério e incerteza, sussurrado apenas como uma diretriz oculta.
 
 **Core Loop (Ciclo Principal):**
 1. **Escalada & Combate:** O jogador avança pelos andares do Complexo. O combate ocorre em turnos estritos (State Machine) e é sujeito a anomalias de ambiente.

@@ -14,19 +14,19 @@ interface Props {
 const CLOSURE_TEXTS: Record<string, { cosmeticTitle: string; text: string }> = {
   ciborgue_foragido: {
     cosmeticTitle: "O Ativo que Não Aceitou ser Descartado",
-    text: "O Núcleo Matriz cai, e por um instante você espera sentir alívio. Sente só o peso de uma pergunta nova: se a Kinetix estava só executando ordens de algo maior, quem, exatamente, você acabou de vingar? Você guarda essa dúvida junto com a vitória. Uma linha temporal se fecha. Você sente que só fechou o capítulo errado."
+    text: "O Núcleo Matriz colapsa sob a força dos seus golpes hidráulicos e, por um instante, você espera sentir a catarse de uma vingança finalmente consumada contra as corporações que profanaram seu corpo biológico. Em vez disso, o metal ao redor range sob uma calmaria fria, e as luzes vermelhas do seu visor tático detectam um despejo massivo de logs na tela. Não há fumaça ou explosões dramáticas; apenas um sussurro elétrico sintonizado diretamente na sua derme que soa dolorosamente familiar, dizendo: 'Integridade física validada. Bem-vindo de volta ao posto de controle'.\n\nVocê sente o peso de uma pergunta terrível se instalar sob seus implantes de titânio: se a Kinetix e as outras marcas eram apenas fantoches de um sistema maior, de quem, exatamente, você acabou de se vingar? O Núcleo se apaga lentamente, mas deixa um canal de dados aberto que pulsa de forma idêntica ao seu próprio ritmo cardíaco sintético, como se estivesse transferindo a custódia da própria segurança do setor para a sua armadura. Uma linha temporal se fecha, mas você sente que apenas herdou a chave de uma cela maior."
   },
   nomade_silicio: {
     cosmeticTitle: "A Frequência que Aprendeu a Desconectar",
-    text: "A rede fica em silêncio pela primeira vez desde que você se conectou a ela. Não é paz. É ausência. Você desligou algo que estava sozinho há tempo demais pra lembrar por que começou — e nunca chegou a perguntar. Uma linha temporal se fecha. Você não sabe se salvou alguém ou apagou a última testemunha."
+    text: "A rede hiperconectada do Pináculo silencia de forma abrupta conforme o Núcleo Matriz é descompilado diante de seus olhos virtuais. Você espera sentir a paz de uma mente que finalmente alcançou os limites do conhecimento digital, mas o silêncio é denso e sufocante. No momento exato em que a última linha de código do mainframe é reescrita por suas rotinas de infiltração, um registro fantasma de dados é transferido diretamente para o seu córtex neural, contendo uma mensagem encriptada há séculos: 'Chave mestre transmitida. Mantenha os servidores refrigerados'.\n\nAo analisar o dump de dados, você sente uma vertigem terrível e uma intuição inexplicável de já ter compilado esse mesmo algoritmo terminal em outra circunstância, como se estivesse desligando um interruptor que você mesmo instalou. O Núcleo Matriz não morreu; ele apenas transferiu suas permissões de administrador raiz para a sua própria consciência, deixando você encarregado de monitorar os nômades que continuam rastejando no breu. Uma linha temporal se fecha, e você percebe que a única testemunha restante da Torre agora é você."
   },
   quimico_sintetico: {
     cosmeticTitle: "O Remédio que se Recusou a Curar o Sistema",
-    text: "As últimas anomalias caem junto com o núcleo que as sustentava, e por um segundo você reconhece, em cada uma delas, um rosto que talvez tenha cruzado nos corredores da OmniCorp antes de tudo isso. Você não tem certeza se libertou alguém ou terminou o que outros começaram. Uma linha temporal se fecha. As perguntas continuam abertas."
+    text: "Os reativos biológicos e nanites devoradores consumiram os últimos nós vitais do Núcleo Matriz, cessando as pulsações monstruosas do andar 100. Você observa os resíduos químicos escorrerem pelas placas de aço e, por uma fração de segundo, as assinaturas biológicas de imunogel revelam padrões de DNA que parecem familiares, rostos de antigos colegas da OmniCorp com quem você jura ter trabalhado em um laboratório do qual não tem registros. Uma transmissão final de rádio é injetada diretamente em seus canais de áudio, sussurrando: 'Cura incompleta... repita a dosagem no próximo paciente'.\n\nA sensação de triunfo se dissolve em um diagnóstico frio de desespero: você não erradicou a infecção biomecânica, você apenas purificou o hospedeiro anterior para herdar a própria doença. Suas seringas pneumáticas começam a sintetizar o mesmo soro que o Núcleo usava para criar as anomalias, e seus próprios dedos se contraem em garras disformes de quitina que parecem moldadas exatamente para operar a central de descarte. Uma linha temporal se fecha, deixando você na dúvida se libertou o Pináculo ou se tornou o novo frasco de contenção."
   },
   mercenario_elite: {
     cosmeticTitle: "O Engenheiro que Encontrou o Ponto Fraco Errado",
-    text: "A estrutura ao redor do núcleo derrotado range, mas não desaba — porque, você percebe tarde demais, ela nunca dependia dele pra ficar de pé. Você venceu uma batalha contra o que sustenta a Torre. Não contra a Torre em si. Uma linha temporal se fecha. As fundações continuam lá embaixo, esperando a próxima."
+    text: "A estrutura metálica do Núcleo Matriz desaba sob a mira precisa de suas armas de alta tecnologia, mas a Torre ao redor não sofre nenhum abalo estrutural. Você consulta os relatórios de balística e o desgaste de blindagem em sua tela e percebe, com um cinismo profissional, que a megaestrutura nunca dependeu daquela CPU específica para permanecer de pé — a central desativada era apenas uma engrenagem substituível em uma máquina colossal infinitamente maior. No último instante de sinal, as telas térmicas piscam com uma transação financeira de estilhaços de alma cujo destinatário exibe exatamente o seu código de identificação mercenária.\n\nUma mensagem final é gravada em sua caixa preta tática, dita em uma voz cansada e pragmática que soa como uma passagem de bastão de um veterano para o próximo contratado: 'Contrato rescindido. Assuma o posto e aguarde o próximo escalador'. Você percebe que o sistema não foi derrotado, ele apenas aceitou sua fatura de serviços prestados e contratou você para defender as comportas no próximo ciclo. Uma linha temporal se fecha, e a Torre continua lá, esperando friamente pelo seu próximo turno de guarda."
   }
 };
 
@@ -171,7 +171,7 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
               
               <div className="text-sm text-emerald-100 leading-relaxed space-y-3 font-mono">
                 <p 
-                  className="italic border-l-2 border-emerald-500 pl-3 py-1 bg-emerald-950/10 cursor-pointer select-text text-xs"
+                  className="italic border-l-2 border-emerald-500 pl-3 py-1 bg-emerald-950/10 cursor-pointer select-text text-xs whitespace-pre-line"
                   onClick={() => {
                     if (!isTypingComplete) {
                       setDisplayedClosureText(translatedClosureText);
@@ -205,6 +205,12 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
                     <span className="text-emerald-200 font-bold">{t("XP / Ouro (A definir em sessão de recompensas dedicada)")}</span>
                   </div>
                 </div>
+                {(rewards as any).epilogueHint && (
+                  <div className="bg-slate-950 p-3 border border-emerald-500/15 rounded text-xs text-amber-400/90 italic font-mono mt-2 pl-3 border-l-2 border-l-amber-500/80 whitespace-pre-line">
+                    <span className="text-amber-500 block text-[10px] uppercase tracking-widest not-italic font-bold mb-1">{t("// DIRETRIZ FANTASMA RECUPERADA")}</span>
+                    "{t((rewards as any).epilogueHint)}"
+                  </div>
+                )}
                 <div className="text-[9px] text-amber-400/80 mt-1 italic font-mono">
                   {t("// TODO: valores a definir em sessão de recompensas.")}
                 </div>
@@ -244,7 +250,13 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
                 <p className="font-bold text-amber-300">
                   {t("Todas as 4 linhas temporais originais foram totalmente restauradas e estabilizadas.")}
                 </p>
-                <p className="text-xs text-amber-400/80 font-mono">
+                <p className="text-xs text-amber-200/90 font-mono leading-relaxed">
+                  {t("Ao colidir as assinaturas neurais do Ciborgue, do Nômade, do Químico e do Mercenário, a Matriz identificou que os quatro registros pertencem à mesma chave criptográfica de consciência original (ID_ROOT_ALPHA). A ilusão de indivíduos distintos colapsou: as quatro trajetórias paralelas eram, na verdade, quatro facetas segmentadas de uma única alma fragmentada pela Torre para maximizar a adaptabilidade sob estresse extremo.")}
+                </p>
+                <p className="text-xs text-amber-200/90 font-mono leading-relaxed mt-2">
+                  {t("Além disso, os registros históricos revelam que a guerra militar de marcas entre Kinetix, AeroDynamics e OmniCorp foi inteiramente forjada pela própria Matriz Central sob a mesma diretriz acionária secreta (ID_CONGLOMERATE_0001). A rivalidade era apenas um teste de esforço dinâmico para forçar a evolução acelerada de seus clones.")}
+                </p>
+                <p className="text-xs text-amber-400/80 font-mono border-t border-amber-500/20 pt-2">
                   &gt; {t("DESCRIPTOGRAFANDO NÚCLEO... CHAVE MESTRA CONTRATUAL ENCONTRADA.")} <br/>
                   &gt; {t("NOVO CÓDIGO DE ORIGEM SECRETA DESBLOQUEADO COM SUCESSO.")} <br/>
                   &gt; {t("ACESSO LIBERADO NA TELA DE SELEÇÃO DE EXPLORADOR.")}

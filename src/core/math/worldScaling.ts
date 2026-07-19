@@ -164,7 +164,8 @@ export function getSectorForFloor(floor: number) {
       color: 'text-green-400',
       bg: 'bg-green-500/10',
       border: 'border-green-500/30',
-      rgb: `${scale(34)}, ${scale(197)}, ${scale(94)}`
+      rgb: `${scale(34)}, ${scale(197)}, ${scale(94)}`,
+      flavorText: translate('Antigo setor de processamento pesado da Kinetix, onde carcaças de metal e implantes rejeitados são dissolvidos em reagentes básicos. Os gases corrosivos ativam os sensores de dor fantasma do Ciborgue, sussurrando sobre a obsolescência de sua derme.')
     };
   }
   if (idx === 1) {
@@ -177,7 +178,8 @@ export function getSectorForFloor(floor: number) {
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
       border: 'border-blue-500/30',
-      rgb: `${scale(59)}, ${scale(130)}, ${scale(246)}`
+      rgb: `${scale(59)}, ${scale(130)}, ${scale(246)}`,
+      flavorText: translate('A zona de resfriamento criogênico que abriga os servidores massivos do Pináculo. Por entre as frestas congeladas e a névoa fria, fluxos de dados brutos que o Nômade costumava interceptar correm como correntes elétricas selvagens, ecoando o silêncio de mentes esquecidas.')
     };
   }
   return {
@@ -189,6 +191,7 @@ export function getSectorForFloor(floor: number) {
     color: 'text-orange-400',
     bg: 'bg-orange-500/10',
     border: 'border-orange-500/30',
-    rgb: `${scale(249)}, ${scale(115)}, ${scale(22)}`
+    rgb: `${scale(249)}, ${scale(115)}, ${scale(22)}`,
+    flavorText: translate('O imenso reator de fusão operado pela OmniCorp para sintetizar energia e matéria condensada. O calor infernal acelera a degradação de nanites e reativos biológicos, as mesmas patentes secretas que o Químico sintetizou antes de se tornar parte deste imenso tubo de ensaio.')
   };
 }

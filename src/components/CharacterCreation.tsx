@@ -3,6 +3,7 @@ import { ORIGINS, Origin } from '../core/entities/origins';
 import { Shield, Zap, Sparkles, Target, Cpu, User, ArrowRight, Terminal } from 'lucide-react';
 import { loadTimelineCodex } from '../core/engine/timelineCodex';
 import { useTranslation } from '../core/engine/translation';
+import { CoreArchiveEntry } from './CoreArchiveEntry';
 
 interface CharacterCreationProps {
   onComplete: (originId: string) => void;
@@ -166,6 +167,7 @@ export function CharacterCreation({ onComplete }: CharacterCreationProps) {
                       }`}>
                         "{t(selectedOrigin.lore)}"
                       </p>
+                      {isSelectedSecret && <CoreArchiveEntry />}
                     </div>
 
                     {/* Modificadores de Atributos */}

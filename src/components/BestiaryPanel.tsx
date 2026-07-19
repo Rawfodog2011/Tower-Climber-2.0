@@ -109,7 +109,9 @@ export const BestiaryPanel: React.FC<Props> = ({ player }) => {
         {filteredEntries.length === 0 ? (
           <div className="system-panel p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
             <BookOpen className="w-12 h-12 mb-4 opacity-50" />
-            <p className="font-mono uppercase tracking-widest text-center" dangerouslySetInnerHTML={{ __html: t("Nenhum registro correspondente encontrado.<br/>Explore a torre para catalogar mais ameaças.") }} />
+            <p className="font-mono uppercase tracking-widest text-center whitespace-pre-line">
+              {t("Nenhum registro correspondente encontrado.\nExplore a torre para catalogar mais ameaças.")}
+            </p>
           </div>
         ) : (
           filteredEntries.map(entry => (

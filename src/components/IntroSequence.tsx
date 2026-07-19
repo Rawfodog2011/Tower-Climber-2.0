@@ -310,7 +310,7 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
                 <p className="mb-12">{t("O Ano é 2342.")}</p>
                 <p className="mb-12">{t("A Terra foi consumida pela ambição corporativa.")}</p>
                 <p className="mb-12">{t("Da superfície devastada ergue-se o Pináculo:\nUma megaestrutura quase infinita perfurando os skies.")}</p>
-                <p className="mb-12 text-emerald-200 font-extrabold">{t("As corporações não caíram. Elas subiram.")}</p>
+                <p className="mb-12 text-emerald-200 font-extrabold">{t("A ruína do mundo exterior não foi um acidente. Foi o alicerce planejado para a grande ascensão.")}</p>
                 <p className="mb-12">{t("Abandonaram a superfície devastada para reinar dentro do Pináculo.")}</p>
                 <p className="mb-12">{t("O controle foi perdido. As divisões inferiores foram tomadas por<br/>Inteligências Artificiais descontroladas e anomalias biomecânicas.")}</p>
                 <p className="mb-12 text-emerald-300">{t("Você é um Tecno-Explorador, um pária buscando tecnologia, poder e respostas.")}</p>

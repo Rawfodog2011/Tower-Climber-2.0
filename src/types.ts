@@ -165,6 +165,7 @@ export interface SectorDefinition {
   hazard: SectorHazard;
   description: string;
   colorTheme: string;
+  flavorText: string;
 }
 
 export interface MarketItem {

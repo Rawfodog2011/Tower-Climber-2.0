@@ -17,8 +17,8 @@ export interface EquipResult {
  * Realiza validação de classe e lida com a troca caso o slot já esteja ocupado.
  */
 export function equipItem(player: Player, item: Item, targetSlot?: keyof Player['equipment']): EquipResult {
-  if (item.type === 'consumable') {
-    return { success: false, message: 'Este item é consumível e não pode ser equipado.', updatedPlayer: player };
+  if (item.type === 'consumable' || item.type === 'circuit_module') {
+    return { success: false, message: `Este item (${item.name}) do tipo ${item.type} não pode ser equipado diretamente.`, updatedPlayer: player };
   }
 
   if (!canClassEquipItem(player.currentClassId, item)) {

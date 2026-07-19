@@ -4,7 +4,7 @@
  */
 
 import { Sword, Power, Trophy, Shield, Cpu, Zap, Crosshair, Activity, Flame, Crosshair as CrosshairIcon, Terminal, Settings , Fingerprint, HardHat, Shirt, Footprints, Watch , User } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Player, Item } from './types';
 import { CLASSES, getAvailableEvolutions, getClassEvolutionNarrative } from './core/entities/classes';
 import { ClassEvolutionModal } from './components/ClassEvolutionModal';
@@ -28,6 +28,11 @@ import { getRandomEvent, EventOption } from './core/entities/events';
 import { checkAchievements, ACHIEVEMENTS_DATABASE } from './core/engine/achievements';
 import { getRandomItemByRarityAndClass } from './core/entities/items';
 import { EquipmentTerminal } from './components/equipment/EquipmentTerminal';
+import { ForgePanel } from './components/ForgePanel';
+import { WeldingBenchPanel } from './components/WeldingBenchPanel';
+import { RelicsPanel } from './components/RelicsPanel';
+import { AdaptationsPanel } from './components/AdaptationsPanel';
+import { AutoBattlePanel } from './components/AutoBattlePanel';
 import { HubNavigation } from './components/HubNavigation';
 import { MainMenu } from './components/MainMenu';
 import { IntroSequence } from './components/IntroSequence';
@@ -46,6 +51,7 @@ import { unlockMemory } from './core/engine/memoryArchive';
 import { MemoryFragmentScreen } from './components/MemoryFragmentScreen';
 import { MemoryArchivePanel } from './components/MemoryArchivePanel';
 import { useTranslation, translate, setLanguage, getLanguage, Language } from './core/engine/translation';
+import { random } from './core/engine/rng';
 
 import { getSectorForFloor } from './core/math/worldScaling';
 import { STORAGE_KEYS, getStorageString, setStorageString } from './core/engine/storage';
@@ -238,8 +244,6 @@ export default function App() {
   const [combatEndMessage, setCombatEndMessage] = useState<{ title: string, subtitle: string, isVictory: boolean } | null>(null);
   const [toasts, setToasts] = useState<{id: number, message: string}[]>([]);
 
-  const [selectedEquipmentForSocketing, setSelectedEquipmentForSocketing] = useState<{item: import('./types').Item, source: string, index: number} | null>(null);
-  
   const [combatSpeed, setCombatSpeed] = useState<'normal' | 'fast'>(() => {
     return (getStorageString(STORAGE_KEYS.COMBAT_SPEED, 'normal') as 'normal' | 'fast') || 'normal';
   });
@@ -251,17 +255,6 @@ export default function App() {
       return next;
     });
   };
-  
-  const [commonToRareQty, setCommonToRareQty] = useState<number>(1);
-  const [rareToEpicQty, setRareToEpicQty] = useState<number>(1);
-  
-  // Estados para filtros de lote de itens (vender/desmanchar)
-  const [batchFilterRarities, setBatchFilterRarities] = useState<string[]>(['common', 'rare', 'epic', 'legendary', 'mythic']);
-  const [batchFilterClasses, setBatchFilterClasses] = useState<string[]>(['any', 'ciborgue_foragido', 'nomade_silicio', 'quimico_sintetico', 'mercenario_elite']);
-  const [batchFilterTypes, setBatchFilterTypes] = useState<string[]>(['weapon', 'armor', 'helmet', 'pants', 'boots', 'bracers', 'accessory', 'circuit_module', 'consumable']);
-  
-  const [selectedSocketIndex, setSelectedSocketIndex] = useState<number | null>(null);
-  const [soldagemSubTab, setSoldagemSubTab] = useState<'socket' | 'merge'>('socket');
 
 
   
@@ -382,7 +375,7 @@ export default function App() {
   }, [player.level, player.currentClassId, player.originId]);
 
   const triggerToast = (message: string) => {
-    const id = Date.now() + Math.random();
+    const id = Date.now() + random();
     setToasts(prev => [...prev, { id, message }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -398,7 +391,7 @@ export default function App() {
     }
     const isBoss = floor % 10 === 0;
     const isFarming = player.isFarmActive;
-    if (!isFarming && !forceCombat && !isBoss && Math.random() < 0.25) {
+    if (!isFarming && !forceCombat && !isBoss && random() < 0.25) {
       const ev = getRandomEvent(lastEventId);
       setActiveEvent(ev);
       setEventLog(null);
@@ -414,8 +407,8 @@ export default function App() {
   };
 
   const generatePuzzle = () => {
-    const vibrationHz = Math.floor(Math.random() * 120) + 20; // 20 a 139 Hz
-    const temperatureC = Math.floor(Math.random() * 80) + 50; // 50 a 129 ºC
+    const vibrationHz = Math.floor(random() * 120) + 20; // 20 a 139 Hz
+    const temperatureC = Math.floor(random() * 80) + 50; // 50 a 129 ºC
     
     let correctPort = 3;
     if (vibrationHz > 80 && temperatureC > 100) {
@@ -671,14 +664,18 @@ export default function App() {
   };
 
   
-  const handleSocketModule = (moduleItem: import('./types').Item, invIndex: number) => {
-    if (!selectedEquipmentForSocketing || selectedSocketIndex === null) return;
-    const { source, index, item } = selectedEquipmentForSocketing;
+  const handleSocketModule = (
+    moduleItem: import('./types').Item,
+    invIndex: number,
+    selectedEquipment: { item: import('./types').Item; source: string; index: number },
+    socketIndex: number
+  ) => {
+    const { source, index, item } = selectedEquipment;
     
     const updatedItem = { ...item };
     updatedItem.hardwareSlots = [...(item.hardwareSlots || [])];
-    const oldModule = updatedItem.hardwareSlots[selectedSocketIndex];
-    updatedItem.hardwareSlots[selectedSocketIndex] = moduleItem;
+    const oldModule = updatedItem.hardwareSlots[socketIndex];
+    updatedItem.hardwareSlots[socketIndex] = moduleItem;
     
     setPlayer(p => {
       const nextPlayer = { ...p, inventory: [...p.inventory] };
@@ -693,11 +690,10 @@ export default function App() {
         nextPlayer.equipment = { ...p.equipment, [source]: updatedItem };
       }
       
-      setSelectedEquipmentForSocketing({ item: updatedItem, source, index });
-      setSelectedSocketIndex(null);
       return nextPlayer;
     });
     triggerToast(`Módulo instalado com sucesso!`);
+    return updatedItem;
   };
 
   
@@ -755,9 +751,11 @@ export default function App() {
     triggerToast(`Fusão concluída! ${baseItem.name} evoluiu para Nv. ${(baseItem.level || 1) + 1}.`);
   };
 
-  const handleUnsocketModule = (socketIndex: number) => {
-    if (!selectedEquipmentForSocketing) return;
-    const { source, index, item } = selectedEquipmentForSocketing;
+  const handleUnsocketModule = (
+    socketIndex: number,
+    selectedEquipment: { item: import('./types').Item; source: string; index: number }
+  ) => {
+    const { source, index, item } = selectedEquipment;
     
     const updatedItem = { ...item };
     if (!updatedItem.hardwareSlots || !updatedItem.hardwareSlots[socketIndex]) return;
@@ -773,10 +771,10 @@ export default function App() {
       } else {
         nextPlayer.equipment = { ...p.equipment, [source]: updatedItem };
       }
-      setSelectedEquipmentForSocketing({ item: updatedItem, source, index });
       return nextPlayer;
     });
     triggerToast(`Módulo removido com sucesso.`);
+    return updatedItem;
   };
 
   
@@ -919,23 +917,6 @@ export default function App() {
     return (
       <div className={`mt-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded inline-block ${isCompatible ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-800/50' : 'bg-red-900/30 text-red-400 border border-red-800/50'}`}>
         [COMPATIBILIDADE: {classNames}]
-      </div>
-    );
-  };
-
-  const renderStatModifiers = (item: import('./types').Item) => {
-    if (!item.statModifiers) return null;
-    const mods = [];
-    if (item.statModifiers.atk) mods.push(<span key="atk" className="text-red-400">+{item.statModifiers.atk} ATK</span>);
-    if (item.statModifiers.def) mods.push(<span key="def" className="text-blue-400">+{item.statModifiers.def} DEF</span>);
-    if (item.statModifiers.hp) mods.push(<span key="hp" className="text-emerald-400">+{item.statModifiers.hp} HP</span>);
-    if (item.statModifiers.mp) mods.push(<span key="mp" className="text-indigo-400">+{item.statModifiers.mp} EP</span>);
-    if (item.statModifiers.spd) mods.push(<span key="spd" className="text-yellow-400">+{item.statModifiers.spd} SPD</span>);
-    
-    if (mods.length === 0) return null;
-    return (
-      <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] font-mono mt-1">
-        {mods}
       </div>
     );
   };
@@ -1127,785 +1108,39 @@ export default function App() {
               )}
 
               {hubTab === 'forja' && (
-                <>
-                  {/* Forge Panels */}
-                  <div className="system-panel">
-                    <div className="tech-panel-header px-4 py-3">
-                      <span className="font-bold text-amber-400 tracking-widest uppercase text-sm">
-                        {t("Criação de Itens")} ({t("Classe")}: {t(CLASSES[player.currentClassId].name)})
-                      </span>
-                    </div>
-                    <div className="p-4 space-y-4">
-                      
-                      <div className="flex gap-3 mb-4">
-                        <div className="flex-1 bg-slate-950/40 p-2 rounded border border-slate-600 flex flex-col justify-between items-center shadow-[inset_0_0_10px_rgba(100,116,139,0.1)]">
-                          <span className="text-slate-400 text-[10px] font-mono uppercase tracking-widest mb-1">{t("Fragmentos")}</span>
-                          <span className="text-slate-100 font-bold">{player.materials.common}</span>
-                        </div>
-                        <div className="flex-1 bg-cyan-950/20 p-2 rounded border border-cyan-500 flex flex-col justify-between items-center shadow-[inset_0_0_15px_rgba(34,211,238,0.15)]">
-                          <span className="text-cyan-400 text-[10px] font-mono uppercase tracking-widest mb-1">{t("Essências")}</span>
-                          <span className="text-cyan-100 font-bold">{player.materials.rare}</span>
-                        </div>
-                        <div className="flex-1 bg-purple-950/20 p-2 rounded border border-purple-500 flex flex-col justify-between items-center shadow-[inset_0_0_20px_rgba(192,132,252,0.25)]">
-                          <span className="text-purple-400 text-[10px] font-mono uppercase tracking-widest mb-1">{t("Núcleos")}</span>
-                          <span className="text-purple-100 font-bold">{player.materials.epic}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        {(['common', 'rare', 'epic', 'legendary', 'mythic'] as const).map(rarity => {
-                          const cost = CRAFTING_COSTS[rarity];
-                          const matType = cost.materialType;
-                          const canCraft = player.materials[matType] >= cost.materials && player.gold >= cost.gold;
-                          const rarityStyle = getRarityStyle(rarity);
-
-                          return (
-                            <button
-                              key={rarity}
-                              onClick={() => handleCraft(rarity)}
-                              disabled={!canCraft}
-                              className={`flex flex-col items-center justify-center p-3 rounded border transition-all relative overflow-hidden ${rarityStyle} ${canCraft ? 'cursor-pointer active:scale-95 hover:brightness-125' : 'opacity-50 cursor-not-allowed'}`}
-                            >
-                              <span className="font-bold uppercase tracking-widest text-[10px] mb-2 relative z-10 text-center">
-                                {t("FORJAR")} {
-                                  (rarity === 'common' ? t('Padrão') : 
-                                   rarity === 'rare' ? t('Avançado') : 
-                                   rarity === 'epic' ? t('Protótipo') : 
-                                   rarity === 'legendary' ? t('Lendário') : t('Mítico')).toUpperCase()
-                                }
-                              </span>
-                              <div className="text-[10px] font-mono opacity-85 space-y-1 relative z-10 text-center">
-                                <div>- {cost.materials} {MATERIAL_NAMES[matType]}</div>
-                                <div>- {cost.gold} CRD</div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Conversão de Materiais */}
-                  {(() => {
-                    const maxCommonToRare = Math.max(1, Math.min(Math.floor(player.materials.common / 5), Math.floor(player.gold / 100)));
-                    const maxRareToEpic = Math.max(1, Math.min(Math.floor(player.materials.rare / 5), Math.floor(player.gold / 500)));
-                    
-                    const activeCommonQty = Math.max(1, Math.min(maxCommonToRare, commonToRareQty));
-                    const activeRareQty = Math.max(1, Math.min(maxRareToEpic, rareToEpicQty));
-
-                    return (
-                      <div className="system-panel">
-                        <div className="tech-panel-header px-4 py-3">
-                          <span className="font-bold text-cyan-400 tracking-widest uppercase text-sm">{t("Conversor de Matéria Arcana")}</span>
-                        </div>
-                        <div className="p-4 space-y-4">
-                          <p className="text-xs text-slate-400 font-mono">
-                            {t("A Forja Arcana permite fundir recursos brutos em estados mais refinados de energia a uma taxa de")} <span className="text-cyan-400 font-bold">5 {t("para")} 1</span>.
-                          </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Fragmento -> Essência */}
-                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-col justify-between items-center text-center gap-3">
-                              <div className="flex items-center gap-2 justify-center">
-                                <span className="text-slate-400 font-mono text-xs">5x {t("Fragmentos Comuns")}</span>
-                                <span className="text-cyan-400 font-bold">➔</span>
-                                <span className="text-cyan-400 font-mono text-xs">1x {t("Essência Rara")}</span>
-                              </div>
-                              
-                              <div className="flex flex-col gap-1.5 w-full">
-                                <div className="flex items-center justify-between gap-1 bg-slate-900/60 border border-slate-800 rounded p-1">
-                                  <span className="text-[10px] text-slate-500 font-mono pl-1">QTD:</span>
-                                  <input 
-                                    type="number" 
-                                    min={1}
-                                    max={maxCommonToRare}
-                                    value={activeCommonQty} 
-                                    onChange={(e) => {
-                                      const val = Math.max(1, Math.min(maxCommonToRare, parseInt(e.target.value) || 1));
-                                      setCommonToRareQty(val);
-                                    }}
-                                    className="w-14 bg-slate-950 text-white border border-slate-800 text-center font-mono text-xs rounded py-0.5"
-                                  />
-                                  <button 
-                                    type="button"
-                                    onClick={() => setCommonToRareQty(prev => Math.min(maxCommonToRare, prev + 1))}
-                                    className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 font-mono text-[10px] text-slate-300 rounded transition-colors"
-                                  >
-                                    +1
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={() => setCommonToRareQty(prev => Math.min(maxCommonToRare, prev + 10))}
-                                    className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 font-mono text-[10px] text-slate-300 rounded transition-colors"
-                                  >
-                                    +10
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={() => setCommonToRareQty(maxCommonToRare)}
-                                    className="px-1.5 py-0.5 bg-cyan-950/40 text-cyan-400 hover:bg-cyan-900/40 font-mono text-[10px] rounded transition-colors"
-                                  >
-                                    Máx
-                                  </button>
-                                </div>
-                                <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
-                                  <span>Total: {activeCommonQty * 5} Frags</span>
-                                  <span>Custo: {activeCommonQty * 100} CRD</span>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => {
-                                  handleConvertMaterials('common_to_rare', activeCommonQty);
-                                  setCommonToRareQty(1);
-                                }}
-                                disabled={player.materials.common < 5 * activeCommonQty || player.gold < 100 * activeCommonQty}
-                                className={`w-full py-2 rounded font-bold font-mono text-xs uppercase tracking-wider transition-all border ${
-                                  player.materials.common >= 5 * activeCommonQty && player.gold >= 100 * activeCommonQty
-                                    ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20 cursor-pointer'
-                                    : 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
-                                }`}
-                              >
-                                {t("Refinar Essência")} (-{activeCommonQty * 5} {t("Frag")}, -{activeCommonQty * 100} CRD)
-                              </button>
-                            </div>
-
-                            {/* Essência -> Núcleo */}
-                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-col justify-between items-center text-center gap-3">
-                              <div className="flex items-center gap-2 justify-center">
-                                <span className="text-cyan-400 font-mono text-xs">5x {t("Essências Raras")}</span>
-                                <span className="text-purple-400 font-bold">➔</span>
-                                <span className="text-purple-400 font-mono text-xs">1x {t("Núcleo Épico")}</span>
-                              </div>
-
-                              <div className="flex flex-col gap-1.5 w-full">
-                                <div className="flex items-center justify-between gap-1 bg-slate-900/60 border border-slate-800 rounded p-1">
-                                  <span className="text-[10px] text-slate-500 font-mono pl-1">QTD:</span>
-                                  <input 
-                                    type="number" 
-                                    min={1}
-                                    max={maxRareToEpic}
-                                    value={activeRareQty} 
-                                    onChange={(e) => {
-                                      const val = Math.max(1, Math.min(maxRareToEpic, parseInt(e.target.value) || 1));
-                                      setRareToEpicQty(val);
-                                    }}
-                                    className="w-14 bg-slate-950 text-white border border-slate-800 text-center font-mono text-xs rounded py-0.5"
-                                  />
-                                  <button 
-                                    type="button"
-                                    onClick={() => setRareToEpicQty(prev => Math.min(maxRareToEpic, prev + 1))}
-                                    className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 font-mono text-[10px] text-slate-300 rounded transition-colors"
-                                  >
-                                    +1
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={() => setRareToEpicQty(prev => Math.min(maxRareToEpic, prev + 10))}
-                                    className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 font-mono text-[10px] text-slate-300 rounded transition-colors"
-                                  >
-                                    +10
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={() => setRareToEpicQty(maxRareToEpic)}
-                                    className="px-1.5 py-0.5 bg-purple-950/40 text-purple-400 hover:bg-purple-900/40 font-mono text-[10px] rounded transition-colors"
-                                  >
-                                    Máx
-                                  </button>
-                                </div>
-                                <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
-                                  <span>Total: {activeRareQty * 5} Ess</span>
-                                  <span>Custo: {activeRareQty * 500} CRD</span>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => {
-                                  handleConvertMaterials('rare_to_epic', activeRareQty);
-                                  setRareToEpicQty(1);
-                                }}
-                                disabled={player.materials.rare < 5 * activeRareQty || player.gold < 500 * activeRareQty}
-                                className={`w-full py-2 rounded font-bold font-mono text-xs uppercase tracking-wider transition-all border ${
-                                  player.materials.rare >= 5 * activeRareQty && player.gold >= 500 * activeRareQty
-                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20 cursor-pointer'
-                                    : 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
-                                }`}
-                              >
-                                {t("Refinar Núcleo")} (-{activeRareQty * 5} {t("Ess")}, -{activeRareQty * 500} CRD)
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Dismantle Inventory Panel with Batch Options */}
-                  <div className="system-panel overflow-hidden flex flex-col min-h-[500px]">
-                    <div className="tech-panel-header px-4 py-3 flex justify-between items-center shrink-0">
-                      <span className="font-bold text-amber-400 tracking-widest uppercase text-sm">{t("Central de Reciclagem & Liquidação")} ({player.inventory.length} {t("Itens")})</span>
-                      {inventoryMessage && (
-                        <span className={`text-xs px-2 py-0.5 rounded font-mono uppercase tracking-wider border ${inventoryMessage.type === 'error' ? 'bg-red-950/50 text-red-400 border-red-900' : 'bg-emerald-950/50 text-emerald-400 border-emerald-900'}`}>
-                          {t(inventoryMessage.text)}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Filters and Batch Actions Area */}
-                    <div className="p-4 border-b border-slate-800 bg-slate-900/40 space-y-4">
-                      {/* Filter Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        
-                        {/* Rarities Filter */}
-                        <div>
-                          <div className="text-[10px] text-amber-500 font-mono uppercase tracking-wider mb-1.5 flex justify-between">
-                            <span>{t("Raridades")}</span>
-                            <div className="space-x-2">
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterRarities(['common', 'rare', 'epic', 'legendary', 'mythic'])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Todos")}]
-                              </button>
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterRarities([])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Nenhum")}]
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(['common', 'rare', 'epic', 'legendary', 'mythic'] as const).map(rarity => {
-                              const active = batchFilterRarities.includes(rarity);
-                              const label = rarity === 'common' ? t('Padrão') : rarity === 'rare' ? t('Avançado') : rarity === 'epic' ? t('Protótipo') : rarity === 'legendary' ? t('Lendário') : t('Mítico');
-                              return (
-                                <button
-                                  key={rarity}
-                                  type="button"
-                                  onClick={() => {
-                                    setBatchFilterRarities(prev => 
-                                      prev.includes(rarity) ? prev.filter(r => r !== rarity) : [...prev, rarity]
-                                    );
-                                  }}
-                                  className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-all cursor-pointer ${
-                                    active 
-                                      ? 'bg-amber-950/40 text-amber-300 border-amber-600/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]' 
-                                      : 'bg-slate-950/60 text-slate-500 border-slate-800'
-                                  }`}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Allowed Classes Filter */}
-                        <div>
-                          <div className="text-[10px] text-amber-500 font-mono uppercase tracking-wider mb-1.5 flex justify-between">
-                            <span>{t("Proficiências de Classe")}</span>
-                            <div className="space-x-2">
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterClasses(['any', 'ciborgue_foragido', 'nomade_silicio', 'quimico_sintetico', 'mercenario_elite'])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Todos")}]
-                              </button>
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterClasses([])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Nenhum")}]
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {([
-                              { id: 'any', name: 'Geral' },
-                              { id: 'ciborgue_foragido', name: 'Ciborgue' },
-                              { id: 'nomade_silicio', name: 'Nômade' },
-                              { id: 'quimico_sintetico', name: 'Químico' },
-                              { id: 'mercenario_elite', name: 'Mercenário' }
-                            ]).map(cls => {
-                              const active = batchFilterClasses.includes(cls.id);
-                              return (
-                                <button
-                                  key={cls.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setBatchFilterClasses(prev => 
-                                      prev.includes(cls.id) ? prev.filter(c => c !== cls.id) : [...prev, cls.id]
-                                    );
-                                  }}
-                                  className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-all cursor-pointer ${
-                                    active 
-                                      ? 'bg-cyan-950/40 text-cyan-300 border-cyan-600/50 shadow-[0_0_8px_rgba(6,182,212,0.2)]' 
-                                      : 'bg-slate-950/60 text-slate-500 border-slate-800'
-                                  }`}
-                                >
-                                  {t(cls.name)}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Item Types Filter */}
-                        <div>
-                          <div className="text-[10px] text-amber-500 font-mono uppercase tracking-wider mb-1.5 flex justify-between">
-                            <span>{t("Tipo de Item")}</span>
-                            <div className="space-x-2">
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterTypes(['weapon', 'armor', 'helmet', 'pants', 'boots', 'bracers', 'accessory', 'circuit_module', 'consumable'])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Todos")}]
-                              </button>
-                              <button 
-                                type="button" 
-                                onClick={() => setBatchFilterTypes([])}
-                                className="hover:text-amber-300 text-[9px] font-mono cursor-pointer"
-                              >
-                                [{t("Nenhum")}]
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {([
-                              { id: 'weapon', name: 'Arma' },
-                              { id: 'armor', name: 'Peitoral' },
-                              { id: 'helmet', name: 'Elmo' },
-                              { id: 'pants', name: 'Pernas' },
-                              { id: 'boots', name: 'Botas' },
-                              { id: 'bracers', name: 'Braços' },
-                              { id: 'accessory', name: 'Acess.' },
-                              { id: 'circuit_module', name: 'Mod.' },
-                              { id: 'consumable', name: 'Cons.' }
-                            ]).map(tItem => {
-                              const active = batchFilterTypes.includes(tItem.id);
-                              return (
-                                <button
-                                  key={tItem.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setBatchFilterTypes(prev => 
-                                      prev.includes(tItem.id) ? prev.filter(type => type !== tItem.id) : [...prev, tItem.id]
-                                    );
-                                  }}
-                                  className={`px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all cursor-pointer ${
-                                    active 
-                                      ? 'bg-purple-950/40 text-purple-300 border-purple-600/50 shadow-[0_0_8px_rgba(168,85,247,0.2)]' 
-                                      : 'bg-slate-950/60 text-slate-500 border-slate-800'
-                                  }`}
-                                >
-                                  {t(tItem.name)}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Filtered Count and Batch Buttons */}
-                      {(() => {
-                        const filteredInventory = player.inventory.filter(item => {
-                          if (!batchFilterRarities.includes(item.rarity)) return false;
-                          const isGeneral = !item.allowedClassIds || item.allowedClassIds.length === 0;
-                          if (isGeneral) {
-                            if (!batchFilterClasses.includes('any')) return false;
-                          } else {
-                            const hasAllowedMatch = item.allowedClassIds.some(cId => batchFilterClasses.includes(cId));
-                            if (!hasAllowedMatch) return false;
-                          }
-                          if (!batchFilterTypes.includes(item.type)) return false;
-                          return true;
-                        });
-
-                        const totalBatchGold = filteredInventory.reduce((acc, item) => acc + (item.value || GOLD_VALUES[item.rarity] || 5), 0);
-
-                        return (
-                          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-                            <div className="text-xs font-mono text-slate-400">
-                              {t("Selecionados:")} <span className="text-amber-400 font-bold">{filteredInventory.length}</span> / {player.inventory.length} {t("item(ns)")}
-                              {filteredInventory.length > 0 && (
-                                <span className="ml-2">
-                                  ({t("Valor Est.:")} <span className="text-yellow-400 font-bold">{totalBatchGold} CRD</span>)
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className="flex gap-2 w-full sm:w-auto">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (confirm(`${t("Deseja DESMANCHAR todos os")} ${filteredInventory.length} ${t("itens filtrados?")}`)) {
-                                    handleDismantleBatch(filteredInventory);
-                                  }
-                                }}
-                                disabled={filteredInventory.length === 0}
-                                className={`flex-1 sm:flex-initial px-4 py-2 rounded text-xs font-bold font-mono tracking-wider uppercase transition-all border cursor-pointer ${
-                                  filteredInventory.length > 0
-                                    ? 'bg-amber-900/30 text-amber-400 border-amber-600/50 hover:bg-amber-900/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-                                    : 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
-                                }`}
-                              >
-                                {t("Desmanchar")} {filteredInventory.length === player.inventory.length ? t('Tudo') : t('Filtrados')}
-                              </button>
-                              
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (confirm(`${t("Deseja VENDER todos os")} ${filteredInventory.length} ${t("itens filtrados por")} ${totalBatchGold} CRD?`)) {
-                                    handleSellBatch(filteredInventory);
-                                  }
-                                }}
-                                disabled={filteredInventory.length === 0}
-                                className={`flex-1 sm:flex-initial px-4 py-2 rounded text-xs font-bold font-mono tracking-wider uppercase transition-all border cursor-pointer ${
-                                  filteredInventory.length > 0
-                                    ? 'bg-emerald-900/30 text-emerald-400 border-emerald-600/50 hover:bg-emerald-900/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-                                    : 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
-                                }`}
-                              >
-                                {t("Vender")} {filteredInventory.length === player.inventory.length ? t('Tudo') : t('Filtrados')}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Filtered Inventory Items List */}
-                    <div className="p-4 overflow-y-auto flex-1 custom-scrollbar" style={{ maxHeight: '350px' }}>
-                      {(() => {
-                        const filteredInventory = player.inventory.map((item, originalIndex) => ({ item, originalIndex })).filter(({ item }) => {
-                          if (!batchFilterRarities.includes(item.rarity)) return false;
-                          const isGeneral = !item.allowedClassIds || item.allowedClassIds.length === 0;
-                          if (isGeneral) {
-                            if (!batchFilterClasses.includes('any')) return false;
-                          } else {
-                            const hasAllowedMatch = item.allowedClassIds.some(cId => batchFilterClasses.includes(cId));
-                            if (!hasAllowedMatch) return false;
-                          }
-                          if (!batchFilterTypes.includes(item.type)) return false;
-                          return true;
-                        });
-
-                        if (filteredInventory.length === 0) {
-                          return (
-                            <div className="h-32 flex items-center justify-center text-slate-500 text-sm font-mono uppercase tracking-widest border border-dashed border-slate-800 rounded bg-slate-900/10">
-                              Nenhum item corresponde aos filtros selecionados
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {filteredInventory.map(({ item, originalIndex }) => {
-                              const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
-                              return (
-                                <li key={originalIndex} className={`flex justify-between items-center text-sm p-2 rounded border ${getRarityStyle(item.rarity)} hover:brightness-110 transition-all group relative overflow-hidden bg-slate-950/40`}>
-                                  <div className="flex items-center gap-3 overflow-hidden mr-2 relative z-10">
-                                    <div className={`w-10 h-10 rounded shrink-0 flex items-center justify-center ${getRarityGradient(item.rarity)}`}>
-                                      {getItemIcon(item.type, "w-5 h-5 text-slate-100 drop-shadow")}
-                                    </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="truncate font-bold tracking-wide text-slate-200">{item.name}</span>
-                                        {renderManufacturerBadge(item)}
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-[9px] uppercase font-mono text-slate-500 font-semibold">{item.type}</span>
-                                        <span className="text-[9px] font-mono text-yellow-500/90 font-bold">${goldEarned} CRD</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex gap-1.5 shrink-0 relative z-10">
-                                    <button 
-                                      onClick={() => handleDismantle(originalIndex)}
-                                      className="bg-amber-950/80 text-amber-400 border border-amber-800/80 hover:bg-amber-900 hover:text-amber-200 hover:shadow-[0_0_10px_rgba(245,158,11,0.3)] active:scale-95 px-2 py-1 rounded text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
-                                    >
-                                      DESMANCHAR
-                                    </button>
-                                    <button 
-                                      onClick={() => handleSell(originalIndex)}
-                                      className="bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 hover:bg-emerald-900/90 hover:text-emerald-100 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] active:scale-95 px-2 py-1 rounded text-[9px] uppercase font-bold tracking-wider transition-all cursor-pointer"
-                                    >
-                                      VENDER
-                                    </button>
-                                  </div>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </>
+                <ForgePanel
+                  player={player}
+                  setPlayer={setPlayer}
+                  handleCraft={handleCraft}
+                  handleConvertMaterials={handleConvertMaterials}
+                  handleDismantle={handleDismantle}
+                  handleSell={handleSell}
+                  handleDismantleBatch={handleDismantleBatch}
+                  handleSellBatch={handleSellBatch}
+                  inventoryMessage={inventoryMessage}
+                  getRarityStyle={getRarityStyle}
+                  getRarityGradient={getRarityGradient}
+                  getItemIcon={getItemIcon}
+                  renderManufacturerBadge={renderManufacturerBadge}
+                />
               )}
               
               {hubTab === 'soldagem' && (
-                <>
-                  <div className="system-panel">
-                    <div className="border-b border-indigo-500/20 bg-indigo-950/40 px-4 py-3 flex justify-between items-center">
-                      <span className="font-bold text-indigo-400 tracking-widest uppercase text-sm flex gap-4">
-                        <button 
-                          onClick={() => setSoldagemSubTab('socket')}
-                          className={`${soldagemSubTab === 'socket' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-indigo-700 hover:text-indigo-300'}`}
-                        >
-                          {t("Bancada de Soldagem PCB")}
-                        </button>
-                        <button 
-                          onClick={() => setSoldagemSubTab('merge')}
-                          className={`${soldagemSubTab === 'merge' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-indigo-700 hover:text-indigo-300'}`}
-                        >
-                          {t("Fusão de Componentes")}
-                        </button>
-                      </span>
-                    </div>
-                    
-                    {soldagemSubTab === 'socket' && (
-                    <>
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <h4 className="text-xs uppercase font-mono text-indigo-300">{t("Equipamentos Compatíveis")}</h4>
-                        <div className="max-h-64 overflow-y-auto pr-2 space-y-2">
-                          {(() => {
-                            const equipSlots = ['weapon', 'helmet', 'armor', 'pants', 'boots', 'bracers', 'accessory1', 'accessory2', 'accessory3'] as const;
-                            const socketableEq = equipSlots.map(slot => ({ item: player.equipment[slot], source: slot })).filter(e => e.item && e.item.hardwareSlots && e.item.hardwareSlots.length > 0);
-                            const socketableInv = player.inventory.map((item, index) => ({ item, source: 'inventory', index })).filter(e => e.item.hardwareSlots && e.item.hardwareSlots.length > 0);
-                            
-                            const allSocketable = [...socketableEq, ...socketableInv];
-                            if (allSocketable.length === 0) return <div className="text-xs text-slate-500 font-mono">{t("Nenhum equipamento Raro ou Épico encontrado.")}</div>;
-                            
-                            return allSocketable.map((entry, idx) => (
-                              <button 
-                                key={idx}
-                                onClick={() => { setSelectedEquipmentForSocketing(entry as any); setSelectedSocketIndex(null); }}
-                                className={`w-full text-left p-2 border rounded flex items-center justify-between ${selectedEquipmentForSocketing?.item?.id === entry.item?.id && selectedEquipmentForSocketing?.source === entry.source ? 'bg-indigo-900/50 border-indigo-500' : 'bg-slate-900/50 border-slate-700 hover:border-indigo-700'}`}
-                              >
-                                <div>
-                                  <div className={`text-sm font-bold truncate ${getRarityStyle(entry.item!.rarity).split(' ')[0]}`}>{t(entry.item!.name)}</div>
-                                  <div className="text-[10px] font-mono text-slate-400">{entry.source === 'inventory' ? t('Inventário') : `${t('Equipado: ')}${entry.source.toUpperCase()}`}</div>
-                                </div>
-                                <div className="flex gap-1">
-                                  {entry.item!.hardwareSlots?.map((slot, i) => (
-                                    <div key={i} className={`w-3 h-3 rounded-full border ${slot ? 'bg-indigo-400 border-indigo-300' : 'bg-slate-800 border-slate-600'}`}></div>
-                                  ))}
-                                </div>
-                              </button>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-                      
-                      <div className="bg-slate-950 border-2 border-indigo-900/30 rounded p-4 relative overflow-hidden flex flex-col items-center justify-center min-h-[250px]">
-                        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 10px 10px, rgba(99, 102, 241, 0.5) 2px, transparent 0)', backgroundSize: '20px 20px' }}></div>
-                        
-                        {selectedEquipmentForSocketing && selectedEquipmentForSocketing.item ? (
-                          <div className="relative z-10 w-full flex flex-col items-center">
-                            <h4 className={`text-lg font-bold mb-6 text-center ${getRarityStyle(selectedEquipmentForSocketing.item.rarity).split(' ')[0]}`}>
-                              {selectedEquipmentForSocketing.item.name}
-                            </h4>
-                            
-                            <div className="flex gap-8 justify-center">
-                              {selectedEquipmentForSocketing.item.hardwareSlots?.map((slotItem, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-3">
-                                  <button 
-                                    onClick={() => setSelectedSocketIndex(idx)}
-                                    className={`w-16 h-16 rounded border-2 flex items-center justify-center transition-all ${selectedSocketIndex === idx ? 'border-indigo-400 bg-indigo-900/40 shadow-[0_0_15px_rgba(99,102,241,0.5)]' : slotItem ? 'border-indigo-600/50 bg-slate-900' : 'border-slate-700 border-dashed bg-slate-900/50 hover:border-indigo-500'}`}
-                                  >
-                                    {slotItem ? (
-                                      <Cpu className="w-8 h-8 text-indigo-400" />
-                                    ) : (
-                                      <div className="text-[10px] font-mono text-slate-500 uppercase text-center leading-tight">{t("Slot Vazio")}</div>
-                                    )}
-                                  </button>
-                                  {slotItem ? (
-                                    <div className="text-center">
-                                      <div className="text-[10px] font-bold text-indigo-300 truncate w-24" title={slotItem.name}>{t(slotItem.name)} {slotItem.level ? `[Nv.${slotItem.level}]` : ''}</div>
-                                      {renderStatModifiers(slotItem)}
-                                      
-                                      <button onClick={() => handleUnsocketModule(idx)} className="mt-2 text-[8px] uppercase tracking-widest bg-red-950/80 text-red-400 px-2 py-1 rounded border border-red-900 hover:bg-red-900 transition-colors">{t("Remover")}</button>
-                                    </div>
-                                  ) : (
-                                    <div className="text-[10px] text-slate-500 font-mono">{t("Disponível")}</div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="h-full w-full flex flex-col items-center justify-center text-indigo-500/30">
-                            <Cpu className="w-16 h-16 mb-2" />
-                            <span className="font-mono text-sm uppercase tracking-widest">{t("Aguardando Conexão")}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {selectedEquipmentForSocketing && selectedSocketIndex !== null && (
-                      <div className="border-t border-indigo-900/30 p-4 bg-indigo-950/20">
-                        <h4 className="text-xs uppercase font-mono text-indigo-400 mb-3">{t("Módulos no Inventário")}</h4>
-                        <div className="flex gap-3 overflow-x-auto pb-2">
-                          {player.inventory.map((item, idx) => {
-                            if (item.type !== 'circuit_module') return null;
-                            return (
-                              <div key={idx} className="shrink-0 bg-slate-900 border border-indigo-900/50 rounded p-2 flex flex-col w-40 justify-between">
-                                <div>
-                                  <div className="text-[10px] font-bold text-indigo-300 truncate">{t(item.name)} {item.level ? `[Nv.${item.level}]` : ''}</div>
-                                  <div className="text-[9px] text-slate-400 mb-2">{t(item.description)}</div>
-                                  {renderStatModifiers(item)}
-                                  
-                                </div>
-                                <button 
-                                  onClick={() => handleSocketModule(item, idx)}
-                                  className="mt-2 text-[10px] uppercase font-bold tracking-widest bg-indigo-900 hover:bg-indigo-800 text-indigo-200 py-1 rounded w-full transition-colors"
-                                >
-                                  {t("Soldar")}
-                                </button>
-                              </div>
-                            );
-                          })}
-                          {!player.inventory.some(i => i.type === 'circuit_module') && (
-                            <div className="text-xs text-slate-500 font-mono w-full text-center py-4">{t("Nenhum módulo de circuito no inventário.")}</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    </>
-                    )}
-                    
-                    {soldagemSubTab === 'merge' && (
-                      <div className="p-4">
-                        <div className="bg-slate-950 border border-indigo-900/50 rounded p-4 mb-6 relative overflow-hidden text-center">
-                          <Cpu className="w-8 h-8 text-indigo-400 mx-auto mb-2 opacity-50" />
-                          <h4 className="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-2">{t("Fundição de Componentes")}</h4>
-                          <p className="text-xs text-slate-400 max-w-lg mx-auto">
-                            {t("Combine 3 módulos de circuito idênticos (mesmo tipo e nível) para criar uma versão superior, pagando uma taxa em Ouro.")}
-                          </p>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {(() => {
-                            // Group circuit modules in inventory by id + level
-                            const groups = player.inventory
-                              .filter(i => i.type === 'circuit_module')
-                              .reduce((acc, item) => {
-                                const key = `${item.id}_${item.level || 1}`;
-                                if (!acc[key]) acc[key] = { item, count: 0 };
-                                acc[key].count++;
-                                return acc;
-                              }, {} as Record<string, { item: import('./types').Item, count: number }>);
-                              
-                            const groupList = Object.values(groups) as { item: import('./types').Item, count: number }[];
-                            
-                            if (groupList.length === 0) {
-                              return <div className="col-span-full text-center text-xs text-slate-500 font-mono py-8">{t("Nenhum módulo no inventário.")}</div>;
-                            }
-                            
-                            return groupList.map((g, idx) => {
-                              const canMerge = g.count >= 3;
-                              const mergeCost = 50 * (g.item.level || 1);
-                              return (
-                                <div key={idx} className={`bg-slate-900 border ${canMerge ? 'border-indigo-500' : 'border-slate-700'} rounded p-3 flex flex-col justify-between`}>
-                                  <div>
-                                    <div className="flex justify-between items-start mb-2">
-                                      <div className="text-xs font-bold text-indigo-300">{t(g.item.name)} {g.item.level ? `[Nv.${g.item.level}]` : ''}</div>
-                                      <div className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${canMerge ? 'bg-indigo-900 text-indigo-200' : 'bg-slate-800 text-slate-400'}`}>
-                                        {g.count}/3
-                                      </div>
-                                    </div>
-                                    <div className="text-[9px] text-slate-400 mb-2">{t(g.item.description)}</div>
-                                    {renderStatModifiers(g.item)}
-                                    
-                                  </div>
-                                  
-                                  <button
-                                    onClick={() => handleMergeChips(g.item)}
-                                    disabled={!canMerge || player.gold < mergeCost}
-                                    className={`mt-3 text-[10px] uppercase font-bold tracking-widest py-1.5 rounded w-full transition-colors flex justify-center items-center gap-1 ${canMerge && player.gold >= mergeCost ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
-                                  >
-                                    {t("Fundir")} ({mergeCost}G)
-                                  </button>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
+                <WeldingBenchPanel
+                  player={player}
+                  handleSocketModule={handleSocketModule}
+                  handleUnsocketModule={handleUnsocketModule}
+                  handleMergeChips={handleMergeChips}
+                  getRarityStyle={getRarityStyle}
+                />
               )}
 
               {hubTab === 'reliquias' && (
-                <>
-                  {/* Relics Panels */}
-                  <div className="system-panel">
-                    <div className="border-b border-rose-500/20 bg-rose-950/40 px-4 py-3 flex justify-between items-center">
-                      <span className="font-bold text-rose-400 tracking-widest uppercase text-sm">{t("Relíquias Passivas")}</span>
-                      {inventoryMessage && (
-                        <span className={`text-xs px-2 py-0.5 rounded font-mono uppercase tracking-wider border ${inventoryMessage.type === 'error' ? 'bg-red-950/50 text-red-400 border-red-900' : 'bg-emerald-950/50 text-emerald-400 border-emerald-900'}`}>
-                          {t(inventoryMessage.text)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-4 space-y-4">
-                      
-                      <div className="flex gap-4 mb-4">
-                        <div className="flex-1 bg-slate-900/60 p-3 rounded border border-rose-600/50 flex justify-between items-center shadow-[0_0_10px_rgba(244,63,94,0.1)]">
-                          <span className="text-rose-400 text-xs uppercase tracking-widest">{t("Estilhaços de Alma")}</span>
-                          <span className="text-white font-bold font-mono">{player.soulShards}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.values(RELICS_DATABASE).map(relic => {
-                          const currentLevel = player.relics[relic.id] || 0;
-                          const isMaxLevel = currentLevel >= relic.maxLevel;
-                          const cost = getRelicUpgradeCost(relic.id, currentLevel);
-                          const canUpgrade = !isMaxLevel && player.soulShards >= cost.shards && player.gold >= cost.gold;
-
-                          return (
-                            <div key={relic.id} className="bg-slate-900/60 p-4 rounded border border-rose-900/50 flex flex-col justify-between">
-                              <div>
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-bold text-rose-300 uppercase tracking-wider text-sm">{t(relic.name)}</span>
-                                  <span className="text-rose-400/80 font-mono text-xs border border-rose-900/50 px-1.5 rounded">{t("Nv.")} {currentLevel}/{relic.maxLevel}</span>
-                                </div>
-                                <p className="text-xs text-slate-400 mb-1 leading-relaxed">{t(relic.description)}</p>
-                                <p className="text-[10px] text-emerald-400/80 font-mono tracking-wide mb-4">{t("Efeito Atual:")} +{parseInt(relic.baseEffectText) * currentLevel}% ({t(relic.baseEffectText)})</p>
-                              </div>
-                              
-                              <button
-                                onClick={() => handleUpgradeRelic(relic.id)}
-                                disabled={!canUpgrade}
-                                className={`w-full py-2 rounded border border-rose-500/30 text-xs uppercase font-bold tracking-wider transition-all flex justify-between items-center px-3 ${canUpgrade ? 'bg-rose-950/50 text-rose-400 hover:bg-rose-900/60 hover:shadow-[0_0_10px_rgba(244,63,94,0.4)] cursor-pointer' : 'bg-slate-800/50 text-slate-500 cursor-not-allowed opacity-60'}`}
-                              >
-                                <span>{isMaxLevel ? t('Máximo') : t('Aprimorar')}</span>
-                                {!isMaxLevel && (
-                                  <div className="font-mono text-[10px] text-right space-y-0.5 opacity-80">
-                                    <div>{cost.shards} {t('Almas')}</div>
-                                    <div>{cost.gold} G</div>
-                                  </div>
-                                )}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </>
+                <RelicsPanel
+                  player={player}
+                  handleUpgradeRelic={handleUpgradeRelic}
+                  inventoryMessage={inventoryMessage}
+                />
               )}
               {hubTab === 'bestiario' && (
                 <BestiaryPanel player={player} />
@@ -1960,164 +1195,15 @@ export default function App() {
                 </>
               )}
               {hubTab === 'adaptacoes' && (
-                <div className="system-panel overflow-hidden mb-4">
-                  <div className="border-b border-blue-500/20 bg-blue-950/40 px-4 py-3 flex items-center gap-2">
-                    <Fingerprint className="text-blue-400 w-4 h-4" />
-                    <span className="font-bold text-blue-400 tracking-widest uppercase text-sm">{t("Protocolos de Adaptação Biomecânica")}</span>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    <p className="text-xs text-blue-200/70 font-mono mb-4">
-                      {t("Seu traje evolui passivamente com a repetição de ações em combate.")}
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {Object.values(ADAPTATIONS_DATABASE).map(def => {
-                        const isUnlocked = player.adaptations && player.adaptations[def.id];
-                        if (def.isFusion && !isUnlocked) return null;
-
-                        const state = player.adaptations?.[def.id] || { level: 0, exp: 0 };
-                        const reqExp = def.expFormula(state.level);
-                        const progress = state.level === def.maxLevel ? 100 : (state.exp / reqExp) * 100;
-                        const borderColor = def.isFusion ? 'border-purple-500/50' : 'border-blue-500/20';
-                        const hoverColor = def.isFusion ? 'hover:border-purple-500' : 'hover:border-blue-500/50';
-                        const textColor = def.isFusion ? 'text-purple-200' : 'text-blue-200';
-                        const barColor = def.isFusion ? 'bg-purple-500' : 'bg-blue-500';
-                        const barBg = def.isFusion ? 'bg-purple-900/30 text-purple-400' : 'bg-blue-900/30 text-blue-400';
-                        
-                        return (
-                          <div key={def.id} className={`bg-slate-900/50 border ${borderColor} p-4 relative overflow-hidden flex flex-col group ${hoverColor} transition-colors`}>
-                            {def.isFusion && (
-                               <div className="absolute top-0 right-0 px-2 py-0.5 bg-purple-900/50 text-[8px] font-mono text-purple-300 uppercase tracking-widest border-b border-l border-purple-500/30">
-                                 {t("Sinergia")}
-                               </div>
-                            )}
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className={`font-bold ${textColor} text-sm tracking-widest uppercase pr-10`}>{t(def.name)}</h4>
-                              <span className={`text-xs font-mono ${barBg} px-2 py-1`}>
-                                {state.level === def.maxLevel ? t('Nv. Máx') : `${t('Nv.')} ${state.level}/${def.maxLevel}`}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-400 mb-4 flex-grow">{t(def.description)}</p>
-                            
-                            <div className="mt-auto">
-                              <div className={`flex justify-between text-[10px] ${def.isFusion ? 'text-purple-300/70' : 'text-blue-300/70'} font-mono mb-1`}>
-                                <span>{t("Proficiência")}</span>
-                                <span>{state.level === def.maxLevel ? t('MÁXIMO') : `${Math.floor(state.exp)} / ${reqExp}`}</span>
-                              </div>
-                              <div className={`w-full bg-slate-950 border ${def.isFusion ? 'border-purple-900' : 'border-blue-900'} h-2`}>
-                                <div className={`${barColor} h-full transition-all duration-1000`} style={{ width: `${progress}%` }}></div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <AdaptationsPanel player={player} />
               )}
 
               {hubTab === 'auto' && (
-                <>
-                  <div className="system-panel">
-                    <div className="border-b border-emerald-500/20 bg-emerald-950/40 px-4 py-3 flex justify-between items-center">
-                      <span className="font-bold text-emerald-400 tracking-widest uppercase text-sm">{t("Protocolos de Automação")}</span>
-                    </div>
-                    <div className="p-4 space-y-6">
-                      <div className="bg-slate-900/50 p-4 rounded border border-emerald-900/30 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div>
-                          <h4 className="text-emerald-300 font-bold tracking-wide uppercase text-sm mb-1">{t("Auto-Batalha")}</h4>
-                          <p className="text-xs text-emerald-200/60 font-mono">{t("Permite que a IA da nave assuma o controle durante confrontos, seguindo as diretrizes abaixo.")}</p>
-                        </div>
-                        <button 
-                          onClick={() => setPlayer(p => ({ ...p, isAutoBattleActive: !p.isAutoBattleActive }))}
-                          className={`shrink-0 px-6 py-2 rounded font-bold uppercase tracking-widest text-sm transition-all border ${player.isAutoBattleActive ? 'bg-emerald-600 text-slate-950 border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-emerald-700 hover:text-emerald-500'}`}
-                        >
-                          {player.isAutoBattleActive ? t('ATIVADO') : t('DESATIVADO')}
-                        </button>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-cyan-400 font-bold tracking-wide uppercase text-sm">{t("Diretrizes de Ação")}</h4>
-                          <button 
-                            onClick={() => {
-                              const newRule = { id: Math.random().toString(36).substr(2, 9), condition: 'always', action: 'attack' };
-                              setPlayer(p => ({ ...p, autoBattleRules: [...(p.autoBattleRules || []), newRule] }));
-                            }}
-                            className="text-[10px] bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-800 px-3 py-1 rounded uppercase tracking-widest transition-colors cursor-pointer"
-                          >
-                            {t("+ Nova Diretriz")}
-                          </button>
-                        </div>
-                        
-                        {!player.autoBattleRules || player.autoBattleRules.length === 0 ? (
-                          <div className="text-center py-8 border border-dashed border-slate-700 rounded bg-slate-900/30">
-                            <span className="text-slate-500 text-xs font-mono uppercase tracking-widest">{t("Nenhuma diretriz definida. IA usará Ataque Básico.")}</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {player.autoBattleRules.map((rule, idx) => (
-                              <div key={rule.id} className="bg-slate-900/80 p-3 rounded border border-slate-700 flex flex-col md:flex-row gap-3 items-center">
-                                <span className="text-cyan-500/50 text-xs font-mono w-6 text-center">#{idx + 1}</span>
-                                
-                                <div className="flex-1 w-full flex items-center gap-2">
-                                  <span className="text-[10px] uppercase tracking-widest text-slate-400">{t("SE")}</span>
-                                  <select 
-                                    value={rule.condition}
-                                    onChange={(e) => {
-                                      const rules = [...player.autoBattleRules];
-                                      rules[idx].condition = e.target.value as any;
-                                      setPlayer(p => ({ ...p, autoBattleRules: rules }));
-                                    }}
-                                    className="bg-slate-950 text-emerald-300 border border-emerald-900/50 text-xs p-1.5 rounded outline-none w-full md:w-auto"
-                                  >
-                                    <option value="always">{t("Sempre")}</option>
-                                    <option value="hp_lt_25">HP &lt; 25%</option>
-                                    <option value="hp_lt_50">HP &lt; 50%</option>
-                                    <option value="hp_lt_75">HP &lt; 75%</option>
-                                    <option value="mp_lt_50">EP &lt; 50%</option>
-                                    <option value="enemy_hp_lt_50">{t("HP Inimigo < 50%")}</option>
-                                  </select>
-                                </div>
-                                
-                                <div className="flex-1 w-full flex items-center gap-2">
-                                  <span className="text-[10px] uppercase tracking-widest text-slate-400">{t("FAZER")}</span>
-                                  <select 
-                                    value={rule.action}
-                                    onChange={(e) => {
-                                      const rules = [...player.autoBattleRules];
-                                      rules[idx].action = e.target.value;
-                                      setPlayer(p => ({ ...p, autoBattleRules: rules }));
-                                    }}
-                                    className="bg-slate-950 text-indigo-300 border border-indigo-900/50 text-xs p-1.5 rounded outline-none w-full md:w-auto"
-                                  >
-                                    <option value="attack">{t("Ataque Básico")}</option>
-                                    {playerCombatSkills.map(s => {
-                                      const skillDef = SKILLS_DATABASE[s];
-                                      return <option key={s} value={s}>{t(skillDef.name)}</option>;
-                                    })}
-                                  </select>
-                                </div>
-                                
-                                <button 
-                                  onClick={() => {
-                                    const rules = [...player.autoBattleRules];
-                                    rules.splice(idx, 1);
-                                    setPlayer(p => ({ ...p, autoBattleRules: rules }));
-                                  }}
-                                  className="shrink-0 text-red-400 hover:text-red-300 p-2 opacity-50 hover:opacity-100 transition-opacity"
-                                  title="Remover Diretriz"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <p className="text-[10px] text-slate-500 font-mono text-center">{t("As diretrizes são avaliadas de cima para baixo. A primeira que for verdadeira será executada.")}</p>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                <AutoBattlePanel
+                  player={player}
+                  setPlayer={setPlayer}
+                  playerCombatSkills={playerCombatSkills}
+                />
               )}
 
             </div>
@@ -2168,7 +1254,7 @@ export default function App() {
                             combatState.bossPuzzle.correctPort,
                             combatState.bossPuzzle.correctPort + 15,
                             combatState.bossPuzzle.correctPort - 10
-                          ].sort(() => Math.random() - 0.5).map((port, idx) => (
+                          ].sort(() => random() - 0.5).map((port, idx) => (
                             <button
                               key={idx}
                               onClick={() => handleCombatAction({ type: 'boss_puzzle', port })}
@@ -2346,6 +1432,18 @@ export default function App() {
               {/* Palco Isométrico de Combate */}
               {combatState && (
                 <div className="system-panel h-64 relative overflow-hidden flex items-center justify-center iso-stage" style={{ '--sector-rgb': getSectorForFloor(selectedFloor).rgb } as React.CSSProperties}>
+                  {/* Informações Narrativas e de Efeito do Setor */}
+                  <div className="absolute top-2 left-2 flex flex-col max-w-[240px] bg-slate-950/90 border border-slate-800/80 rounded p-2 z-20 text-[9px] font-mono leading-relaxed backdrop-blur-md shadow-md text-left">
+                    <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                      <span className={`w-2 h-2 rounded-full animate-pulse ${getSectorForFloor(selectedFloor).colorTheme === 'green' ? 'bg-green-500' : getSectorForFloor(selectedFloor).colorTheme === 'blue' ? 'bg-blue-500' : 'bg-orange-500'}`} />
+                      <span className={getSectorForFloor(selectedFloor).color}>{getSectorForFloor(selectedFloor).name}</span>
+                    </div>
+                    <p className="text-slate-400 text-[8px] mt-1 italic">{getSectorForFloor(selectedFloor).flavorText}</p>
+                    <div className="border-t border-slate-850 mt-1.5 pt-1 text-[7.5px] text-amber-500/90">
+                      <span className="font-bold uppercase tracking-widest">{t("Aviso Ambiental")}:</span> {getSectorForFloor(selectedFloor).description}
+                    </div>
+                  </div>
+
                   {combatState.anomaly && combatState.isBossEnraged && (
                     <div className="absolute top-2 right-2 bg-yellow-950/80 border border-yellow-500/50 text-yellow-400 p-1 rounded z-20 text-[8px] font-mono shadow-[0_0_10px_rgba(234,179,8,0.3)]">
                       <span className="animate-pulse mr-1">⚡</span>{combatState.anomaly.name}

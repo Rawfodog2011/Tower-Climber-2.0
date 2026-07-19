@@ -24,12 +24,15 @@ export function EndingScreen({ player, onContinue }: EndingScreenProps) {
           <p className="text-indigo-200/70 uppercase tracking-[0.2em] text-sm">{t("Protocolo de Anomalia Desativado")}</p>
         </div>
 
-        <div className="bg-slate-900/50 border border-indigo-500/30 p-8 rounded-lg shadow-2xl backdrop-blur-sm animate-[slideUp_1.5s_ease-out] mb-10">
-          <p className="text-lg leading-relaxed mb-6 font-medium text-slate-300">
-            {t("O Núcleo Matriz foi silenciado. As luzes da Torre começam a pulsar em uma frequência estável. A corrupção industrial que assolava os andares superiores dissipou-se.")}
+        <div className="bg-slate-900/50 border border-indigo-500/30 p-8 rounded-lg shadow-2xl backdrop-blur-sm animate-[slideUp_1.5s_ease-out] mb-10 space-y-6">
+          <p className="text-lg leading-relaxed font-medium text-slate-300">
+            {t("O silêncio que se abate sobre a Matrix Central é frio e absoluto. As explosões de fumaça e curto-circuitos dão lugar a um pulsar lento e rítmico das bobinas de energia da Torre. Você desferiu o golpe de misericórdia contra o Núcleo Matriz, mas em vez do colapso da megaestrutura, você sente uma transição suave de permissões de sistema correndo pelas suas próprias veias de metal.")}
           </p>
-          <p className="text-lg leading-relaxed mb-8 font-medium text-slate-300">
-            {t("Você ascendeu ao topo, superando aberrações biológicas e construtos de silício implacáveis. A rede principal agora obedece aos seus comandos de sobrescrita.")}
+          <p className="text-lg leading-relaxed font-medium text-slate-300">
+            {t("Você ascendeu ao topo, deixando para trás um rastro de cinzas, ferro retorcido e clones sacrificados. A rede principal da Torre agora obedece aos seus comandos de sobrescrita tática. No entanto, as luzes nos andares inferiores não se apagaram — elas apenas mudaram de padrão, alinhando-se sob a frequência de assinatura de seu novo administrador supremo.")}
+          </p>
+          <p className="text-lg leading-relaxed font-medium text-slate-300 border-t border-indigo-500/25 pt-4">
+            {t("Silenciar o Núcleo Matriz nunca foi sobre libertar o Pináculo; foi sobre depurar um processo obsoleto. O mainframe desativado repousa sob seus pés como um chassi oco, aguardando que o novo hospedeiro herde o terminal de controle. A Torre precisa de um núcleo para manter o ciclo girando. E enquanto você observa o trono mecânico se abrir, você percebe com clareza amarga: o próximo explorador que subir estes andares encontrará você esperando nas sombras como o novo Guardião.")}
           </p>
           
           <div className="border-t border-indigo-900/50 pt-6 mt-6 font-mono">
