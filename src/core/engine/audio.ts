@@ -67,7 +67,7 @@ class AudioManagerClass {
     }
   }
 
-  playSfx(id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number }): void {
+  playSfx(id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number; rarity?: any }): void {
     if (!this.initialized || this.muted) {
       return;
     }
@@ -361,6 +361,33 @@ class AudioManagerClass {
           noise.dispose();
           filter.dispose();
         }, 2500);
+      } else if (id === 'ui.danger_siren') {
+        const synth = new Tone.Synth({
+          oscillator: { type: 'sawtooth' },
+          envelope: { attack: 0.05, decay: 0.15, sustain: 0.6, release: 0.1 }
+        }).connect(this.sfxGain);
+        synth.volume.setValueAtTime(customVol - 4, now);
+        synth.triggerAttack(400, now);
+        synth.frequency.setValueAtTime(400, now);
+        synth.frequency.linearRampToValueAtTime(800, now + 0.15);
+        synth.frequency.linearRampToValueAtTime(400, now + 0.3);
+        synth.triggerRelease(now + 0.35);
+        setTimeout(() => synth.dispose(), 500);
+      } else if (id === 'ui.sector_reveal') {
+        const delay = new Tone.FeedbackDelay(0.12, 0.3).connect(this.sfxGain);
+        const synth = new Tone.Synth({
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.05, decay: 0.3, sustain: 0.2, release: 0.3 }
+        }).connect(delay);
+        synth.volume.setValueAtTime(customVol - 6, now);
+        synth.triggerAttackRelease(261.63, 0.1, now);
+        synth.triggerAttackRelease(329.63, 0.1, now + 0.08);
+        synth.triggerAttackRelease(392.00, 0.1, now + 0.16);
+        synth.triggerAttackRelease(523.25, 0.2, now + 0.24);
+        setTimeout(() => {
+          synth.dispose();
+          delay.dispose();
+        }, 1500);
       } else if (id === 'combat.boss_enrage') {
         const filter = new Tone.Filter({ type: 'lowpass', frequency: 400 }).connect(this.sfxGain);
         const dist = new Tone.Distortion(0.8).connect(filter);

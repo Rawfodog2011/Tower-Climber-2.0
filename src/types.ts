@@ -155,6 +155,7 @@ export interface Player {
   adaptations: Record<string, AdaptationState>;
   originId?: string;
   completedTutorials?: string[];
+  visitedSectors?: string[];
 }
 
 export type SectorHazard = 'toxic_refinery' | 'frozen_datacore' | 'plasma_furnace' | 'none';

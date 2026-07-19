@@ -52,6 +52,7 @@ import { MemoryFragmentScreen } from './components/MemoryFragmentScreen';
 import { MemoryArchivePanel } from './components/MemoryArchivePanel';
 import { useTranslation, translate, setLanguage, getLanguage, Language } from './core/engine/translation';
 import { random } from './core/engine/rng';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { getSectorForFloor } from './core/math/worldScaling';
 import { STORAGE_KEYS, getStorageString, setStorageString } from './core/engine/storage';
@@ -168,7 +169,8 @@ function createDefaultPlayer() {
       'dissipacao_calor': { level: 0, exp: 0 }
     },
     contracts: [],
-    bestiary: {}
+    bestiary: {},
+    visitedSectors: []
   };
 }
 
@@ -181,6 +183,9 @@ export default function App() {
   const [player, setPlayer] = useState<Player>(() => {
     const saved = loadGame();
     if (saved) {
+      if (!saved.visitedSectors) {
+        saved.visitedSectors = [];
+      }
       return saved;
     }
     return {
@@ -215,11 +220,12 @@ export default function App() {
         'overclock_combate': { level: 0, exp: 0 },
         'dissipacao_calor': { level: 0, exp: 0 }
       },
-      completedTutorials: []
+      completedTutorials: [],
+      visitedSectors: []
     };
   });
 
-  const [scene, setScene] = useState<'main_menu' | 'intro' | 'hub' | 'combat' | 'event' | 'puzzle' | 'ending' | 'character_creation' | 'timeline_closure'>('main_menu');
+  const [scene, setScene] = useState<'main_menu' | 'intro' | 'hub' | 'combat' | 'event' | 'puzzle' | 'ending' | 'character_creation' | 'timeline_closure' | 'env_intro'>('main_menu');
   const [justCompletedAll, setJustCompletedAll] = useState<boolean>(false);
   const [isContinueRun, setIsContinueRun] = useState(false);
   const [hubTab, setHubTab] = useState<'expedicao' | 'perfil' | 'geral' | 'habilidades' | 'forja' | 'soldagem' | 'reliquias' | 'adaptacoes' | 'auto' | 'conquistas' | 'mercado' | 'contratos' | 'bestiario' | 'memorias'>('expedicao');
@@ -233,6 +239,9 @@ export default function App() {
   const [inventoryMessage, setInventoryMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
   const [activeEvolutionNarrative, setActiveEvolutionNarrative] = useState<{ classId: string; text: string } | null>(null);
   const [activeMemoryKey, setActiveMemoryKey] = useState<string | null>(null);
+  const [introSector, setIntroSector] = useState<any | null>(null);
+  const [introStep, setIntroStep] = useState<'danger' | 'details'>('danger');
+  const [pendingDiveParams, setPendingDiveParams] = useState<{ floor: number; forceCombat: boolean } | null>(null);
 
   const playerCombatSkills = React.useMemo(() => {
     return Object.keys(SKILLS_DATABASE).filter(skillId => {
@@ -431,13 +440,25 @@ export default function App() {
     }
   }, [inventoryMessage]);
 
-  const handleStartDive = (floor: number, forceCombat: boolean = false) => {
-    const pending = getPendingTutorials(player);
-    if (pending.length > 0) {
-      triggerToast(`⚠️ Calibração pendente! Por favor, conclua o tutorial do sistema.`);
-      setScene('hub');
-      return;
+  useEffect(() => {
+    if (scene === 'env_intro' && introStep === 'danger') {
+      AudioManager.playSfx('ui.danger_siren');
+      const interval = setInterval(() => {
+        AudioManager.playSfx('ui.danger_siren');
+      }, 600);
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        setIntroStep('details');
+        AudioManager.playSfx('ui.sector_reveal');
+      }, 2400);
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
     }
+  }, [scene, introStep]);
+
+  const proceedWithDive = (floor: number, forceCombat: boolean = false) => {
     const isBoss = floor % 10 === 0;
     const isFarming = player.isFarmActive;
     if (!isFarming && !forceCombat && !isBoss && random() < 0.25) {
@@ -453,6 +474,25 @@ export default function App() {
       setCombatEndMessage(null);
       setScene('combat');
     }
+  };
+
+  const handleStartDive = (floor: number, forceCombat: boolean = false) => {
+    const pending = getPendingTutorials(player);
+    if (pending.length > 0) {
+      triggerToast(`⚠️ Calibração pendente! Por favor, conclua o tutorial do sistema.`);
+      setScene('hub');
+      return;
+    }
+    const sector = getSectorForFloor(floor);
+    const visited = player.visitedSectors || [];
+    if (!visited.includes(sector.hazard)) {
+      setIntroSector(sector);
+      setIntroStep('danger');
+      setPendingDiveParams({ floor, forceCombat });
+      setScene('env_intro');
+      return;
+    }
+    proceedWithDive(floor, forceCombat);
   };
 
   const generatePuzzle = () => {
@@ -1602,20 +1642,31 @@ export default function App() {
                 </div>
               )}
 
+              {/* Painel de Risco Ambiental do Setor */}
+              {combatState && (
+                <div className={`bg-slate-900/50 border ${
+                  getSectorForFloor(selectedFloor).colorTheme === 'green' ? 'border-green-500/30 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.05)]' : 
+                  getSectorForFloor(selectedFloor).colorTheme === 'blue' ? 'border-blue-500/30 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.05)]' : 
+                  'border-orange-500/30 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.05)]'
+                } p-2 rounded flex flex-col md:flex-row items-start md:items-center justify-between gap-2 mb-4`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full animate-pulse ${
+                      getSectorForFloor(selectedFloor).colorTheme === 'green' ? 'bg-green-500' : 
+                      getSectorForFloor(selectedFloor).colorTheme === 'blue' ? 'bg-blue-500' : 
+                      'bg-orange-500'
+                    }`} />
+                    <span className="font-bold uppercase tracking-widest text-xs">{t(getSectorForFloor(selectedFloor).name)}</span>
+                  </div>
+                  <span className="font-mono text-xs text-slate-300 md:text-right leading-relaxed">
+                    <strong className="text-amber-500 uppercase text-[10px] tracking-widest mr-1.5">{t("Efeito Ambiental")}:</strong>
+                    {t(getSectorForFloor(selectedFloor).description)}
+                  </span>
+                </div>
+              )}
+
               {/* Palco Isométrico de Combate */}
               {combatState && (
                 <div className="system-panel h-64 relative overflow-hidden flex items-center justify-center iso-stage" style={{ '--sector-rgb': getSectorForFloor(selectedFloor).rgb } as React.CSSProperties}>
-                  {/* Informações Narrativas e de Efeito do Setor */}
-                  <div className="absolute top-2 left-2 flex flex-col max-w-[240px] bg-slate-950/90 border border-slate-800/80 rounded p-2 z-20 text-[9px] font-mono leading-relaxed backdrop-blur-md shadow-md text-left">
-                    <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider">
-                      <span className={`w-2 h-2 rounded-full animate-pulse ${getSectorForFloor(selectedFloor).colorTheme === 'green' ? 'bg-green-500' : getSectorForFloor(selectedFloor).colorTheme === 'blue' ? 'bg-blue-500' : 'bg-orange-500'}`} />
-                      <span className={getSectorForFloor(selectedFloor).color}>{getSectorForFloor(selectedFloor).name}</span>
-                    </div>
-                    <p className="text-slate-400 text-[8px] mt-1 italic">{getSectorForFloor(selectedFloor).flavorText}</p>
-                    <div className="border-t border-slate-850 mt-1.5 pt-1 text-[7.5px] text-amber-500/90">
-                      <span className="font-bold uppercase tracking-widest">{t("Aviso Ambiental")}:</span> {getSectorForFloor(selectedFloor).description}
-                    </div>
-                  </div>
 
                   {combatState.anomaly && combatState.isBossEnraged && (
                     <div className="absolute top-2 right-2 bg-yellow-950/80 border border-yellow-500/50 text-yellow-400 p-1 rounded z-20 text-[8px] font-mono shadow-[0_0_10px_rgba(234,179,8,0.3)]">
@@ -1895,6 +1946,120 @@ export default function App() {
               setScene('character_creation');
             }}
           />
+        ) : scene === 'env_intro' && introSector ? (
+          <div className="flex flex-col items-center justify-center w-full min-h-[550px] relative overflow-hidden bg-slate-950 p-6 rounded-lg border border-slate-900 shadow-2xl">
+            {introStep === 'danger' ? (
+              <div 
+                onClick={() => {
+                  setIntroStep('details');
+                  AudioManager.playSfx('ui.sector_reveal');
+                }}
+                className="flex flex-col items-center justify-center text-center cursor-pointer select-none space-y-6 w-full py-16 animate-pulse"
+              >
+                {/* Danger Stripes */}
+                <div className="w-full flex flex-col space-y-2">
+                  <div className="h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+                  <div className="bg-red-950/30 border-y border-red-500/40 py-6 w-full flex items-center justify-center">
+                    <span className="text-red-500 font-mono text-5xl md:text-7xl font-black uppercase tracking-[0.25em] drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+                      {t("DANGER")}
+                    </span>
+                  </div>
+                  <div className="h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+                </div>
+
+                <div className="flex items-center gap-2 text-red-400 font-mono text-sm uppercase tracking-widest">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                  {t("AMBIENTE ANÔMALO DETECTADO")}
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                </div>
+
+                <p className="text-slate-500 font-mono text-xs uppercase tracking-wider animate-bounce mt-4">
+                  {t("Clique para pular transmissão >>")}
+                </p>
+              </div>
+            ) : (
+              <div className="w-full max-w-2xl flex flex-col items-center justify-center py-8 space-y-8 animate-fade-in">
+                {/* Header with color theme */}
+                <div className="text-center space-y-2">
+                  <div className={`text-xs font-mono uppercase tracking-[0.3em] ${
+                    introSector.colorTheme === 'green' ? 'text-green-400' : introSector.colorTheme === 'blue' ? 'text-blue-400' : 'text-orange-400'
+                  }`}>
+                    {t("SISTEMA DE MAPEAMENTO DE SETOR")}
+                  </div>
+                  
+                  <h1 className={`text-3xl md:text-5xl font-black uppercase tracking-wider ${
+                    introSector.colorTheme === 'green' ? 'text-green-300 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]' :
+                    introSector.colorTheme === 'blue' ? 'text-blue-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]' :
+                    'text-orange-300 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]'
+                  }`}>
+                    {t(introSector.name)}
+                  </h1>
+                </div>
+
+                {/* Main terminal dossier */}
+                <div className="w-full bg-slate-900/80 border border-slate-800 rounded-lg p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+                  {/* Decorative corner lines */}
+                  <div className={`absolute top-0 left-0 w-8 h-1 ${
+                    introSector.colorTheme === 'green' ? 'bg-green-500' : introSector.colorTheme === 'blue' ? 'bg-blue-500' : 'bg-orange-500'
+                  }`} />
+                  <div className={`absolute top-0 left-0 w-1 h-8 ${
+                    introSector.colorTheme === 'green' ? 'bg-green-500' : introSector.colorTheme === 'blue' ? 'bg-blue-500' : 'bg-orange-500'
+                  }`} />
+
+                  {/* Narrative/Flavor text */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">{t("RELATÓRIO DE RECONHECIMENTO")}</span>
+                    <p className="text-slate-200 font-serif italic text-base leading-relaxed md:text-lg">
+                      "{t(introSector.flavorText)}"
+                    </p>
+                  </div>
+
+                  {/* Separator */}
+                  <div className="border-t border-slate-800" />
+
+                  {/* Environmental Hazard Alert Panel */}
+                  <div className={`p-4 rounded border ${
+                    introSector.colorTheme === 'green' ? 'bg-green-950/20 border-green-500/30' :
+                    introSector.colorTheme === 'blue' ? 'bg-blue-950/20 border-blue-500/30' :
+                    'bg-orange-950/20 border-orange-500/30'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-amber-500">⚠️</span>
+                      <span className="text-amber-500 font-mono text-xs font-black uppercase tracking-widest">{t("ALERTA DE ANOMALIA AMBIENTAL")}</span>
+                    </div>
+                    <p className="text-slate-300 font-mono text-sm leading-relaxed">
+                      {t(introSector.description)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Confirm Action Button */}
+                <button
+                  onClick={() => {
+                    const nextVisited = [...(player.visitedSectors || []), introSector.hazard];
+                    const nextPlayer = { ...player, visitedSectors: nextVisited };
+                    setPlayer(nextPlayer);
+                    saveGame(nextPlayer);
+                    
+                    setIntroSector(null);
+                    if (pendingDiveParams) {
+                      proceedWithDive(pendingDiveParams.floor, pendingDiveParams.forceCombat);
+                      setPendingDiveParams(null);
+                    } else {
+                      setScene('hub');
+                    }
+                  }}
+                  className={`w-full max-w-md py-4 px-8 rounded font-black uppercase tracking-[0.2em] text-sm cursor-pointer transition-all duration-300 border ${
+                    introSector.colorTheme === 'green' ? 'bg-green-950/50 hover:bg-green-900/60 border-green-500/50 text-green-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]' :
+                    introSector.colorTheme === 'blue' ? 'bg-blue-950/50 hover:bg-blue-900/60 border-blue-500/50 text-blue-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]' :
+                    'bg-orange-950/50 hover:bg-orange-900/60 border-orange-500/50 text-orange-300 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)]'
+                  }`}
+                >
+                  {t("INICIAR DIRETRIZES DE INCURSÃO")}
+                </button>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
       
