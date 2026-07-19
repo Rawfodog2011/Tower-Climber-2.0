@@ -91,6 +91,9 @@ const DICTIONARY: Record<string, string> = {
   "Patch Notes // Changelog": "Patch Notes // Changelog",
   "Efeitos Sonoros (Em Breve)": "Sound Effects (Soon)",
   "Música de Fundo (Em Breve)": "Background Music (Soon)",
+  "Efeitos Sonoros": "Sound Effects",
+  "Música de Fundo": "Background Music",
+  "Mutar Tudo": "Mute All",
   "Idioma / Language": "Language / Idioma",
   "Voltar": "Back",
   "AVISO: Isso apagará seu progresso atual irreversivelmente. Tem certeza?": "WARNING: This will erase your current progress irreversibly. Are you sure?",
@@ -150,6 +153,7 @@ const DICTIONARY: Record<string, string> = {
   "Selecionar": "Select",
   "Confirmar": "Confirm",
   "Ativo": "Active",
+  "Mutado": "Muted",
   "Passivo": "Passive",
 
   // Character Class Names (classes.ts)

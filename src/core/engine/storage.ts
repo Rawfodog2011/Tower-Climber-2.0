@@ -5,6 +5,9 @@ export const STORAGE_KEYS = {
   COMBAT_SPEED: 'combat_speed',
   INTRO_SEEN_COUNT: 'intro_seen_count',
   LANGUAGE: 'tower_climber_lang',
+  SFX_VOLUME: 'tower_audio_sfx_volume',
+  MUSIC_VOLUME: 'tower_audio_music_volume',
+  AUDIO_MUTED: 'tower_audio_muted',
 } as const;
 
 /**

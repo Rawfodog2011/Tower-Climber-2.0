@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Shield, Activity, Flame, Cpu, Settings, Fingerprint, Zap, Trophy, ChevronLeft, ChevronRight, User, Crosshair, ShoppingCart, Briefcase, BookOpen, Lock, BrainCircuit } from 'lucide-react';
 import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
+import { useAudio } from '../core/engine/useAudio';
 
 interface Props {
   hubTab: string;
@@ -12,6 +13,7 @@ interface Props {
 export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -122,7 +124,11 @@ export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) =>
           return (
             <button 
               key={tab.id}
-              onClick={() => setHubTab(tab.id)} 
+              onClick={() => {
+                setHubTab(tab.id);
+                playSfx('ui.tab_switch');
+              }} 
+              onMouseEnter={() => playSfx('ui.hover')}
               className={`whitespace-nowrap px-4 py-2.5 rounded border text-xs font-bold uppercase tracking-wider transition-all duration-200 ${getColorClasses(tab.id, tab.color)}`}
             >
               <Icon className="w-4 h-4 inline-block mr-2" /> 

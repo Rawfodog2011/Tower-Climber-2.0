@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Terminal } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
 import { STORAGE_KEYS, getStorageString, setStorageString } from '../core/engine/storage';
+import { useAudio } from '../core/engine/useAudio';
 
 interface Props {
   onComplete: () => void;
@@ -25,6 +26,7 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
   const [showStartButton, setShowStartButton] = useState<boolean>(false);
   const [isRepeatIntro, setIsRepeatIntro] = useState<boolean>(false);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
 
   useEffect(() => {
     const countStr = getStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, '0');
@@ -35,6 +37,7 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
   }, [isContinue]);
 
   const handleComplete = () => {
+    playSfx('ui.click');
     const countStr = getStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, '0');
     const count = parseInt(countStr, 10);
     setStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, (count + 1).toString());
@@ -56,6 +59,7 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
       let currentLine = 0;
       const interval = setInterval(() => {
         setBootLines(prev => [...prev, BOOT_LINES[currentLine]]);
+        playSfx('ui.boot_beep', { pitch: 800 + currentLine * 50 });
         currentLine++;
         if (currentLine >= BOOT_LINES.length) {
           clearInterval(interval);

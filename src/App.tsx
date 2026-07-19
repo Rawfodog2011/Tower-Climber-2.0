@@ -55,6 +55,7 @@ import { random } from './core/engine/rng';
 
 import { getSectorForFloor } from './core/math/worldScaling';
 import { STORAGE_KEYS, getStorageString, setStorageString } from './core/engine/storage';
+import { AudioManager } from './core/engine/audio';
 
 function getPendingTutorials(player: Player): string[] {
   const completed = player.completedTutorials || [];
@@ -312,6 +313,36 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, [scene, combatState?.isActive, combatEndMessage, player.isFarmActive, player.isAutoBattleActive, selectedFloor, combatSpeed]);
 
+  // Hook para gerenciar música de fundo procedural de acordo com o contexto/setor
+  useEffect(() => {
+    if (scene === 'combat') {
+      if (combatEndMessage) {
+        // Ao fim do combate mostrando combatEndMessage, faça crossfade de volta pra música do hub
+        AudioManager.playMusic('music.hub');
+      } else if (combatState?.monster) {
+        const monster = combatState.monster;
+        if (monster.isBoss) {
+          const isMainframePrime = monster.id === 'mainframe_prime';
+          AudioManager.playMusic('music.boss_theme', { isMainframePrime });
+        } else {
+          const sector = getSectorForFloor(selectedFloor);
+          if (sector.hazard === 'toxic_refinery') {
+            AudioManager.playMusic('music.sector_toxic_refinery');
+          } else if (sector.hazard === 'frozen_datacore') {
+            AudioManager.playMusic('music.sector_frozen_datacore');
+          } else if (sector.hazard === 'plasma_furnace') {
+            AudioManager.playMusic('music.sector_plasma_furnace');
+          }
+        }
+      }
+    } else if (scene === 'main_menu') {
+      AudioManager.stopMusic(2.0);
+    } else {
+      // Outras cenas (hub, event, puzzle, etc.) usam o tema do Hub
+      AudioManager.playMusic('music.hub');
+    }
+  }, [scene, combatEndMessage, combatState?.monster?.id, selectedFloor]);
+
   // Hook para detectar mudança de HP e disparar Damage Popups
   useEffect(() => {
     if (!combatState) {
@@ -377,10 +408,28 @@ export default function App() {
   const triggerToast = (message: string) => {
     const id = Date.now() + random();
     setToasts(prev => [...prev, { id, message }]);
+    
+    // Play appropriate sound based on message content
+    if (message.includes('⚠️') || message.includes('⚡') || message.includes('AVISO') || message.includes('Erro') || message.includes('Pendente') || message.includes('pendente')) {
+      AudioManager.playSfx('ui.error');
+    } else {
+      AudioManager.playSfx('ui.notification');
+    }
+
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3000);
   };
+
+  useEffect(() => {
+    if (inventoryMessage) {
+      if (inventoryMessage.type === 'error') {
+        AudioManager.playSfx('ui.error');
+      } else {
+        AudioManager.playSfx('ui.click');
+      }
+    }
+  }, [inventoryMessage]);
 
   const handleStartDive = (floor: number, forceCombat: boolean = false) => {
     const pending = getPendingTutorials(player);
@@ -425,6 +474,7 @@ export default function App() {
     let nextPlayer = { ...player };
     
     if (index === activePuzzle.correctPort) {
+      AudioManager.playSfx('event.puzzle_correct');
       const rarity = 'epic';
       const newItem = getRandomItemByRarityAndClass(rarity, player.currentClassId);
       
@@ -446,6 +496,7 @@ export default function App() {
       
       const achResult = checkAchievements(nextPlayer);
       if (achResult.unlocked.length > 0) {
+         AudioManager.playSfx('event.achievement_unlock');
          achResult.unlocked.forEach(ach => triggerToast(`🏆 Conquista Desbloqueada: ${ach.name}!`));
       }
       
@@ -467,6 +518,7 @@ export default function App() {
         }, 1500);
       }
     } else {
+      AudioManager.playSfx('event.puzzle_incorrect');
       const hpDamage = Math.floor(calculatePlayerStats(player).hp * 0.25);
       const materialsLost = Math.floor(player.materials.common * 0.2);
       nextPlayer.materials.common = Math.max(0, nextPlayer.materials.common - materialsLost);
@@ -497,6 +549,7 @@ export default function App() {
   };
 
   const handleSkipPuzzle = () => {
+    AudioManager.playSfx('event.puzzle_skip');
     let nextPlayer = { ...player };
     if (selectedFloor === nextPlayer.highestFloorUnlocked) {
       nextPlayer.highestFloorUnlocked += 1;
@@ -509,6 +562,7 @@ export default function App() {
 
   const handleEventOption = (option: EventOption) => {
     if (!activeEvent) return;
+    AudioManager.playSfx('event.exploration_choice');
     const result = option.action(player, selectedFloor);
     let nextPlayer = result.updatedPlayer;
     
@@ -527,6 +581,7 @@ export default function App() {
     
     const achResult = checkAchievements(nextPlayer);
     if (achResult.unlocked.length > 0) {
+       AudioManager.playSfx('event.achievement_unlock');
        achResult.unlocked.forEach(ach => triggerToast(`🏆 Conquista Desbloqueada: ${ach.name}!`));
     }
     
@@ -560,6 +615,113 @@ export default function App() {
     const { nextState, combatResult } = processTurn(player, combatState, action, selectedFloor);
     setCombatState(nextState);
 
+    // Process sound effects based on log patterns and status effect updates
+    const oldLogsCount = combatState.logs ? combatState.logs.length : 0;
+    const newLogs = nextState.logs.slice(oldLogsCount);
+
+    const getNewStatuses = (oldList: any[] = [], newList: any[] = []) => {
+      const oldTypes = new Set(oldList.map(s => s.type));
+      return newList.filter(s => !oldTypes.has(s.type)).map(s => s.type);
+    };
+    const newPlayerStatuses = getNewStatuses(combatState.playerStatuses, nextState.playerStatuses);
+    const newMonsterStatuses = getNewStatuses(combatState.monsterStatuses, nextState.monsterStatuses);
+    const allNewStatuses = Array.from(new Set([...newPlayerStatuses, ...newMonsterStatuses]));
+
+    allNewStatuses.forEach(type => {
+      if (type === 'overheat') AudioManager.playSfx('combat.status_overheat');
+      else if (type === 'corrosion') AudioManager.playSfx('combat.status_corrosion');
+      else if (type === 'shock') AudioManager.playSfx('combat.status_shock');
+      else if (type === 'stun') AudioManager.playSfx('combat.status_stun');
+    });
+
+    let hasVictory = false;
+    let hasDefeat = false;
+    let hasLevelUp = false;
+    let hasHeal = false;
+    let hasSkillDamage = false;
+    let maxSkillDamageMultiplier = 1.0;
+    let hasCritOrBonus = false;
+    let hasBossEnrage = false;
+    let hasDamageTakenPlayer = false;
+    let hasDamageTakenMonster = false;
+    let hasAttackBasic = false;
+
+    newLogs.forEach(log => {
+      if (log.includes('Vitória')) {
+        hasVictory = true;
+      } else if (log.includes('sucumbiu') || log.includes('derrotado')) {
+        if (!log.includes('Vitória')) {
+          hasDefeat = true;
+        }
+      }
+      if (log.includes('LEVEL UP')) {
+        hasLevelUp = true;
+      }
+      if (log.includes('Sinergia') || log.includes('Choque ampliou') || log.includes('CRÍTICO')) {
+        hasCritOrBonus = true;
+      }
+      if (log.includes('PROTOCOLO DE EXTERMÍNIO') || log.includes('FÚRIA') || log.includes('AMEAÇA CLASSE ÔMEGA')) {
+        hasBossEnrage = true;
+      }
+      if (log.includes('curou') || log.includes('recuperou')) {
+        hasHeal = true;
+      }
+      if (log.includes('usou')) {
+        const matchedSkill = Object.values(SKILLS_DATABASE).find(s => log.includes(s.name));
+        if (matchedSkill) {
+          if (matchedSkill.type === 'heal') {
+            hasHeal = true;
+          } else {
+            hasSkillDamage = true;
+            if (matchedSkill.multiplier > maxSkillDamageMultiplier) {
+              maxSkillDamageMultiplier = matchedSkill.multiplier;
+            }
+          }
+        } else {
+          hasSkillDamage = true;
+        }
+      }
+      if (log.includes('ataca e causa') || log.includes('sofre') || log.includes('incinera')) {
+        if (log.includes('Jogador') || log.includes('jogador')) {
+          hasDamageTakenPlayer = true;
+        } else {
+          hasDamageTakenMonster = true;
+        }
+        if (log.includes('ataca') && !log.includes('Skill') && !log.includes('Soro')) {
+          hasAttackBasic = true;
+        }
+      }
+    });
+
+    if (hasVictory) {
+      AudioManager.playSfx('combat.victory');
+    } else if (hasDefeat) {
+      AudioManager.playSfx('combat.defeat');
+    }
+    if (hasLevelUp) {
+      AudioManager.playSfx('combat.level_up');
+    }
+    if (hasBossEnrage) {
+      AudioManager.playSfx('combat.boss_enrage');
+    }
+    if (hasCritOrBonus) {
+      AudioManager.playSfx('combat.crit_or_bonus');
+    }
+
+    if (hasHeal) {
+      AudioManager.playSfx('combat.skill_heal');
+    } else if (hasSkillDamage) {
+      AudioManager.playSfx('combat.skill_damage', { damageMultiplier: maxSkillDamageMultiplier });
+    } else if (hasAttackBasic) {
+      AudioManager.playSfx('combat.attack_basic');
+    }
+
+    if (hasDamageTakenPlayer) {
+      AudioManager.playSfx('combat.damage_taken_player');
+    } else if (hasDamageTakenMonster) {
+      AudioManager.playSfx('combat.damage_taken_monster');
+    }
+
     if (combatResult) {
       let updatedPlayer = combatResult.updatedPlayer;
       
@@ -578,8 +740,16 @@ export default function App() {
         }
         
         if (combatResult.loot?.items && combatResult.loot.items.length > 0) {
-          combatResult.loot.items.forEach(item => {
+          combatResult.loot.items.forEach((item, index) => {
              triggerToast(`💎 Drop Raro: ${item.name}!`);
+             setTimeout(() => {
+               let lootId = 'combat.loot_common';
+               if (item.rarity === 'rare') lootId = 'combat.loot_rare';
+               else if (item.rarity === 'epic') lootId = 'combat.loot_epic';
+               else if (item.rarity === 'legendary') lootId = 'combat.loot_legendary';
+               else if (item.rarity === 'mythic') lootId = 'combat.loot_mythic';
+               AudioManager.playSfx(lootId);
+             }, index * 250);
           });
         }
         
@@ -598,6 +768,7 @@ export default function App() {
       
       const achResult = checkAchievements(updatedPlayer);
       if (achResult.unlocked.length > 0) {
+         AudioManager.playSfx('event.achievement_unlock');
          achResult.unlocked.forEach(ach => triggerToast(`🏆 Conquista Desbloqueada: ${ach.name}!`));
       }
       
@@ -856,6 +1027,7 @@ export default function App() {
   const handleCraft = (rarity: import('./types').Rarity) => {
     const result = craftItem(player, rarity);
     if (result.success) {
+      AudioManager.playSfx('event.craft_success', { rarity });
       setPlayer(result.updatedPlayer);
       setInventoryMessage({ text: result.message, type: 'success' });
     } else {
@@ -878,6 +1050,7 @@ export default function App() {
   const handleUpgradeRelic = (relicId: string) => {
     const result = upgradeRelic(player, relicId);
     if (result.success) {
+      AudioManager.playSfx('event.relic_upgrade');
       setPlayer(result.updatedPlayer);
       setInventoryMessage({ text: result.message, type: 'success' });
     } else {

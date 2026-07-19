@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, Play, Settings, FileText, RotateCcw, Power } from 'lucide-react';
+import { Terminal, Play, Settings, FileText, RotateCcw, Power, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation, Language } from '../core/engine/translation';
+import { useAudio } from '../core/engine/useAudio';
 
 interface GlitchFooterProps {
   t: (text: string) => string;
@@ -99,6 +100,24 @@ export const MainMenu: React.FC<Props> = ({
   const [showConfirmNew, setShowConfirmNew] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'main' | 'settings' | 'changelog'>('main');
   const { t } = useTranslation();
+  const { 
+    init: initAudio, 
+    playSfx, 
+    sfxVolume, 
+    musicVolume, 
+    muted, 
+    setSfxVolume, 
+    setMusicVolume, 
+    setMuted 
+  } = useAudio();
+
+  const handleInteraction = async (callback: () => void, sfxId?: string, sfxOptions?: any) => {
+    await initAudio();
+    if (sfxId) {
+      playSfx(sfxId, sfxOptions);
+    }
+    callback();
+  };
 
   // Unified Glitch / Horror system states
   const [isGlitchTriggered, setIsGlitchTriggered] = useState(false);
@@ -169,6 +188,14 @@ export const MainMenu: React.FC<Props> = ({
       const elapsed = time - glitchStartTimeRef.current;
       const progress = Math.min(elapsed / duration, 1.0); // t: 0.0 to 1.0
       setGlitchProgress(progress);
+
+      // Play a randomized glitch boot beep
+      if (Math.random() < 0.15) {
+        playSfx('ui.boot_beep', { 
+          volume: 0.15, 
+          pitch: 200 + Math.random() * 800 
+        });
+      }
 
       const horrorGlyphs = [
         'Ø', '†', '⎋', '⌁', '☠', '⛥', '☣', '☤', '⚙', '⚡', '⚠', '0', '1', 
@@ -433,7 +460,7 @@ export const MainMenu: React.FC<Props> = ({
           <div className="w-full max-w-md flex flex-col gap-4">
             {hasSaveFile && (
               <button
-                onClick={onContinue}
+                onClick={() => handleInteraction(onContinue, 'ui.click')}
                 className={`w-full font-bold py-4 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 group ${
                   glitchProgress >= 1.0
                     ? 'bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 hover:border-red-500 text-rose-100 hover:shadow-[0_0_20px_rgba(239,68,68,0.45)]'
@@ -446,7 +473,7 @@ export const MainMenu: React.FC<Props> = ({
 
             {!showConfirmNew ? (
               <button
-                onClick={handleNewGame}
+                onClick={() => handleInteraction(handleNewGame, 'ui.click')}
                 className={`w-full font-bold py-4 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 group ${
                   glitchProgress >= 1.0
                     ? `bg-slate-950/80 hover:bg-slate-900 border ${hasSaveFile ? 'border-red-900/50 text-red-300 hover:border-red-500 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)]' : 'border-red-500/50 text-rose-100 hover:border-red-400 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)]'}`
@@ -463,8 +490,8 @@ export const MainMenu: React.FC<Props> = ({
               <div className={`w-full bg-red-950/30 border ${glitchProgress >= 1.0 ? 'border-red-800' : 'border-red-900/50'} p-4 rounded text-center flex flex-col gap-4`}>
                 <p className="text-red-400 text-sm">{t("AVISO: Isso apagará seu progresso atual irreversivelmente. Tem certeza?")}</p>
                 <div className="flex gap-2">
-                  <button onClick={confirmNewGame} className="flex-1 bg-red-900/50 hover:bg-red-800 border border-red-500 text-red-100 py-2 rounded text-xs uppercase tracking-widest transition-colors">{t("Sim, Formatar")}</button>
-                  <button onClick={() => setShowConfirmNew(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 py-2 rounded text-xs uppercase tracking-widest transition-colors">{t("Cancelar")}</button>
+                  <button onClick={() => handleInteraction(confirmNewGame, 'ui.click')} className="flex-1 bg-red-900/50 hover:bg-red-800 border border-red-500 text-red-100 py-2 rounded text-xs uppercase tracking-widest transition-colors">{t("Sim, Formatar")}</button>
+                  <button onClick={() => handleInteraction(() => setShowConfirmNew(false), 'ui.click')} className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 py-2 rounded text-xs uppercase tracking-widest transition-colors">{t("Cancelar")}</button>
                 </div>
               </div>
             )}
@@ -472,7 +499,7 @@ export const MainMenu: React.FC<Props> = ({
             <div className={`h-px w-full ${glitchProgress >= 1.0 ? 'bg-red-900/40' : 'bg-slate-800/50'} my-2`} />
 
             <button
-              onClick={() => setActiveScreen('settings')}
+              onClick={() => handleInteraction(() => setActiveScreen('settings'), 'ui.click')}
               className={`w-full border font-bold py-3 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
                 glitchProgress >= 1.0
                   ? 'bg-slate-950/60 hover:bg-slate-900 border-red-950 hover:border-red-800 text-red-400 hover:text-red-200 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]'
@@ -483,7 +510,7 @@ export const MainMenu: React.FC<Props> = ({
             </button>
 
             <button
-              onClick={() => setActiveScreen('changelog')}
+              onClick={() => handleInteraction(() => setActiveScreen('changelog'), 'ui.click')}
               className={`w-full border font-bold py-3 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
                 glitchProgress >= 1.0
                   ? 'bg-slate-950/60 hover:bg-slate-900 border-red-950 hover:border-red-800 text-red-400 hover:text-red-200 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]'
@@ -509,7 +536,7 @@ export const MainMenu: React.FC<Props> = ({
                    {/* Brazil / Portugal Flag */}
                    <button
                      type="button"
-                     onClick={() => onLanguageChange('pt')}
+                     onClick={() => handleInteraction(() => onLanguageChange('pt'), 'ui.click')}
                      className={`relative w-14 h-9 rounded overflow-hidden border transition-all cursor-pointer flex-shrink-0 group hover:scale-105 active:scale-95 ${
                        currentLanguage === 'pt' 
                          ? (glitchProgress >= 1.0 ? 'border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)] ring-1 ring-red-500' : 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] ring-1 ring-cyan-400')
@@ -532,7 +559,7 @@ export const MainMenu: React.FC<Props> = ({
                    {/* USA / UK Flag */}
                    <button
                      type="button"
-                     onClick={() => onLanguageChange('en')}
+                     onClick={() => handleInteraction(() => onLanguageChange('en'), 'ui.click')}
                      className={`relative w-14 h-9 rounded overflow-hidden border transition-all cursor-pointer flex-shrink-0 group hover:scale-105 active:scale-95 ${
                        currentLanguage === 'en' 
                          ? (glitchProgress >= 1.0 ? 'border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)] ring-1 ring-red-500' : 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] ring-1 ring-cyan-400')
@@ -574,18 +601,74 @@ export const MainMenu: React.FC<Props> = ({
                  </div>
                </div>
 
-               <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/20' : 'border-slate-800'} flex justify-between items-center opacity-50`}>
-                 <span>{t("Efeitos Sonoros (Em Breve)")}</span>
-                 <div className="w-12 h-6 bg-slate-800 rounded-full"></div>
-               </div>
-               <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/20' : 'border-slate-800'} flex justify-between items-center opacity-50`}>
-                 <span>{t("Música de Fundo (Em Breve)")}</span>
-                 <div className="w-12 h-6 bg-slate-800 rounded-full"></div>
-               </div>
-            </div>
+               <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/50' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-500`}>
+                  <div className="flex flex-col">
+                    <span className="font-bold tracking-wider">{t("Efeitos Sonoros")}</span>
+                    <span className="text-xs text-slate-500 font-mono">{Math.round(sfxVolume * 100)}%</span>
+                  </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={sfxVolume}
+                    onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
+                    onMouseUp={async () => {
+                      await initAudio();
+                      playSfx('ui.click');
+                    }}
+                    onTouchEnd={async () => {
+                      await initAudio();
+                      playSfx('ui.click');
+                    }}
+                    className={`w-full sm:w-48 h-1 rounded-lg appearance-none cursor-pointer accent-cyan-400 bg-slate-800 ${glitchProgress >= 1.0 ? 'accent-red-500 bg-slate-900' : ''}`}
+                  />
+                </div>
+
+                <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/50' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-500`}>
+                  <div className="flex flex-col">
+                    <span className="font-bold tracking-wider">{t("Música de Fundo")}</span>
+                    <span className="text-xs text-slate-500 font-mono">{Math.round(musicVolume * 100)}%</span>
+                  </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={musicVolume}
+                    onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
+                    className={`w-full sm:w-48 h-1 rounded-lg appearance-none cursor-pointer accent-cyan-400 bg-slate-800 ${glitchProgress >= 1.0 ? 'accent-red-500 bg-slate-900' : ''}`}
+                  />
+                </div>
+
+                <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/50' : 'border-slate-800'} flex justify-between items-center transition-colors duration-500`}>
+                  <div className="flex flex-col">
+                    <span className="font-bold tracking-wider">{t("Mutar Tudo")}</span>
+                    <span className="text-xs text-slate-500 font-mono">
+                      {muted ? t("Mutado") : t("Ativo")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await initAudio();
+                      setMuted(!muted);
+                      if (muted) {
+                        playSfx('ui.click');
+                      }
+                    }}
+                    className={`p-2 rounded border transition-all ${
+                      muted
+                        ? (glitchProgress >= 1.0 ? 'bg-red-950/40 border-red-800 text-red-400' : 'bg-cyan-950/40 border-cyan-800 text-cyan-400')
+                        : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  </button>
+                </div>
+             </div>
 
             <button
-              onClick={() => setActiveScreen('main')}
+              onClick={() => handleInteraction(() => setActiveScreen('main'), 'ui.click')}
               className={`mt-4 border font-bold py-2 px-6 rounded uppercase tracking-widest transition-all ${
                 glitchProgress >= 1.0
                   ? 'bg-red-950/40 hover:bg-red-900/60 border-red-800 text-rose-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)]'
@@ -642,7 +725,7 @@ export const MainMenu: React.FC<Props> = ({
             </div>
 
             <button
-              onClick={() => setActiveScreen('main')}
+              onClick={() => handleInteraction(() => setActiveScreen('main'), 'ui.click')}
               className={`mt-4 border font-bold py-2 px-6 rounded uppercase tracking-widest transition-all ${
                 glitchProgress >= 1.0
                   ? 'bg-red-950/40 hover:bg-red-900/60 border-red-800 text-rose-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)]'
@@ -663,7 +746,7 @@ export const MainMenu: React.FC<Props> = ({
         footerColorClass={footerColorClass}
         footerClonesOpacity={footerClonesOpacity}
         footerClips={footerClips}
-        startGlitch={startGlitch}
+        startGlitch={() => handleInteraction(startGlitch, 'ui.click')}
       />
     </div>
   );

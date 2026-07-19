@@ -3,6 +3,7 @@ import { Player } from '../types';
 import { generateRandomContracts, claimContractReward, claimAllCompletedContracts } from '../core/engine/contracts';
 import { Briefcase, CheckCircle2, CircleDashed, TerminalSquare, AlertTriangle } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
+import { AudioManager } from '../core/engine/audio';
 
 interface Props {
   player: Player;
@@ -36,6 +37,7 @@ export const ContractsPanel: React.FC<Props> = ({ player, setPlayer }) => {
   const handleClaim = (id: string) => {
     const res = claimContractReward(player, id);
     if (res.success) {
+      AudioManager.playSfx('event.contract_complete');
       setPlayer(res.updatedPlayer);
       setMessage({ text: t(res.message), type: 'success' });
     } else {
@@ -47,6 +49,7 @@ export const ContractsPanel: React.FC<Props> = ({ player, setPlayer }) => {
   const handleClaimAll = () => {
     const res = claimAllCompletedContracts(player);
     if (res.success) {
+      AudioManager.playSfx('event.contract_complete');
       setPlayer(res.updatedPlayer);
       setMessage({ text: t(res.message), type: 'success' });
     } else {

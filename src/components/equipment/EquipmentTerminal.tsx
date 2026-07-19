@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Item, Player, ClassDefinition } from '../../types';
 import { ExosuitSilhouette } from './ExosuitSilhouette';
 import { EquipmentSlot } from './EquipmentSlot';
@@ -6,6 +6,7 @@ import { ItemInspectionPanel } from './ItemInspectionPanel';
 import { CargoGrid } from './CargoGrid';
 import { StatusPanel } from './StatusPanel';
 import { useTranslation } from '../../core/engine/translation';
+import { useAudio } from '../../core/engine/useAudio';
 
 interface Props {
   player: Player;
@@ -28,10 +29,19 @@ export const EquipmentTerminal: React.FC<Props> = ({
 }) => {
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
+
+  useEffect(() => {
+    playSfx('ui.panel_open');
+    return () => {
+      playSfx('ui.panel_close');
+    };
+  }, [playSfx]);
 
   const onHover = (item?: Item) => {
     if (item) {
       setHoveredItem(item);
+      playSfx('ui.hover');
     }
   };
 

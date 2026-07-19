@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, ClassDefinition } from '../types';
 import { getAvailableEvolutions } from '../core/entities/classes';
 import { calculatePlayerStats } from '../core/entities/player';
@@ -9,6 +9,7 @@ import { ADAPTATIONS_DATABASE } from '../core/entities/adaptations';
 import { Activity, Shield, Zap, Info, X } from 'lucide-react';
 import { ORIGINS } from '../core/entities/origins';
 import { useTranslation } from '../core/engine/translation';
+import { useAudio } from '../core/engine/useAudio';
 
 interface Props {
   player: Player;
@@ -20,6 +21,19 @@ export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvo
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
   const stats = calculatePlayerStats(player);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
+
+  useEffect(() => {
+    playSfx('ui.panel_open');
+    return () => {
+      playSfx('ui.panel_close');
+    };
+  }, [playSfx]);
+
+  const handleToggleGlossary = (open: boolean) => {
+    setIsGlossaryOpen(open);
+    playSfx(open ? 'ui.panel_open' : 'ui.panel_close');
+  };
   
   // Find all skills this class can use
   const availableSkills = Object.values(SKILLS_DATABASE).filter(skill => 
@@ -170,7 +184,7 @@ export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvo
               {t("Protocolos de Combate (Habilidades)")}
             </span>
             <button
-              onClick={() => setIsGlossaryOpen(true)}
+              onClick={() => handleToggleGlossary(true)}
               className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1 text-xs font-mono uppercase tracking-widest bg-indigo-950/50 px-2 py-1 rounded border border-indigo-500/30 hover:border-indigo-500/80 transition-colors cursor-pointer"
             >
               <Info className="w-3 h-3" /> {t("Glossário de Status")}
@@ -274,7 +288,7 @@ export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvo
                 {t("Diretório de Anomalias & Status")}
               </h2>
               <button 
-                onClick={() => setIsGlossaryOpen(false)}
+                onClick={() => handleToggleGlossary(false)}
                 className="text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
               >
                 <X className="w-6 h-6" />
