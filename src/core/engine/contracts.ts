@@ -79,7 +79,7 @@ export function updateHuntContracts(player: Player, monsterId: string): Player {
   return player;
 }
 
-export function updateFloorContracts(player: Player, currentFloor: number): Player {
+function updateFloorContracts(player: Player, currentFloor: number): Player {
   let updated = false;
   const newContracts = player.contracts.map(c => {
     if (!c.completed && c.type === 'reach_floor') {
@@ -100,7 +100,7 @@ export function updateFloorContracts(player: Player, currentFloor: number): Play
   return player;
 }
 
-export function updateCollectContracts(player: Player): Player {
+function updateCollectContracts(player: Player): Player {
    // Material count update
    let updated = false;
    const newContracts = player.contracts.map(c => {

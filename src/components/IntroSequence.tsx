@@ -3,6 +3,7 @@ import { Terminal } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
 import { STORAGE_KEYS, getStorageString, setStorageString } from '../core/engine/storage';
 import { useAudio } from '../core/engine/useAudio';
+import { TTSButton } from './TTSButton';
 
 interface Props {
   onComplete: () => void;
@@ -29,10 +30,10 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
   const { playSfx } = useAudio();
 
   useEffect(() => {
-    const countStr = getStorageString(STORAGE_KEYS.INTRO_SEEN_COUNT, '0');
-    const count = parseInt(countStr, 10);
-    if (count > 0 || isContinue) {
+    if (isContinue) {
       setIsRepeatIntro(true);
+    } else {
+      setIsRepeatIntro(false);
     }
   }, [isContinue]);
 
@@ -199,6 +200,19 @@ export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
           animation: fade-in-button 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
+
+      {/* Top Left TTS Narration Button for Phase 2 */}
+      {phase === 2 && !isRepeatIntro && (
+        <div className="absolute top-4 left-4 z-50">
+          <TTSButton
+            text={`${t("O Ano é 2342.")} ${t("A Terra foi consumida pela ambição corporativa.")} ${t("Da superfície devastada ergue-se o Pináculo: Uma megaestrutura quase infinita perfurando os skies.")} ${t("A ruína do mundo exterior não foi um acidente. Foi o alicerce planejado para a grande ascensão.")} ${t("Abandonaram a superfície devastada para reinar dentro do Pináculo.")} ${t("O controle foi perdido. As divisões inferiores foram tomadas por Inteligências Artificiais descontroladas e anomalias biomecânicas.")} ${t("Você é um Tecno-Explorador, um pária buscando tecnologia, poder e respostas.")} ${t("Para sobreviver, você precisará evoluir.")} ${t("A Escalada começa agora.")}`}
+            id="intro-story"
+            variant="emerald"
+            size="sm"
+            showDetails={true}
+          />
+        </div>
+      )}
 
       {isContinue ? (
         <button 

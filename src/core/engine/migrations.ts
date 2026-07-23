@@ -41,6 +41,10 @@ export function migrateSave(data: any): Player | null {
   if (!player.learnedSkills) player.learnedSkills = [];
   if (!player.autoBattleRules) player.autoBattleRules = [];
   if (player.isAutoBattleActive === undefined) player.isAutoBattleActive = false;
+  if (typeof player.totalPlaytimeSeconds !== 'number') player.totalPlaytimeSeconds = 0;
+  if (typeof player.quantumLevel !== 'number') player.quantumLevel = 0;
+  if (!player.quantumUpgrades) player.quantumUpgrades = {};
+  if (typeof player.highestAbyssalDepth !== 'number') player.highestAbyssalDepth = 0;
   if (!player.adaptations) {
     player.adaptations = {
       'blindagem_reativa': { level: 0, exp: 0 },

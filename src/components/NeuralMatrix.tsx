@@ -115,12 +115,12 @@ export const NeuralMatrix: React.FC<NeuralMatrixProps> = ({ player, setPlayer })
   };
 
   // Drag handlers
-  const handleMouseDown = (e: MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     setPan({
       x: e.clientX - dragStart.x,
@@ -133,6 +133,25 @@ export const NeuralMatrix: React.FC<NeuralMatrixProps> = ({ player, setPlayer })
   };
 
   const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    const touch = e.touches[0];
+    setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    setPan({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y
+    });
+  };
+
+  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
@@ -150,11 +169,14 @@ export const NeuralMatrix: React.FC<NeuralMatrixProps> = ({ player, setPlayer })
       </div>
       
       <div 
-        className="flex-1 relative overflow-hidden bg-slate-950 bg-[linear-gradient(to_right,#082f49_1px,transparent_1px),linear-gradient(to_bottom,#082f49_1px,transparent_1px)] bg-[size:40px_40px] select-none cursor-grab active:cursor-grabbing"
+        className="flex-1 relative overflow-hidden bg-slate-950 bg-[linear-gradient(to_right,#082f49_1px,transparent_1px),linear-gradient(to_bottom,#082f49_1px,transparent_1px)] bg-[size:40px_40px] select-none cursor-grab active:cursor-grabbing touch-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         ref={containerRef}
       >
         <div 

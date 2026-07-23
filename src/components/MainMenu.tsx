@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, Play, Settings, FileText, RotateCcw, Power, Volume2, VolumeX } from 'lucide-react';
+import { Terminal, Play, Settings, FileText, RotateCcw, Cpu, Power, Volume2, VolumeX, Bot, Ghost, UserRound, Crosshair, Fingerprint, Eye, Hexagon } from 'lucide-react';
 import { useTranslation, Language } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
+import { SystemVoiceSelector } from './SystemVoiceSelector';
 
 interface GlitchFooterProps {
   t: (text: string) => string;
@@ -14,7 +15,21 @@ interface GlitchFooterProps {
   startGlitch: () => void;
 }
 
-export const GlitchFooter: React.FC<GlitchFooterProps> = ({ 
+const getAvatarIcon = (id?: string, isGlitch?: boolean) => {
+  const cn = `w-4 h-4 ${isGlitch ? 'text-red-400' : 'text-cyan-400'}`;
+  switch (id) {
+    case 'bot': return <Bot className={cn} />;
+    case 'ghost': return <Ghost className={cn} />;
+    case 'crosshair': return <Crosshair className={cn} />;
+    case 'fingerprint': return <Fingerprint className={cn} />;
+    case 'eye': return <Eye className={cn} />;
+    case 'hexagon': return <Hexagon className={cn} />;
+    case 'cpu': return <Cpu className={cn} />;
+    default: return <UserRound className={cn} />;
+  }
+};
+
+const GlitchFooter: React.FC<GlitchFooterProps> = ({ 
   t,
   isGlitchTriggered,
   displayText,
@@ -84,6 +99,16 @@ export const GlitchFooter: React.FC<GlitchFooterProps> = ({
 
 interface Props {
   hasSaveFile: boolean;
+  savedPlayerPreview?: {
+    name?: string;
+    avatar?: string;
+    className: string;
+    originName: string | null;
+    level: number;
+    highestFloorUnlocked: number;
+    totalPlaytimeSeconds: number;
+    gold: number;
+  } | null;
   onContinue: () => void;
   onNewGame: () => void;
   currentLanguage: Language;
@@ -92,6 +117,7 @@ interface Props {
 
 export const MainMenu: React.FC<Props> = ({ 
   hasSaveFile, 
+  savedPlayerPreview,
   onContinue, 
   onNewGame,
   currentLanguage,
@@ -459,16 +485,50 @@ export const MainMenu: React.FC<Props> = ({
         {activeScreen === 'main' && (
           <div className="w-full max-w-md flex flex-col gap-4">
             {hasSaveFile && (
-              <button
-                onClick={() => handleInteraction(onContinue, 'ui.click')}
-                className={`w-full font-bold py-4 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 group ${
-                  glitchProgress >= 1.0
-                    ? 'bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 hover:border-red-500 text-rose-100 hover:shadow-[0_0_20px_rgba(239,68,68,0.45)]'
-                    : 'bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-100 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]'
-                }`}
-              >
-                <Play className={`w-5 h-5 transition-colors ${glitchProgress >= 1.0 ? 'group-hover:text-red-300 text-red-400' : 'group-hover:text-cyan-300'}`} /> {t("Continuar Ciclo")}
-              </button>
+              <>
+                {savedPlayerPreview && (
+                  <div className={`system-panel p-3 mb-2 animate-in fade-in duration-500 flex flex-col gap-2 font-mono text-sm border ${
+                    glitchProgress >= 1.0 ? 'border-red-500/30 bg-red-950/20 text-red-200' : 'border-cyan-500/30 bg-cyan-950/20 text-cyan-100'
+                  }`}>
+                    <div className={`flex items-center gap-2 border-b pb-2 mb-1 ${glitchProgress >= 1.0 ? 'border-red-500/20' : 'border-cyan-500/20'}`}>
+                      {getAvatarIcon(savedPlayerPreview.avatar, glitchProgress >= 1.0)}
+                      <div className="flex flex-col">
+                        {savedPlayerPreview.name && (
+                          <span className="uppercase tracking-widest text-xs font-bold text-left leading-tight text-cyan-300">
+                            {savedPlayerPreview.name}
+                          </span>
+                        )}
+                        <span className="uppercase tracking-widest text-[10px] opacity-80 text-left leading-tight">
+                          {savedPlayerPreview.className} {savedPlayerPreview.originName ? `(${savedPlayerPreview.originName})` : ''}
+                        </span>
+                      </div>
+                      <span className={`ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold ${glitchProgress >= 1.0 ? 'bg-red-900/40' : 'bg-cyan-900/40'}`}>
+                        LVL {savedPlayerPreview.level}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs opacity-80">
+                      <span>{t('Andar mais alto')}: {savedPlayerPreview.highestFloorUnlocked}</span>
+                      <span className="text-amber-400/90 font-bold">{savedPlayerPreview.gold} CRD</span>
+                    </div>
+                    <div className="text-[10px] opacity-50 uppercase tracking-widest text-right">
+                      {(savedPlayerPreview.totalPlaytimeSeconds || 0) < 60 
+                        ? t("Menos de 1 minuto") 
+                        : `${Math.floor((savedPlayerPreview.totalPlaytimeSeconds || 0) / 3600).toString().padStart(2, '0')}h ${Math.floor(((savedPlayerPreview.totalPlaytimeSeconds || 0) % 3600) / 60).toString().padStart(2, '0')}m`
+                      }
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => handleInteraction(onContinue, 'ui.click')}
+                  className={`w-full font-bold py-4 px-6 rounded uppercase tracking-widest transition-all flex items-center justify-center gap-3 group ${
+                    glitchProgress >= 1.0
+                      ? 'bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 hover:border-red-500 text-rose-100 hover:shadow-[0_0_20px_rgba(239,68,68,0.45)]'
+                      : 'bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-100 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]'
+                  }`}
+                >
+                  <Play className={`w-5 h-5 transition-colors ${glitchProgress >= 1.0 ? 'group-hover:text-red-300 text-red-400' : 'group-hover:text-cyan-300 text-cyan-400'}`} /> {t("Continuar Ciclo")}
+                </button>
+              </>
             )}
 
             {!showConfirmNew ? (
@@ -664,6 +724,10 @@ export const MainMenu: React.FC<Props> = ({
                   >
                     {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                   </button>
+                </div>
+
+                <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/50' : 'border-slate-800'} transition-colors duration-500`}>
+                  <SystemVoiceSelector />
                 </div>
              </div>
 

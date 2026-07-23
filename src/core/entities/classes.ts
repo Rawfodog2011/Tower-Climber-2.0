@@ -1,4 +1,5 @@
 import { ClassDefinition } from '../../types';
+import { coreEventText } from '../engine/memoryArchive';
 
 export const CLASSES: Record<string, ClassDefinition> = {
   tecno_aprendiz: {
@@ -131,6 +132,12 @@ export function getAvailableEvolutions(currentClassId: string, playerLevel: numb
 }
 
 export function getClassEvolutionNarrative(classId: string, originId?: string): string {
+  let baseClassId = classId;
+  if (classId.endsWith('_ascension')) {
+    baseClassId = classId.replace('_70a_ascension', '').replace('_70b_ascension', '');
+  } else if (classId.endsWith('_70a') || classId.endsWith('_70b')) {
+    baseClassId = classId.substring(0, classId.length - 4);
+  }
   const narratives: Record<string, Record<string, string>> = {
     mecatronico: {
       default: "LOG DO SISTEMA // ATIVAÇÃO PROTOCOLO MECATRÔNICO\n\nAtivação do protocolo de engenharia mecânica pesada. Suas ferramentas de campo agora ressoam com a vibração estrutural do Pináculo, soldando sucata em blindagem ativa. O metal responde à sua vontade.",
@@ -206,8 +213,17 @@ export function getClassEvolutionNarrative(classId: string, originId?: string): 
     }
   };
 
-  const classNarratives = narratives[classId] || {};
-  return classNarratives[originId || ""] || classNarratives.default || "LOG DO SISTEMA // PROTOCOLO ATIVADO\n\nSua classe evoluiu com sucesso. Seus sistemas integrados foram atualizados para um novo patamar de processamento mecânico.";
+  const classNarratives = narratives[classId];
+  if (classNarratives) {
+    const specificText = classNarratives[originId || ""] || classNarratives.default;
+    if (specificText) return specificText;
+  }
+
+  if (coreEventText[baseClassId]) {
+    return coreEventText[baseClassId];
+  }
+
+  return "LOG DO SISTEMA // PROTOCOLO ATIVADO\n\nSua classe evoluiu com sucesso. Seus sistemas integrados foram atualizados para um novo patamar de processamento mecânico.";
 }
 
 // TODO: valores provisórios, revisar em sessão de balanceamento dedicada.
@@ -228,10 +244,10 @@ level40Classes.forEach(id40 => {
 
   // Level 70 evolutions (A and B)
   const baseStats70 = {
-    hp: Math.floor(pCls.baseStats.hp * 2.5),
+    hp: Math.floor(pCls.baseStats.hp * 2.0 + 1000),
     mp: Math.floor(pCls.baseStats.mp * 2.5),
     atk: Math.floor(pCls.baseStats.atk * 2.5),
-    def: Math.floor(pCls.baseStats.def * 2.5),
+    def: Math.floor(pCls.baseStats.def * 2.0 + 100),
     spd: Math.floor(pCls.baseStats.spd * 2.0)
   };
   const growth70 = {
@@ -246,7 +262,7 @@ level40Classes.forEach(id40 => {
   CLASSES[id70a] = {
     id: id70a,
     name: `${pCls.name} Alfa`,
-    description: 'Evolução de nível 70 — descrição a definir',
+    description: `Evolução tática Alfa de nível 70 da linha ${pCls.name}, otimizada para máximo rendimento de combate.`,
     requiredLevel: 70,
     parentClassId: id40,
     baseStats: baseStats70,
@@ -257,7 +273,7 @@ level40Classes.forEach(id40 => {
   CLASSES[id70b] = {
     id: id70b,
     name: `${pCls.name} Beta`,
-    description: 'Evolução de nível 70 — descrição a definir',
+    description: `Evolução tática Beta de nível 70 da linha ${pCls.name}, especializada em resiliência e adaptação estrutural.`,
     requiredLevel: 70,
     parentClassId: id40,
     baseStats: baseStats70,
@@ -268,10 +284,10 @@ level40Classes.forEach(id40 => {
   [id70a, id70b].forEach(id70 => {
     const parent70 = CLASSES[id70];
     const baseStats100 = {
-      hp: Math.floor(parent70.baseStats.hp * 2.5),
+      hp: Math.floor(parent70.baseStats.hp * 2.0 + 2000),
       mp: Math.floor(parent70.baseStats.mp * 2.5),
       atk: Math.floor(parent70.baseStats.atk * 2.5),
-      def: Math.floor(parent70.baseStats.def * 2.5),
+      def: Math.floor(parent70.baseStats.def * 2.0 + 200),
       spd: Math.floor(parent70.baseStats.spd * 2.0)
     };
     const growth100 = {
@@ -286,7 +302,7 @@ level40Classes.forEach(id40 => {
     CLASSES[id100] = {
       id: id100,
       name: `${parent70.name} [Ascensão]`,
-      description: 'Ascensão de nível 100 — descrição a definir',
+      description: `Ascensão máxima de nível 100, alcançando a sincronização neural plena com a infraestrutura da Torre.`,
       requiredLevel: 100,
       parentClassId: id70,
       baseStats: baseStats100,

@@ -3,6 +3,7 @@ import { Player, Item, Rarity } from '../types';
 import { CLASSES } from '../core/entities/classes';
 import { CRAFTING_COSTS, MATERIAL_NAMES, GOLD_VALUES } from '../core/engine/crafting';
 import { useTranslation } from '../core/engine/translation';
+import { Wrench } from 'lucide-react';
 
 interface Props {
   player: Player;
@@ -63,6 +64,7 @@ export const ForgePanel: React.FC<Props> = ({
   }, [player.inventory, batchFilterRarities, batchFilterClasses, batchFilterTypes]);
 
   return (
+ 
     <>
       {/* Forge Panels */}
       <div className="system-panel">
@@ -96,6 +98,7 @@ export const ForgePanel: React.FC<Props> = ({
               const rarityStyle = getRarityStyle(rarity);
 
               return (
+ 
                 <button
                   key={rarity}
                   onClick={() => handleCraft(rarity)}
@@ -130,6 +133,7 @@ export const ForgePanel: React.FC<Props> = ({
         const activeRareQty = Math.max(1, Math.min(maxRareToEpic, rareToEpicQty));
 
         return (
+ 
           <div className="system-panel">
             <div className="tech-panel-header px-4 py-3">
               <span className="font-bold text-cyan-400 tracking-widest uppercase text-sm">{t("Conversor de Matéria Arcana")}</span>
@@ -318,6 +322,7 @@ export const ForgePanel: React.FC<Props> = ({
                   const active = batchFilterRarities.includes(rarity);
                   const label = rarity === 'common' ? t('Padrão') : rarity === 'rare' ? t('Avançado') : rarity === 'epic' ? t('Protótipo') : rarity === 'legendary' ? t('Lendário') : t('Mítico');
                   return (
+ 
                     <button
                       key={rarity}
                       type="button"
@@ -370,6 +375,7 @@ export const ForgePanel: React.FC<Props> = ({
                 ]).map(cls => {
                   const active = batchFilterClasses.includes(cls.id);
                   return (
+ 
                     <button
                       key={cls.id}
                       type="button"
@@ -426,6 +432,7 @@ export const ForgePanel: React.FC<Props> = ({
                 ]).map(tItem => {
                   const active = batchFilterTypes.includes(tItem.id);
                   return (
+ 
                     <button
                       key={tItem.id}
                       type="button"
@@ -454,8 +461,8 @@ export const ForgePanel: React.FC<Props> = ({
             const filteredInventory = forgeFilteredInventory;
             const filteredItemsOnly = filteredInventory.map(x => x.item);
             const totalBatchGold = filteredInventory.reduce((acc, { item }) => acc + (item.value || GOLD_VALUES[item.rarity] || 5), 0);
-
-            return (
+            return (<>
+ 
               <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
                 <div className="text-xs font-mono text-slate-400">
                   {t("Selecionados:")} <span className="text-amber-400 font-bold">{filteredInventory.length}</span> / {player.inventory.length} {t("item(ns)")}
@@ -502,8 +509,38 @@ export const ForgePanel: React.FC<Props> = ({
                   </button>
                 </div>
               </div>
-            );
-          })()}
+              
+              {/* Settings Auto-Dismantle */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                <div className="text-xs text-slate-400 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <Wrench className="w-4 h-4 text-slate-500" />
+                  {t("Auto-Desmanche (Pós-Combate)")}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['common', 'rare', 'epic'].map(r => {
+                      const rarity = r as import('../types').Rarity;
+                      const isActive = player.settings?.autoDismantleRarities?.includes(rarity);
+                      return (
+ 
+                        <button
+                          key={rarity}
+                          type="button"
+                          onClick={() => {
+                            const current = player.settings?.autoDismantleRarities || [];
+                            const next = isActive ? current.filter(x => x !== rarity) : [...current, rarity];
+                            setPlayer({ ...player, settings: { ...player.settings, autoDismantleRarities: next }});
+                          }}
+                          className={`px-3 py-1 rounded text-[10px] uppercase font-bold border transition-colors cursor-pointer ${isActive ? 'bg-amber-900/40 text-amber-300 border-amber-500/50' : 'bg-slate-950 text-slate-500 border-slate-800 hover:border-slate-600'}`}
+                        >
+                          {t(rarity)}
+                        </button>
+                      )
+                  })}
+                </div>
+              </div>
+          </>
+          );
+        })()}
         </div>
 
         {/* Filtered Inventory Items List */}
@@ -513,6 +550,7 @@ export const ForgePanel: React.FC<Props> = ({
 
             if (filteredInventory.length === 0) {
               return (
+ 
                 <div className="h-32 flex items-center justify-center text-slate-500 text-sm font-mono uppercase tracking-widest border border-dashed border-slate-800 rounded bg-slate-900/10">
                   {t("Nenhum item corresponde aos filtros selecionados")}
                 </div>
@@ -520,10 +558,12 @@ export const ForgePanel: React.FC<Props> = ({
             }
 
             return (
+ 
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {filteredInventory.map(({ item, originalIndex }) => {
                   const goldEarned = item.value || GOLD_VALUES[item.rarity] || 5;
                   return (
+ 
                     <li key={originalIndex} className={`flex justify-between items-center text-sm p-2 rounded border ${getRarityStyle(item.rarity)} hover:brightness-110 transition-all group relative overflow-hidden bg-slate-950/40`}>
                       <div className="flex items-center gap-3 overflow-hidden mr-2 relative z-10">
                         <div className={`w-10 h-10 rounded shrink-0 flex items-center justify-center ${getRarityGradient(item.rarity)}`}>

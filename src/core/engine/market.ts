@@ -15,7 +15,7 @@ const EQUIP_BASE_PRICE = {
   epic: 3000
 };
 
-export function generateMarketItems(player: Player): MarketItem[] {
+function generateMarketItems(player: Player): MarketItem[] {
   const items: MarketItem[] = [];
   
   // Equipments (3 slots)

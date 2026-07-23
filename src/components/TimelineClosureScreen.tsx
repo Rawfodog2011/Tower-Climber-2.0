@@ -188,21 +188,21 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
                 </p>
               </div>
 
-              {/* Reward Placeholders */}
+              {/* Rewards Section */}
               <div className="pt-2 border-t border-emerald-500/10 space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/80">{t("Recompensa:")} [placeholder]</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/80">{t("Recompensas Concedidas:")}</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   <div className="bg-slate-950 p-2 border border-emerald-500/10 rounded">
                     <span className="text-emerald-500 block text-[10px] uppercase tracking-widest">{t("Título Cosmético")}</span>
                     <span className="text-emerald-200 font-bold">{t(rewards.title)}</span>
                   </div>
                   <div className="bg-slate-950 p-2 border border-emerald-500/10 rounded">
-                    <span className="text-emerald-500 block text-[10px] uppercase tracking-widest">{t("Habilidade Passiva Ú")}nica</span>
-                    <span className="text-emerald-200 font-bold">{t("Resistência Temporal (A definir)")}</span>
+                    <span className="text-emerald-500 block text-[10px] uppercase tracking-widest">{t("Bônus da Linha Temporal")}</span>
+                    <span className="text-emerald-200 font-bold">{t("+2% XP e Ouro Permanentes")}</span>
                   </div>
                   <div className="bg-slate-950 p-2 border border-emerald-500/10 rounded col-span-1 md:col-span-2">
                     <span className="text-emerald-500 block text-[10px] uppercase tracking-widest">{t("Bônus Meta-Persistente de Run (Global)")}</span>
-                    <span className="text-emerald-200 font-bold">{t("XP / Ouro (A definir em sessão de recompensas dedicada)")}</span>
+                    <span className="text-emerald-200 font-bold">{t(`+2% XP e Ouro permanentes (Total atual: +${rewards.totalBonusPercent}%)`)}</span>
                   </div>
                 </div>
                 {(rewards as any).epilogueHint && (
@@ -211,9 +211,6 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
                     "{t((rewards as any).epilogueHint)}"
                   </div>
                 )}
-                <div className="text-[9px] text-amber-400/80 mt-1 italic font-mono">
-                  {t("// TODO: valores a definir em sessão de recompensas.")}
-                </div>
               </div>
             </div>
 

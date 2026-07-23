@@ -110,10 +110,15 @@ export interface AdaptationDef {
 }
 
 export interface Player {
+  name?: string;
+  avatar?: string;
   saveVersion?: number;
   campaignBeaten?: boolean;
   runStats: { goldSpent: number, totalTurns: number };
   marketState?: MarketState;
+  settings?: {
+    autoDismantleRarities: Rarity[];
+  };
   level: number;
   currentXp: number;
   currentClassId: string;
@@ -156,6 +161,12 @@ export interface Player {
   originId?: string;
   completedTutorials?: string[];
   visitedSectors?: string[];
+  playerName?: string;
+  totalPlaytimeSeconds?: number;
+  lastPlayedAt?: number;
+  quantumLevel?: number;
+  quantumUpgrades?: Record<string, number>;
+  highestAbyssalDepth?: number;
 }
 
 export type SectorHazard = 'toxic_refinery' | 'frozen_datacore' | 'plasma_furnace' | 'none';

@@ -38,19 +38,41 @@ export function getExpectedPlayerStats(level: number) {
     atk = 25 + 4 * (level - 10);
     def = 20 + 3 * (level - 10);
     spd = 20 + 4 * (level - 10);
-  } else if (level >= 40) {
+  } else if (level >= 40 && level < 70) {
     // Media aproximada das evoluções do nivel 40
     hp = 800 + 25 * (level - 40);
     atk = 250 + 12 * (level - 40);
     def = 150 + 7 * (level - 40);
     spd = 150 + 8 * (level - 40);
+  } else if (level >= 70 && level < 100) {
+    hp = 2500 + 75 * (level - 70);
+    atk = 600 + 20 * (level - 70);
+    def = 500 + 15 * (level - 70);
+    spd = 350 + 8 * (level - 70);
+  } else if (level >= 100) {
+    hp = 5000 + 100 * (level - 100);
+    atk = 1300 + 30 * (level - 100);
+    def = 1000 + 25 * (level - 100);
+    spd = 600 + 10 * (level - 100);
   }
 
-  // Bonus aproximado de itens
-  hp += level * 10;
-  atk += level * 3;
-  def += level * 3;
-  spd += level * 2;
+  // Bonus aproximado de itens por tier
+  if (level >= 100) {
+    hp += level * 100;
+    atk += level * 20;
+    def += level * 30;
+    spd += level * 5;
+  } else if (level >= 70) {
+    hp += level * 70;
+    atk += level * 12;
+    def += level * 20;
+    spd += level * 4;
+  } else {
+    hp += level * 10;
+    atk += level * 3;
+    def += level * 3;
+    spd += level * 2;
+  }
 
   return { hp, atk, def, spd };
 }
@@ -62,15 +84,49 @@ export function getMonsterScalingForFloor(floor: number) {
   const goldReward = Math.floor(baseGold * Math.pow(floor, 1.4));
   
   const pStats = getExpectedPlayerStats(floor);
+
+  if (floor >= 70) {
+    const fDiff = floor - 70;
+    const isTier100 = floor >= 90;
+
+    let hp: number;
+    let def: number;
+    let atk: number;
+    let spd: number;
+
+    if (!isTier100) {
+      // Andares 70-89 (Tier 70)
+      hp = 7000 + fDiff * 150;
+      def = 600 + fDiff * 10;
+      atk = 3150 + fDiff * 30;
+      spd = 550 + fDiff * 6;
+    } else {
+      // Andares 90-99 (Tier 100)
+      hp = 18000 + (floor - 90) * 3200;
+      def = 1500 + (floor - 90) * 180;
+      atk = 5600 + (floor - 90) * 260;
+      spd = 900 + (floor - 90) * 15;
+    }
+
+    return {
+      hp: Math.max(100, hp),
+      atk: Math.max(10, atk),
+      def: Math.max(1, def),
+      spd: Math.max(5, spd),
+      xpReward,
+      goldReward,
+    };
+  }
+
   return {
-    // Reduz HP do monstro para cerca de 22% do HP do jogador para combates ágeis e divertidos
-    hp: Math.max(20, Math.floor(pStats.hp * 0.22)),
-    // Garante que o ataque do inimigo cause dano real superando a defesa esperada do jogador
-    atk: Math.floor(pStats.def + 3 + floor * 1.2),
-    // Reduz defesa para evitar o efeito 'esponja de balas' onde o jogador causa 1 de dano
-    def: Math.max(1, Math.floor(pStats.def * 0.15)),
-    // Velocidade ligeiramente inferior para dar iniciativa estratégica ao jogador
-    spd: Math.max(5, Math.floor(pStats.spd * 0.85)),
+    // Monstro com HP e estatísticas para resistir a habilidades de burst e oferecer curva 50/50
+    hp: Math.max(30, Math.floor(pStats.hp * 1.25 + floor * 15)),
+    // Dano do inimigo para pressionar o jogador
+    atk: Math.floor(pStats.def * 1.15 + 10 + floor * 2.8),
+    // Defesa proporcional
+    def: Math.max(1, Math.floor(pStats.def * 0.35 + floor * 0.8)),
+    // Velocidade
+    spd: Math.max(5, Math.floor(pStats.spd * 0.90)),
     xpReward,
     goldReward,
   };

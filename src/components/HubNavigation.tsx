@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Shield, Activity, Flame, Cpu, Settings, Fingerprint, Zap, Trophy, ChevronLeft, ChevronRight, User, Crosshair, ShoppingCart, Briefcase, BookOpen, Lock, BrainCircuit } from 'lucide-react';
+import { Shield, Activity, Flame, Cpu, Settings, Fingerprint, Zap, Trophy, ChevronLeft, ChevronRight, User, Crosshair, ShoppingCart, Briefcase, BookOpen, Lock, BrainCircuit, Sparkles } from 'lucide-react';
 import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
@@ -39,14 +39,25 @@ export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) =>
     { id: 'auto', label: t('Módulos Auto'), icon: Zap, color: 'emerald' },
     { id: 'bestiario', label: t('Arquivo de Ameaças'), icon: BookOpen, color: 'red' },
     { id: 'memorias', label: t('Arquivo de Memórias'), icon: BrainCircuit, color: 'purple' },
+    { id: 'prestagio', label: t('Prestígio Quântico'), icon: Sparkles, color: 'purple' },
     { id: 'conquistas', label: t('Parede de Troféus'), icon: Trophy, color: 'purple' }
   ];
 
+  const colorStyles: Record<string, { active: string, inactive: string }> = {
+    orange: { active: 'bg-orange-900/40 text-orange-400 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-orange-200 border-transparent' },
+    emerald: { active: 'bg-emerald-900/40 text-emerald-400 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-emerald-200 border-transparent' },
+    cyan: { active: 'bg-cyan-900/40 text-cyan-400 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-cyan-200 border-transparent' },
+    amber: { active: 'bg-amber-900/40 text-amber-400 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-amber-200 border-transparent' },
+    indigo: { active: 'bg-indigo-900/40 text-indigo-400 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-indigo-200 border-transparent' },
+    rose: { active: 'bg-rose-900/40 text-rose-400 border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-rose-200 border-transparent' },
+    blue: { active: 'bg-blue-900/40 text-blue-400 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-blue-200 border-transparent' },
+    red: { active: 'bg-red-900/40 text-red-400 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-red-200 border-transparent' },
+    purple: { active: 'bg-purple-900/40 text-purple-400 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.2)]', inactive: 'text-slate-400 hover:bg-slate-800 hover:text-purple-200 border-transparent' },
+  };
+
   const getColorClasses = (id: string, color: string) => {
-    if (hubTab === id) {
-      return `bg-${color}-900/40 text-${color}-400 border-${color}-500/50 shadow-[0_0_15px_rgba(var(--${color}-500-rgb),0.2)]`;
-    }
-    return `text-slate-400 hover:bg-slate-800 hover:text-${color}-200 border-transparent`;
+    const style = colorStyles[color] || colorStyles.cyan;
+    return hubTab === id ? style.active : style.inactive;
   };
 
   return (
@@ -99,6 +110,9 @@ export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) =>
           } else if (tab.id === 'auto') {
             isUnlocked = player.level >= 20 || player.highestFloorUnlocked >= 20;
             lockMessage = 'Nível 20 ou Andar 20';
+          } else if (tab.id === 'prestagio') {
+            isUnlocked = player.level >= 25 || player.highestFloorUnlocked >= 25 || (player.quantumLevel || 0) > 0;
+            lockMessage = 'Nível 25 ou Andar 25';
           } else if (tab.id === 'conquistas') {
             isUnlocked = player.level >= 4 || player.highestFloorUnlocked >= 3;
             lockMessage = 'Nível 4 ou Andar 3';

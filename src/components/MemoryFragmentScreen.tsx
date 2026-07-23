@@ -5,6 +5,7 @@ import { getMemoryFragment } from '../core/entities/memories';
 import { ORIGINS } from '../core/entities/origins';
 import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
+import { TTSButton } from './TTSButton';
 
 interface Props {
   player: Player;
@@ -90,11 +91,20 @@ export const MemoryFragmentScreen: React.FC<Props> = ({ player, memoryKey, onCom
         </div>
 
         {/* Title */}
-        <div className="space-y-1">
-          <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest text-purple-200">
-            {t(memory.title)}
-          </h2>
-          <div className="h-0.5 w-24 bg-gradient-to-r from-purple-500 to-transparent"></div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest text-purple-200">
+              {t(memory.title)}
+            </h2>
+            <div className="h-0.5 w-24 bg-gradient-to-r from-purple-500 to-transparent"></div>
+          </div>
+          <TTSButton
+            text={`${t(memory.title)}. ${combinedStoryText}`}
+            id={`memory-screen-${memory.key}`}
+            variant="purple"
+            size="sm"
+            showDetails={true}
+          />
         </div>
 
         {/* Step 1: Origin Frame (Metadata) */}

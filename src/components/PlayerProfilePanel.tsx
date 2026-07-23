@@ -6,7 +6,7 @@ import { getXpRequiredForNextLevel } from '../core/math/progression';
 import { SKILLS_DATABASE, canClassUseSkill } from '../core/entities/skills';
 import { NEURAL_MATRIX_DATABASE } from '../core/entities/neuralMatrix';
 import { ADAPTATIONS_DATABASE } from '../core/entities/adaptations';
-import { Activity, Shield, Zap, Info, X } from 'lucide-react';
+import { Activity, Shield, Zap, Info, X, Bot, Ghost, UserRound, Crosshair, Fingerprint, Eye, Hexagon, Cpu } from 'lucide-react';
 import { ORIGINS } from '../core/entities/origins';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
@@ -17,9 +17,22 @@ interface Props {
   handleEvolveClass: (classId: string) => void;
 }
 
+const getAvatarIcon = (id?: string) => {
+  switch (id) {
+    case 'bot': return <Bot className="w-8 h-8 text-cyan-400" />;
+    case 'ghost': return <Ghost className="w-8 h-8 text-cyan-400" />;
+    case 'crosshair': return <Crosshair className="w-8 h-8 text-cyan-400" />;
+    case 'fingerprint': return <Fingerprint className="w-8 h-8 text-cyan-400" />;
+    case 'eye': return <Eye className="w-8 h-8 text-cyan-400" />;
+    case 'hexagon': return <Hexagon className="w-8 h-8 text-cyan-400" />;
+    case 'cpu': return <Cpu className="w-8 h-8 text-cyan-400" />;
+    default: return <UserRound className="w-8 h-8 text-cyan-400" />;
+  }
+};
+
 export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvolveClass }) => {
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
-  const stats = calculatePlayerStats(player);
+  const stats = React.useMemo(() => calculatePlayerStats(player), [player]);
   const { t } = useTranslation();
   const { playSfx } = useAudio();
 
@@ -52,9 +65,26 @@ export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvo
           </div>
           
           <div className="p-4 space-y-4 text-sm font-mono">
+            <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded border border-cyan-900/50">
+              <div className="p-2 bg-slate-950 border border-slate-800 rounded">
+                {getAvatarIcon(player.avatar)}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-cyan-200/60 uppercase text-xs tracking-wider">{t("Identificação")}</span>
+                <span className="text-cyan-400 font-bold uppercase text-lg">{player.name || t(player.originId ? ORIGINS[player.originId].name : 'Explorador Sem Nome')}</span>
+              </div>
+            </div>
+
             <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded border border-cyan-900/50">
               <span className="text-cyan-200/60 uppercase text-xs tracking-wider">{t("Classe")}</span>
               <span className="text-emerald-400 font-bold uppercase">{t(CLASSES[player.currentClassId].name)}</span>
+            </div>
+
+            <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded border border-cyan-900/50">
+              <span className="text-cyan-200/60 uppercase text-xs tracking-wider">{t("Tempo de Serviço")}</span>
+              <span className="text-cyan-400 font-bold tracking-wider">
+                {Math.floor((player.totalPlaytimeSeconds || 0) / 3600).toString().padStart(2, '0')}h {Math.floor(((player.totalPlaytimeSeconds || 0) % 3600) / 60).toString().padStart(2, '0')}m
+              </span>
             </div>
 
             {player.originId && ORIGINS[player.originId] && (

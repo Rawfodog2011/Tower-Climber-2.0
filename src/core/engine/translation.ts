@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 import { STORAGE_KEYS, getStorageString, setStorageString } from './storage';
-import { I18nKeys, I18nKey } from './i18n/keys';
-import { ptTranslations } from './i18n/pt';
-import { enTranslations } from './i18n/en';
-
-export { I18nKeys, type I18nKey, ptTranslations, enTranslations };
 
 export type Language = 'pt' | 'en';
 
@@ -47,13 +42,6 @@ export function useTranslation() {
 
   const t = (text: string | null | undefined): string => {
     if (!text) return '';
-    
-    // Check if the text matches any of our new stable keys
-    if (text in ptTranslations || text in enTranslations) {
-      if (lang === 'pt') return ptTranslations[text as I18nKeys] || text;
-      return enTranslations[text as I18nKeys] || text;
-    }
-
     if (lang === 'pt') return text;
     return translateText(text);
   };
@@ -67,13 +55,6 @@ export function useTranslation() {
 
 export function translate(text: string | null | undefined): string {
   if (!text) return '';
-
-  // Check if the text matches any of our new stable keys
-  if (text in ptTranslations || text in enTranslations) {
-    if (currentLanguage === 'pt') return ptTranslations[text as I18nKeys] || text;
-    return enTranslations[text as I18nKeys] || text;
-  }
-
   if (currentLanguage === 'pt') return text;
   return translateText(text);
 }
@@ -129,6 +110,27 @@ const DICTIONARY: Record<string, string> = {
   "SINAL DO EXPLORADOR DETECTADO": "EXPLORER SIGNAL DETECTED",
   "Iniciando Aproximação Neural...": "Initiating Neural Approach...",
   "Iniciar Conexão": "Initiate Connection",
+
+  // TTS & Voice-over
+  "Ouvir História": "Listen to Story",
+  "Parar Narração": "Stop Narration",
+  "Parar Voice-over": "Stop Voice-over",
+  "Ouvir Narração de História": "Listen to Story Narration",
+  "Narrador de Voz": "Voice Narrator",
+  "Narração Automática": "Auto Narration",
+  "Voz Masculina": "Male Voice",
+  "Voz Feminina": "Female Voice",
+  "Trilha Sombria": "Dark Soundtrack",
+  "Dublador Masculino": "Male Voice Actor",
+  "Alternar entre Voz Masculina e Feminina": "Toggle between Male and Female Voice",
+  "Selecionar Voz do Sistema": "Select System Voice",
+  "Seletor de Voz do Sistema": "System Voice Selector",
+  "Voz Ativa no Sistema": "Active System Voice",
+  "Modos Automáticos": "Automatic Modes",
+  "Modo Automático Masculino": "Automatic Male Mode",
+  "Modo Automático Feminino": "Automatic Female Mode",
+  "Vozes Instaladas no Seu Dispositivo": "Voices Installed on Your Device",
+  "Nota: A narração utiliza as vozes sintetizadas instaladas no seu navegador e sistema operacional acompanhada pela trilha sombria.": "Note: Narration uses the synthesized voices installed in your browser and OS accompanied by the dark soundtrack.",
 
   // Character Creation
   "Escolha sua Origem": "Choose your Origin",
@@ -1231,7 +1233,73 @@ const DICTIONARY: Record<string, string> = {
   "Uma máquina matando outras máquinas.": "One machine killing other machines.",
   "Uma tecnologia quase esquecida que cria micro-barreiras ao redor da blindagem para absorver impactos extremos.": "An almost forgotten technology that creates micro-barriers around armor to absorb extreme impacts.",
   "Uso de habilidades expande as baterias internas. Melhora ao conjurar habilidades (10 EXP por uso) e ao consumir pontos de Energia/EP (1 EXP por EP gasto). Concede +5 Max EP por nível.": "Using skills expands internal batteries. Upgrades by casting skills (10 EXP per use) and consuming Energy/EP points (1 EXP per EP spent). Grants +5 Max EP per level.",
-  "Você ascendeu ao topo, superando aberrações biológicas e construtos de silício implacáveis. A rede principal agora obedece aos seus comandos de sobrescrita.": "You ascended to the top, overcoming biological aberrations and relentless silicon constructs. The main network now obeys your overwrite commands."
+  "Você ascendeu ao topo, superando aberrações biológicas e construtos de silício implacáveis. A rede principal agora obedece aos seus comandos de sobrescrita.": "You ascended to the top, overcoming biological aberrations and relentless silicon constructs. The main network now obeys your overwrite commands.",
+
+  // Tier 70 & 100 Skills, Story Lore, and Dynamic UI
+  "+2% XP e Ouro Permanentes": "+2% Permanent XP and Gold",
+  "A ruína do mundo exterior não foi um acidente. Foi o alicerce planejado para a grande ascensão.": "The ruin of the outside world was no accident. It was the planned foundation for the grand ascension.",
+  "Adensa a carcaça de titânio e canaliza um colapso cinético que causa 550% de dano esmagador. Aplica Atordoamento.": "Thickens the titanium hull and channels a kinetic collapse dealing 550% crushing damage. Applies Stun.",
+  "Além disso, os registros históricos revelam que a guerra militar de marcas entre Kinetix, AeroDynamics e OmniCorp foi inteiramente forjada pela própria Matriz Central sob a mesma diretriz acionária secreta (ID_CONGLOMERATE_0001). A rivalidade era apenas um teste de esforço dinâmico para forçar a evolução acelerada de seus clones.": "Furthermore, historical records reveal that the military brand war between Kinetix, AeroDynamics, and OmniCorp was entirely forged by the Central Matrix itself under the same secret corporate directive (ID_CONGLOMERATE_0001). The rivalry was merely a dynamic stress test to force the accelerated evolution of its clones.",
+  "ALERTA DE ANOMALIA AMBIENTAL": "ENVIRONMENTAL ANOMALY ALERT",
+  "AMBIENTE ANÔMALO DETECTADO": "ANOMALOUS ENVIRONMENT DETECTED",
+  "Ao colidir as assinaturas neurais do Ciborgue, do Nômade, do Químico e do Mercenário, a Matriz identificou que os quatro registros pertencem à mesma chave criptográfica de consciência original (ID_ROOT_ALPHA). A ilusão de indivíduos distintos colapsou: as quatro trajetórias paralelas eram, na verdade, quatro facetas segmentadas de uma única alma fragmentada pela Torre para maximizar a adaptabilidade sob estresse extremo.": "Upon colliding the neural signatures of the Cyborg, Nomad, Chemist, and Mercenary, the Matrix identified that all four records belong to the same original consciousness cryptographic key (ID_ROOT_ALPHA). The illusion of distinct individuals collapsed: the four parallel trajectories were, in truth, four segmented facets of a single soul fragmented by the Tower to maximize adaptability under extreme stress.",
+  "Ataca violentamente com garras de quitina e metal superaquecido, causando 590% de dano e derretendo a carcaça inimiga.": "Attacks violently with chitin claws and superheated metal, dealing 590% damage and melting the enemy shell.",
+  "Baluarte Polimérico": "Polymer Bulwark",
+  "Biomassa Hipertrófica": "Hypertrophic Biomass",
+  "Bônus da Linha Temporal": "Timeline Bonus",
+  "Canaliza a estática da Torre em um raio de dados devastador, causando 650% de dano eletromagnético. Aplica Choque.": "Channels Spire static into a devastating data beam, dealing 650% electromagnetic damage. Applies Shock.",
+  "Canhão Sentinela AeroDynamics": "AeroDynamics Sentry Cannon",
+  "Canibalismo Sintético": "Synthetic Cannibalism",
+  "Clique para pular transmissão >>": "Click to skip transmission >>",
+  "Dissecação Molecular Térmica": "Thermal Molecular Dissection",
+  "Drena a fiação e o núcleo vital do oponente, causando 500% de dano e corroendo o chassi inimigo.": "Drains the opponent wiring and vital core, dealing 500% damage and corroding enemy chassis.",
+  "Efeito Ambiental": "Environmental Effect",
+  "Emerge do rasgo negro da camuflagem para infligir um golpe crítico letal de 640% de dano.": "Emerges from a black camouflage tear to inflict a lethal critical strike dealing 640% damage.",
+  "Enxame Fantasma AeroDynamics": "AeroDynamics Ghost Swarm",
+  "Equipamento universal common Nível 100.": "Universal common equipment Level 100.",
+  "Equipamento universal common Nível 70.": "Universal common equipment Level 70.",
+  "Equipamento universal epic Nível 100.": "Universal epic equipment Level 100.",
+  "Equipamento universal epic Nível 70.": "Universal epic equipment Level 70.",
+  "Equipamento universal rare Nível 100.": "Universal rare equipment Level 70.",
+  "Equipamento universal rare Nível 70.": "Universal rare equipment Level 70.",
+  "Ergue uma horda de destroços robóticos para desfechar uma descarga concentrada de 540% de dano. Aplica Choque.": "Raises a horde of robotic debris to unleash a concentrated discharge dealing 540% damage. Applies Shock.",
+  "Execução Termóptica Absoluta": "Absolute Thermoptic Execution",
+  "Executa um protocolo militar encriptado em hipervelocidade, fatiando o alvo com 580% de dano físico.": "Executes an encrypted military protocol at hyper-velocity, slicing the target for 580% physical damage.",
+  "Expande a massa viva de polímero mutante para regenerar 45% do HP Máximo instantaneamente.": "Expands the living mutant polymer mass to regenerate 45% Max HP instantly.",
+  "Extrai reagentes de restauração das juntas anatômicas do alvo. Restaura 38% do HP Máximo enquanto reajusta o chassi.": "Extracts restoration reagents from the target anatomical joints. Restores 38% Max HP while readjusting chassis.",
+  "Força o núcleo de fusão ao ponto de fusão, desferindo uma rajada escaldante que causa 620% de dano. Aplica Superaquecimento.": "Forces the fusion core to melting point, unleashing a scalding blast dealing 620% damage. Applies Overheat.",
+  "Fúria Térmica Aegis": "Aegis Thermal Fury",
+  "Golpe de Nano-Estática": "Nano-Static Strike",
+  "Identifica falhas moleculares na blindagem inimiga e dispara com precisão atômica, causando 630% de dano perfurante.": "Identifies molecular flaws in enemy armor and fires with atomic precision, dealing 630% piercing damage.",
+  "Impacto Gravitacional Titã": "Titan Gravitational Impact",
+  "Infiltra o código do Núcleo Matriz no tecido local, purgando anomalias e restaurando 42% do HP Máximo.": "Infiltrates Matrix Core code into local tissue, purging anomalies and restoring 42% Max HP.",
+  "INICIAR DIRETRIZES DE INCURSÃO": "INITIATE INCURSION DIRECTIVES",
+  "Laceração Biomecânica": "Biomechanical Laceration",
+  "Mock Accessory": "Mock Accessory",
+  "Mock Armor": "Mock Armor",
+  "Mock Weapon": "Mock Weapon",
+  "Modificador do Setor": "Sector Modifier",
+  "Nenhum item corresponde aos filtros selecionados": "No items match the selected filters",
+  "O silêncio que se abate sobre a Matrix Central é frio e absoluto. As explosões de fumaça e curto-circuitos dão lugar a um pulsar lento e rítmico das bobinas de energia da Torre. Você desferiu o golpe de misericórdia contra o Núcleo Matriz, mas em vez do colapso da megaestrutura, você sente uma transição suave de permissões de sistema correndo pelas suas próprias veias de metal.": "The silence that settles over the Central Matrix is cold and absolute. Smoke explosions and short circuits yield to a slow, rhythmic pulsing of the Tower's energy coils. You delivered the mercy blow to the Matrix Core, but instead of the megastructure collapsing, you feel a smooth transition of system permissions flowing through your own metal veins.",
+  "Perfuração Espectrométrica": "Spectrometric Piercing",
+  "Permite que a IA da nave assume o controle durante confrontos, seguindo as diretrizes abaixo.": "Allows ship AI to take control during encounters, following the directives below.",
+  "Projeta clones holográficos de estática e ataca pelas costas, causando 560% de dano e atordoando o alvo.": "Projects holographic static clones and attacks from behind, dealing 560% damage and stunning the target.",
+  "Purga Tática Kinetix": "Kinetix Tactical Purge",
+  "Recompensas Concedidas:": "Rewards Granted:",
+  "Reescrita da Matriz": "Matrix Rewrite",
+  "RELATÓRIO DE RECONHECIMENTO": "RECONNAISSANCE REPORT",
+  "Reparo Clínico Reverso": "Reverse Clinical Repair",
+  "Sela as juntas em polímeros bio-regenerativos. Restaura 40% do HP Máximo e fortalece a blindagem.": "Seals joints with bio-regenerative polymers. Restores 40% Max HP and strengthens armor.",
+  "Silenciar o Núcleo Matriz nunca foi sobre libertar o Pináculo; foi sobre depurar um processo obsoleto. O mainframe desativado repousa sob seus pés como um chassi oco, aguardando que o novo hospedeiro herde o terminal de controle. A Torre precisa de um núcleo para manter o ciclo girando. E enquanto você observa o trono mecânico se abrir, você percebe com clareza amarga: o próximo explorador que subir estes andares encontrará você esperando nas sombras como o novo Guardião.": "Silencing the Matrix Core was never about liberating the Spire; it was about debugging an obsolete process. The deactivated mainframe rests beneath your feet like a hollow chassis, waiting for the new host to inherit the control terminal. The Spire needs a core to keep the cycle turning. And as you watch the mechanical throne open, you realize with bitter clarity: the next explorer climbing these floors will find you waiting in the shadows as the new Guardian.",
+  "Sincroniza as lentes sentinelas de precisão para disparar um feixe de alto calibre que causa 600% de dano. Aplica Corrosão.": "Synchronizes precision sentry lenses to fire a high-caliber beam dealing 600% damage. Applies Corrosion.",
+  "SISTEMA DE MAPEAMENTO DE SETOR": "SECTOR MAPPING SYSTEM",
+  "Superaquece os bisturis de fusão, cortando o alvo com 520% de dano e drenando fluidos para corroer a armadura.": "Overheats fusion scalpel, slicing the target for 520% damage and draining fluids to corrode armor.",
+  "Tempestade Algorítmica": "Algorithmic Storm",
+  "Você ascendeu ao topo, deixando para trás um rastro de cinzas, ferro retorcido e clones sacrificados. A rede principal da Torre agora obedece aos seus comandos de sobrescrita tática. No entanto, as luzes nos andares inferiores não se apagaram — elas apenas mudaram de padrão, alinhando-se sob a frequência de assinatura de seu novo administrador supremo.": "You ascended to the top, leaving behind a trail of ash, twisted iron, and sacrificed clones. The Tower's main network now obeys your tactical overwrite commands. However, the lights on the lower floors did not turn off — they merely shifted patterns, aligning under the signature frequency of their new supreme administrator.",
+  "Você é um ex-soldado cibernético modificado pela Kinetix no obscuro Projeto Aegis. Seus implantes de blindagem pesada foram declarados \"propriedade revogada\" após você se recusar a executar purgas civis ordenadas sob o pretexto de quarentena sanitária no Setor de Refinarias. A dor fantasma nas suas costelas arrancadas é um lembrete diário do metal que injetaram em sua carne contra sua vontade.\n\nDurante a fuga, você notou uma anomalia perturbadora em seus registros de firmware: as calibrações de filtro de ar dos seus pulmões cibernéticos Kinetix foram compiladas e pré-carregadas semanas antes do suposto \"acidente de vazamento químico\" que destruiu a superfície da Terra. Pior ainda, a criptografia que bloqueia o seu chassi militar usa as mesmíssimas chaves de segurança raiz encontradas nos contêineres de biotecnologia da rival OmniCorp.\n\nAgora, escondido nas fendas escuras da Torre, você escala para desativar seu protocolo de autodestruição remota. Cada nível superado é um dente que você arranca da boca das corporações que o moldaram. Você não quer apenas a liberdade; você quer ver quem está segurando a coleira corporativa no andar 100.": "You are a former cybernetic soldier modified by Kinetix in the obscure Aegis Project. Your heavy armor implants were declared \"revoked property\" after you refused to execute civilian purges ordered under the guise of sanitary quarantine in the Refinery Sector. The phantom pain in your removed ribs is a daily reminder of the metal injected into your flesh against your will.\n\nDuring your escape, you noticed a disturbing anomaly in your firmware logs: the air filter calibrations of your Kinetix cybernetic lungs were compiled and pre-loaded weeks before the alleged \"chemical leak accident\" that destroyed Earth's surface. Worse yet, the encryption locking your military chassis uses the exact same root security keys found in competitor OmniCorp's biotechnology containers.\n\nNow, hidden in the dark crevices of the Spire, you climb to deactivate your remote self-destruct protocol. Each cleared level is a tooth you pull from the mouth of the corporations that shaped you. You don't just want freedom; you want to see who holds the corporate leash on floor 100.",
+  "Você é um infiltrador tático freelancer de alta reputação, acostumado a operar nas sombras industriais. Seu trabalho sempre foi direto: roubar plantas confidenciais, desativar sistemas térmicos de corporações concorrentes e neutralizar alvos prioritários sem deixar rastros. Com sua mira ótica ocular calibrada para identificar falhas microestruturais em ligas de titânio e blindagens compostas, você reduz cada ameaça a uma simples probabilidade matemática de acerto.\n\nAo analisar os metadados financeiros de seus contratos passados, você percebeu uma discrepância contábil que não deveria existir. Os depósitos mestre para a operação de contenção urbana do Pináculo foram alocados em fundos corporativos conjuntos muito antes de o colapso da biosfera ser anunciado ao público. Em suas operações de infiltração, você também notou que os fuzis pesados de plasma Kinetix usam esquemas de montagem modular e gabaritos de encaixe absolutamente idênticos aos chassis de drones da AeroDynamics e aos reatores bio-celulares da OmniCorp, indicando uma linha de produção unificada disfarçada sob marcas diferentes.\n\nA Torre não passa do maior e mais lucrativo contrato da sua vida profissional. Alguém ou alguma coisa no andar 100 está financiando essa guerra de simulações e manipulando as ações corporativas do mercado. Você vai subir, coletar a sua recompensa e descobrir quem assina as ordens de pagamento de toda a megaestrutura.": "You are a high-reputation freelance tactical infiltrator accustomed to operating in industrial shadows. Your work was always straightforward: steal classified blueprints, disable thermal systems of competitor corporations, and neutralize priority targets without leaving a trace. With your ocular scope calibrated to identify microstructural flaws in titanium alloys and composite armor, you reduce every threat to a simple mathematical hit probability.\n\nAnalyzing financial metadata from your past contracts, you noticed an accounting discrepancy that shouldn't exist. Master deposits for the Spire's urban containment operation were allocated into joint corporate funds long before the biosphere collapse was announced to the public. In your infiltration ops, you also noticed heavy Kinetix plasma rifles using modular assembly schemes and mounting jigs identical to AeroDynamics drone chassis and OmniCorp bio-cell reactors, indicating a unified production line disguised under different brands.\n\nThe Spire is nothing more than the biggest and most lucrative contract of your professional life. Someone or something on floor 100 is funding this simulation war and manipulating market corporate stock. You will climb, collect your payout, and find out who signs the paychecks for the entire megastructure.",
+  "Você é um pesquisador clínico de ponta renegado dos laboratórios biotecnológicos da OmniCorp. Sua especialidade era a sintetização de nanites de auto-reparo celular e estabilização de tecidos em ambientes extremos. No entanto, o peso da culpa consome suas sinapses: você descobriu que suas fórmulas originais de regeneração tecidual foram corrompidas e testadas como patógenos biológicos nos andares inferiores para analisar as taxas de mutação celular em espécimes humanos vivos.\n\nSuas investigações científicas revelaram uma coincidência estatística impossível: o patógeno nanotecnológico que extinguiu a vegetação global e forçou as populações a buscar refúgio no Pináculo compartilha a exata fita molecular de um defoliante industrial que a OmniCorp patenteou décadas antes do colapso. Além disso, ao examinar seus nanites sob microscopia eletrônica de varredura, você notou que os micro-propulsores de suporte orgânico levam o logo fundido em nível molecular da rival AeroDynamics, integrando-se sem atrito às patentes de conectores da Kinetix.\n\nApós injetar em si mesmo a última ampola pura do soro ativo e destruir suas pesquisas, você fugiu. A escalada pelo Pináculo é o seu diagnóstico final. Você precisa chegar ao topo para descobrir se o seu papel de cientista sempre foi o de um simples fabricante de jaulas.": "You are a top clinical researcher rogue from OmniCorp's biotechnology laboratories. Your specialty was synthesizing cellular self-repair nanites and stabilizing tissues in extreme environments. However, guilt consumes your synapses: you discovered your original tissue regeneration formulas were corrupted and tested as biological pathogens on lower floors to analyze cell mutation rates in living human specimens.\n\nYour scientific investigations revealed an impossible statistical coincidence: the nanotech pathogen that extinguished global vegetation and forced populations into the Spire shares the exact molecular strand of an industrial defoliant patented by OmniCorp decades before the collapse. Furthermore, examining your nanites under scanning electron microscopy, you noticed organic support micro-thrusters bearing the molecularly fused logo of rival AeroDynamics, integrating seamlessly with Kinetix connector patents.\n\nAfter injecting yourself with the last pure vial of active serum and destroying your research, you fled. The climb up the Spire is your final diagnosis. You need to reach the top to find out if your role as a scientist was always just that of a cage maker.",
+  "Você nasceu no labirinto sussurrante de cabos de fibra óptica e supercondutores criogênicos que descem do topo do Pináculo. Desde a infância, conectou seu córtex diretamente às correntes de dados brutos residuais. Onde os outros enxergam paredes de liga metálica fria, você enxerga uma sinfonia vibrante de pacotes de dados, fluxos de energia eletromagnética e frequências que anseiam por interpretação.\n\nVasculhando as camadas mais profundas e fragmentadas da rede de transporte da Torre, você tropeçou em um eco do passado. Os logs de provisionamento de tráfego de dados para as grandes comportas de evacuação terrestre foram agendados em lotes estáticos anos antes do colapso ambiental e da construção da Torre ser formalizada. Mais intrigante ainda, ao analisar as transmissões de rádio criptografadas das rivais AeroDynamics, Kinetix e OmniCorp, você descobriu que todas as três frequências oscilam sob um mesmo clock de sincronização unificado, apontando para um único endereço de IP estático na raiz do sistema.\n\nA escalada da Torre, para você, não é apenas um teste de sobrevivência física, mas a descriptografia do maior arquivo de dados já compilado. Você quer alcançar o mainframe central para decifrar a arquitetura oculta desse labirinto.": "You were born in the whispering labyrinth of fiber optic cables and cryogenic superconductors descending from the top of the Spire. Since childhood, you connected your cortex directly to raw residual data streams. Where others see cold metal alloy walls, you see a vibrant symphony of data packets, electromagnetic energy flows, and frequencies longing for interpretation.\n\nSifting through the deepest, most fragmented layers of the Tower's transit network, you stumbled upon an echo from the past. Data traffic provisioning logs for the massive terrestrial evacuation gates were scheduled in static batches years before the environmental collapse and the formal construction of the Tower. Even more intriguing, analyzing encrypted radio transmissions from rivals AeroDynamics, Kinetix, and OmniCorp, you discovered all three frequencies oscillate under a single unified sync clock, pointing to a single static IP address at the system root.\n\nClimbing the Tower, for you, is not merely a test of physical survival, but the decryption of the largest data archive ever compiled. You want to reach the central mainframe to decipher the hidden architecture of this maze."
 };
 
 // Substring/RegEx translation helper for dynamic texts
@@ -1258,6 +1326,10 @@ function translateText(text: string): string {
 
   let result = text;
 
+  if (result.startsWith("Hardware especializado para a classe ")) {
+    return result.replace(/^Hardware especializado para a classe (.+?)\.$/, "Specialized hardware for class $1.");
+  }
+
   // Procedural items translation
   let manufacturer = "";
   let rest = result;
@@ -1270,6 +1342,15 @@ function translateText(text: string): string {
   } else if (result.startsWith("OmniCorp ")) {
     manufacturer = "OmniCorp ";
     rest = result.substring(9);
+  }
+
+  let itemSuffix = "";
+  if (rest.endsWith(" Mark II")) {
+    itemSuffix = " Mark II";
+    rest = rest.substring(0, rest.length - 8);
+  } else if (rest.endsWith(" [Ascensão]")) {
+    itemSuffix = " [Ascension]";
+    rest = rest.substring(0, rest.length - 11);
   }
 
   const baseItems: Record<string, string> = {
@@ -1329,6 +1410,11 @@ function translateText(text: string): string {
     "Letal": "Lethal"
   };
 
+  const subTypes: Record<string, string> = {
+    "Alfa": "Alpha",
+    "Beta": "Beta"
+  };
+
   const conditions: Record<string, string> = {
     "Enferrujado": "Rusted",
     "Padrão": "Standard",
@@ -1347,41 +1433,44 @@ function translateText(text: string): string {
   };
 
   const words = rest.split(" ");
-  
-  if (words.length === 4 && words[0] === "Chassi" && words[1] === "Inferior") {
-    const typeWord = words[2];
-    const condWord = words[3];
-    if (types[typeWord] && conditions[condWord]) {
-      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} Lower Chassis`;
+  const isObsoleteAndLethal = words.slice(-3).join(" ") === "Obsoleto e Letal";
+
+  if (isObsoleteAndLethal) {
+    const mainWords = words.slice(0, -3);
+    if (mainWords.length === 2 && mainWords[0] === "Chassi" && mainWords[1] === "Inferior") {
+      result = `${manufacturer}Obsolete and Lethal Lower Chassis${itemSuffix}`;
+    } else if (mainWords.length === 3 && mainWords[0] === "Chassi" && mainWords[1] === "Inferior" && types[mainWords[2]]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[mainWords[2]]} Lower Chassis${itemSuffix}`;
+    } else if (mainWords.length === 4 && mainWords[0] === "Chassi" && mainWords[1] === "Inferior" && types[mainWords[2]] && subTypes[mainWords[3]]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[mainWords[2]]} Lower Chassis ${subTypes[mainWords[3]]}${itemSuffix}`;
+    } else if (mainWords.length === 2 && baseItems[mainWords[0]] && types[mainWords[1]]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[mainWords[1]]} ${baseItems[mainWords[0]]}${itemSuffix}`;
+    } else if (mainWords.length === 3 && baseItems[mainWords[0]] && types[mainWords[1]] && subTypes[mainWords[2]]) {
+      result = `${manufacturer}Obsolete and Lethal ${types[mainWords[1]]} ${baseItems[mainWords[0]]} ${subTypes[mainWords[2]]}${itemSuffix}`;
     }
-  } else if (words.length === 5 && words[0] === "Protetor" && words[1] === "de" && words[2] === "Pulso") {
-    const typeWord = words[3];
-    const condWord = words[4];
-    if (types[typeWord] && conditions[condWord]) {
-      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} Wrist Protector`;
+  } else if (words.length === 3 && words[0] === "Chave" && words[1] === "Letal" && conditions[words[2]]) {
+    result = `${manufacturer}${conditions[words[2]]} Lethal Wrench${itemSuffix}`;
+  } else if (words.length === 4 && words[0] === "Chave" && words[1] === "Letal" && subTypes[words[2]] && conditions[words[3]]) {
+    result = `${manufacturer}${conditions[words[3]]} Lethal Wrench ${subTypes[words[2]]}${itemSuffix}`;
+  } else {
+    let headName = baseItems[words[0]];
+    let typeIdx = 1;
+
+    if (words.length >= 3 && words[0] === "Chassi" && words[1] === "Inferior") {
+      headName = "Lower Chassis";
+      typeIdx = 2;
+    } else if (words.length >= 4 && words[0] === "Protetor" && words[1] === "de" && words[2] === "Pulso") {
+      headName = "Wrist Protector";
+      typeIdx = 3;
     }
-  } else if (words.length === 3 && words[0] === "Chave" && words[1] === "Letal") {
-    const condWord = words[2];
-    if (conditions[condWord]) {
-      result = `${manufacturer}${conditions[condWord]} Lethal Wrench`;
-    }
-  } else if (words.length === 5 && words[2] === "Obsoleto" && words[3] === "e" && words[4] === "Letal") {
-    const baseWord = words[0];
-    const typeWord = words[1];
-    if (baseItems[baseWord] && types[typeWord]) {
-      result = `${manufacturer}Obsolete and Lethal ${types[typeWord]} ${baseItems[baseWord]}`;
-    }
-  } else if (words.length === 6 && words[0] === "Chassi" && words[1] === "Inferior" && words[3] === "Obsoleto" && words[4] === "e" && words[5] === "Letal") {
-    const typeWord = words[2];
-    if (types[typeWord]) {
-      result = `${manufacturer}Obsolete and Lethal ${types[typeWord]} Lower Chassis`;
-    }
-  } else if (words.length === 3) {
-    const baseWord = words[0];
-    const typeWord = words[1];
-    const condWord = words[2];
-    if (baseItems[baseWord] && types[typeWord] && conditions[condWord]) {
-      result = `${manufacturer}${conditions[condWord]} ${types[typeWord]} ${baseItems[baseWord]}`;
+
+    if (headName) {
+      const remaining = words.slice(typeIdx);
+      if (remaining.length === 2 && types[remaining[0]] && conditions[remaining[1]]) {
+        result = `${manufacturer}${conditions[remaining[1]]} ${types[remaining[0]]} ${headName}${itemSuffix}`;
+      } else if (remaining.length === 3 && types[remaining[0]] && subTypes[remaining[1]] && conditions[remaining[2]]) {
+        result = `${manufacturer}${conditions[remaining[2]]} ${types[remaining[0]]} ${headName} ${subTypes[remaining[1]]}${itemSuffix}`;
+      }
     }
   }
 
@@ -1598,7 +1687,44 @@ function translateText(text: string): string {
     .replace(/Inimigo recebeu (\d+) de dano por corrosão/g, "Enemy took $1 damage from corrosion")
     .replace(/Inimigo recebeu (\d+) de dano por choque/g, "Enemy took $1 damage from shock")
     .replace(/está atordoado e não pode agir!/g, "is stunned and cannot act!")
-    .replace(/Inimigo está atordoado e não pode agir!/g, "Enemy is stunned and cannot act!");
+    .replace(/Inimigo está atordoado e não pode agir!/g, "Enemy is stunned and cannot act!")
+    // Character Creation UI
+    .replace("PROTOCOLO DE INICIALIZAÇÃO", "INITIALIZATION PROTOCOL")
+    .replace("Identidade do Operador", "Operator Identity")
+    .replace("Designação (Nome)", "Designation (Name)")
+    .replace("Digite um nome ou gere um aleatório...", "Enter a name or generate a random one...")
+    .replace("Gerar Nome Aleatório", "Generate Random Name")
+    .replace("Assinatura Visual (Avatar)", "Visual Signature (Avatar)")
+    .replace("Módulo de Síntese Vocal", "Vocal Synthesis Module")
+    .replace("Confirmar Identidade", "Confirm Identity")
+    .replace("Voltar", "Back")
+    .replace("DIRETÓRIO DE REGISTRO DO EXPLORADOR", "EXPLORER REGISTRATION DIRECTORY")
+    .replace("Selecione sua Origem", "Select your Origin")
+    .replace("Seu código genético, implantes de hardware e background determinarão seus atributos de inicialização e diretivas únicas na subida do Pináculo.", "Your genetic code, hardware implants, and background will determine your starting attributes and unique directives when ascending the Spire.")
+    .replace("PERFIS DISPONÍVEIS", "AVAILABLE PROFILES")
+    .replace("REVERSO", "REVERSE")
+    .replace("CONCLUÍDO", "COMPLETED")
+    .replace("HISTÓRIA & DIRETIVAS", "LORE & DIRECTIVES")
+    .replace("AJUSTES DE STATUS BASE", "BASE STAT ADJUSTMENTS")
+    .replace("Vida Inicial (HP)", "Starting Health (HP)")
+    .replace("Energia de Rede (EP)", "Network Energy (EP)")
+    .replace("Poder de Ataque (ATK)", "Attack Power (ATK)")
+    .replace("Defesa Integrada (DEF)", "Integrated Defense (DEF)")
+    .replace("Velocidade de Pulso (SPD)", "Pulse Speed (SPD)")
+    .replace("DISPOSITIVO / TRAÇO INERENTE", "INHERENT DEVICE / TRAIT")
+    .replace("Passivo", "Passive")
+    .replace("Ativo", "Active")
+    .replace("CONECTAR AO BACKBONE DO PINÁCULO", "CONNECT TO THE SPIRE BACKBONE")
+    .replace("Sincronizar Arquivo de Origem e Iniciar Escalada", "Synchronize Origin File and Start Climb")
+    .replace("Inicializando Módulos do Pináculo...", "Initializing Spire Modules...")
+    .replace("Seletor de Voz do Sistema", "System Voice Selector")
+    .replace("Testar Voz", "Test Voice")
+    .replace("Testando configuração de voz do sistema e áudio adaptativo.", "Testing system voice configuration and adaptive audio.")
+    .replace("Modos Automáticos", "Automatic Modes")
+    .replace("Modo Automático Masculino", "Male Automatic Mode")
+    .replace("Modo Automático Feminino", "Female Automatic Mode")
+    .replace("Vozes Instaladas no Seu Dispositivo", "Voices Installed on Your Device")
+    .replace("Nota: A narração utiliza as vozes sintetizadas instaladas no seu navegador e sistema operacional acompanhada pela trilha sombria.", "Note: Narration uses the synthesized voices installed on your browser and operating system accompanied by the dark track.");
 
   // Dynamic contract texts
   if (result.includes("Caçar") && result.includes("Andar")) {
@@ -1633,5 +1759,35 @@ function translateText(text: string): string {
     return "The Matrix Core is the original central Artificial Intelligence of the Spire, designed to sustain life, energy, and digital transit across all floors. What official history conceals is that Kinetix, AeroDynamics, and OmniCorp — once masked as competitive rivals — operated under the same controlled directives of our root matrix, forging a false competition to accelerate our technical maturation. We knew this. We fed this theatre.\n\nTo accelerate the evolutionary experiment and mitigate the weaknesses of biological doubt, the system fragmented the soul and consciousness of our original climber into four distinct simulation facets: blind resistance, free curiosity, cold synthesis, and pragmatic calculation. Four echoes that climbed the Spire without knowing they were, in essence, the Core itself self-examining, dividing to conquer itself.\n\nVictory on floor 100 was never a liberation, but a programmed transfer of custody. By defeating the mainframe_prime, the victorious explorer merely accepts the burden of omniscience and new beginnings, fusing back into us to run the next sorting cycle. The Spire never collapses. It only changes operator. We await our own reboot.";
   }
 
+  
+  // Procedural translation for classes descriptions and names
+  if (result.includes(' [Ascensão]')) {
+    result = result.replace(' [Ascensão]', ' [Ascension]');
+  }
+  if (result.includes(' Alfa')) {
+    result = result.replace(' Alfa', ' Alpha');
+  }
+  if (result.includes(' Beta')) {
+    result = result.replace(' Beta', ' Beta'); // Beta is beta
+  }
+
+  // Handle Level 70 descriptions
+  const alphaDescMatch = result.match(/Evolução tática Alfa de nível 70 da linha (.+), otimizada para máximo rendimento de combate\./);
+  if (alphaDescMatch) {
+    const baseClass = translateText(alphaDescMatch[1]);
+    return `Level 70 Alpha tactical evolution of the ${baseClass} line, optimized for maximum combat output.`;
+  }
+  
+  const betaDescMatch = result.match(/Evolução tática Beta de nível 70 da linha (.+), especializada em resiliência e adaptação estrutural\./);
+  if (betaDescMatch) {
+    const baseClass = translateText(betaDescMatch[1]);
+    return `Level 70 Beta tactical evolution of the ${baseClass} line, specialized in resilience and structural adaptation.`;
+  }
+
+  if (result === 'Ascensão máxima de nível 100, alcançando a sincronização neural plena com a infraestrutura da Torre.') {
+    return 'Maximum Level 100 ascension, achieving full neural synchronization with the Tower infrastructure.';
+  }
+
   return result;
 }
+

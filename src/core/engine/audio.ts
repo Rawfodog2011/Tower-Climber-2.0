@@ -49,7 +49,7 @@ class AudioManagerClass {
       
       // Inicializar nós do Tone.js e conectá-los ao Destination principal
       this.sfxGain = new Tone.Gain(this.sfxVolume).toDestination();
-      this.musicGain = new Tone.Gain(Tone.dbToGain(-15) * this.musicVolume).toDestination();
+      this.musicGain = new Tone.Gain(this.musicVolume).toDestination();
 
       // Definir estado de mute global do Tone
       Tone.getDestination().mute = this.muted;
@@ -964,6 +964,81 @@ class AudioManagerClass {
         arpeggioLoop.start(now);
         disposables.push(fastSynth, arpeggioLoop);
       }
+    } else if (trackId === 'music.dark_narrative') {
+      bpm = 62;
+      // Sub Bass Drone - Dark, deep and heavy
+      const subFilter = new Tone.Filter({ type: 'lowpass', frequency: 140 }).connect(gainNode);
+      const subLFO = new Tone.LFO(0.15, 60, 180).connect(subFilter.frequency);
+      const subSynth = new Tone.Synth({
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 2.5, decay: 1.5, sustain: 0.9, release: 3.0 }
+      }).connect(subFilter);
+      subSynth.volume.setValueAtTime(-2, now);
+      subLFO.start(now);
+
+      const subNotes = [55.00, 48.99, 43.65, 51.91]; // A1, G1, F1, Ab1
+      let subIdx = 0;
+      const subLoop = new Tone.Loop((time) => {
+        const note = subNotes[subIdx % subNotes.length];
+        subSynth.triggerAttackRelease(note, 7.5, time);
+        subIdx++;
+      }, '8m');
+
+      // Atmospheric Dark Pad Chords
+      const padFilter = new Tone.Filter({ type: 'lowpass', frequency: 550 }).connect(gainNode);
+      const padSynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 2.0, decay: 2.0, sustain: 0.8, release: 3.0 }
+      }).connect(padFilter);
+      padSynth.volume.setValueAtTime(-4, now);
+
+      const darkChords = [
+        [110.00, 130.81, 164.81], // A min (A2, C3, E3)
+        [98.00, 116.54, 146.83],  // G min (G2, Bb2, D3)
+        [87.31, 103.83, 130.81],  // F min (F2, Ab2, C3)
+        [103.83, 123.47, 155.56]  // Ab min (Ab2, B2, Eb3)
+      ];
+      let padIdx = 0;
+      const padLoop = new Tone.Loop((time) => {
+        const chord = darkChords[padIdx % darkChords.length];
+        padSynth.triggerAttackRelease(chord, 7.0, time);
+        padIdx++;
+      }, '8m');
+
+      // Cinematic Heavy Low Impact Pulses
+      const pulseFilter = new Tone.Filter({ type: 'lowpass', frequency: 200 }).connect(gainNode);
+      const pulseSynth = new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 1.5, sustain: 0, release: 0.8 }
+      }).connect(pulseFilter);
+      pulseSynth.volume.setValueAtTime(-1, now);
+
+      const pulseLoop = new Tone.Loop((time) => {
+        pulseSynth.triggerAttackRelease(55, 1.2, time);
+      }, '4m');
+
+      // Eerie Sparse High Bell/Chime with Delay
+      const delay = new Tone.FeedbackDelay(0.4, 0.4).connect(gainNode);
+      const chimeSynth = new Tone.Synth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.05, decay: 0.8, sustain: 0, release: 1.2 }
+      }).connect(delay);
+      chimeSynth.volume.setValueAtTime(-6, now);
+
+      const chimeNotes = [440.00, 466.16, 523.25, 554.37, 659.25];
+      const chimeLoop = new Tone.Loop((time) => {
+        if (Math.random() < 0.45) {
+          const note = chimeNotes[Math.floor(Math.random() * chimeNotes.length)];
+          chimeSynth.triggerAttackRelease(note, 0.8, time);
+        }
+      }, '2m');
+
+      subLoop.start(now);
+      padLoop.start(now);
+      pulseLoop.start(now);
+      chimeLoop.start(now);
+
+      disposables.push(subFilter, subLFO, subSynth, subLoop, padFilter, padSynth, padLoop, pulseFilter, pulseSynth, pulseLoop, delay, chimeSynth, chimeLoop);
     }
 
     Tone.Transport.bpm.value = bpm;
@@ -1039,7 +1114,7 @@ class AudioManagerClass {
         isMainframePrime: options?.isMainframePrime || false
       };
 
-      const targetDb = (trackId === 'music.boss_theme' && options?.isMainframePrime) ? -17 : -20;
+      const targetDb = (trackId === 'music.boss_theme' && options?.isMainframePrime) ? 0 : -3;
       newTrackObj.gainNode.gain.setValueAtTime(0, now);
       newTrackObj.gainNode.gain.linearRampToValueAtTime(Tone.dbToGain(targetDb), now + fadeTime);
 
@@ -1098,7 +1173,7 @@ class AudioManagerClass {
 
     if (this.initialized && this.musicGain) {
       try {
-        this.musicGain.gain.setValueAtTime(Tone.dbToGain(-15) * vol, Tone.now());
+        this.musicGain.gain.setValueAtTime(vol, Tone.now());
       } catch (error) {
         console.warn('[audio] Erro ao setar volume música no Tone:', error);
       }

@@ -6,6 +6,7 @@ import { CLASSES } from '../core/entities/classes';
 import { getMemoryFragment } from '../core/entities/memories';
 import { loadMemoryArchive } from '../core/engine/memoryArchive';
 import { useTranslation } from '../core/engine/translation';
+import { TTSButton } from './TTSButton';
 
 interface Props {
   player: Player;
@@ -221,7 +222,16 @@ export const MemoryArchivePanel: React.FC<Props> = ({ player }) => {
                     <Terminal className="w-3.5 h-3.5" />
                     <span>{t("REGISTRO RECONSTITUÍDO")}</span>
                   </div>
-                  <span className="text-[9px] text-slate-500 font-mono font-bold">{t("100% DE INTEGRALIDADE")}</span>
+                  <div className="flex items-center gap-2">
+                    <TTSButton
+                      text={`${t(selectedFragment.title)}. ${t(selectedFragment.originFrame)}. ${t(selectedFragment.coreText)}`}
+                      id={`archive-memory-${selectedFragment.key}`}
+                      variant="purple"
+                      size="sm"
+                      showDetails={true}
+                    />
+                    <span className="text-[9px] text-slate-500 font-mono font-bold hidden sm:inline">{t("100% DE INTEGRALIDADE")}</span>
+                  </div>
                 </div>
 
                 {/* Metadata frame */}

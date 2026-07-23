@@ -4,6 +4,7 @@ import { getAdaptationBonuses } from './adaptations';
 import { getXpRequiredForNextLevel } from '../math/progression';
 import { NEURAL_MATRIX_DATABASE } from './neuralMatrix';
 import { ORIGINS } from './origins';
+import { getTimelineMetaBonus } from '../engine/timelineCodex';
 
 /**
  * Calcula os status totais do jogador somando os atributos da Classe base (e seu crescimento por nível)
@@ -116,6 +117,21 @@ export function calculatePlayerStats(player: Player): Stats {
   // (Imunidade a corrosão no combate, etc). Aqui apenas mudamos status estáticos, 
   // mas vamos salvar os counts se possível? O CombatState pode calcular a imunidade lendo o player.
 
+  // Bônus Meta-Permanentes de Ressonância Quântica (Prestígio)
+  if (player.quantumUpgrades) {
+    const qBio = (player.quantumUpgrades['quantum_bio'] || 0) * 0.05;
+    const qAtk = (player.quantumUpgrades['quantum_atk'] || 0) * 0.05;
+    const qDef = (player.quantumUpgrades['quantum_def'] || 0) * 0.05;
+    const qMp  = (player.quantumUpgrades['quantum_mp'] || 0) * 0.05;
+    const qSpd = (player.quantumUpgrades['quantum_spd'] || 0) * 0.03;
+
+    finalHp = Math.floor(finalHp * (1 + qBio));
+    finalAtk = Math.floor(finalAtk * (1 + qAtk));
+    finalDef = Math.floor(finalDef * (1 + qDef));
+    finalMp = Math.floor(finalMp * (1 + qMp));
+    finalSpd = Math.floor(finalSpd * (1 + qSpd));
+  }
+
   return {
     hp: finalHp,
     mp: finalMp,
@@ -149,8 +165,9 @@ export function applyDeathPenalty(player: Player): Player {
 export function addXpAndLevelUp(player: Player, xpAmount: number): Player {
   let { currentXp, level, matrixPoints = 0 } = player;
   
-  // Bônus do Medalhão do Caçador
-  const xpMultiplier = 1 + ((player.relics?.chip_aprendizado || 0) * 0.03);
+  // Bônus do Medalhão do Caçador e Códice Temporal
+  const timelineBonus = getTimelineMetaBonus();
+  const xpMultiplier = (1 + ((player.relics?.chip_aprendizado || 0) * 0.03)) * timelineBonus.xpMultiplier;
   const finalXp = Math.floor(xpAmount * xpMultiplier);
   
   // Se já estiver no cap (nível 100), não ganha mais XP

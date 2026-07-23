@@ -116,7 +116,7 @@ export const EquipmentTerminal: React.FC<Props> = ({
            {/* Character Silhouette Area */}
            <div className="w-full relative flex items-center justify-center min-h-[500px] overflow-hidden bg-slate-950/20 rounded-xl border border-cyan-900/20 p-4">
              {/* Constrain Exosuit to exact aspect ratio to align slots perfectly */}
-             <div className="relative w-full max-w-[240px] aspect-[1/2] flex items-center justify-center">
+             <div className="relative w-full max-w-[190px] sm:max-w-[240px] aspect-[1/2] flex items-center justify-center">
                
                {/* Exosuit SVG */}
                <div className="absolute inset-0 z-0">
@@ -127,7 +127,7 @@ export const EquipmentTerminal: React.FC<Props> = ({
                <div className="absolute inset-0 z-10">
                   
                   {/* Left side: Weapon */}
-                  <div className="absolute top-[40%] left-[-15%] origin-left scale-90">
+                  <div className="absolute top-[40%] left-[-15%] origin-left scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="weapon" label={t("Arma")} item={player.equipment.weapon} shape="vertical"
                       onHover={onHover} onClick={handleUnequip}
@@ -136,7 +136,7 @@ export const EquipmentTerminal: React.FC<Props> = ({
                   </div>
 
                   {/* Right side: Bracers */}
-                  <div className="absolute top-[38%] right-[-15%] origin-right scale-90">
+                  <div className="absolute top-[38%] right-[-15%] origin-right scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="bracers" label={t("Braços")} item={player.equipment.bracers} shape="square"
                       onHover={onHover} onClick={handleUnequip}
@@ -145,28 +145,28 @@ export const EquipmentTerminal: React.FC<Props> = ({
                   </div>
 
                   {/* Center slots */}
-                  <div className="absolute top-[5%] left-1/2 -translate-x-1/2 scale-90">
+                  <div className="absolute top-[5%] left-1/2 -translate-x-1/2 scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="helmet" label={t("Capacete")} item={player.equipment.helmet} shape="hexagon"
                       onHover={onHover} onClick={handleUnequip}
                       getItemIcon={getItemIcon} getRarityStyle={getRarityStyle} getRarityGradient={getRarityGradient}
                     />
                   </div>
-                  <div className="absolute top-[26%] left-1/2 -translate-x-1/2 scale-90">
+                  <div className="absolute top-[26%] left-1/2 -translate-x-1/2 scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="armor" label={t("Peitoral")} item={player.equipment.armor} shape="square"
                       onHover={onHover} onClick={handleUnequip}
                       getItemIcon={getItemIcon} getRarityStyle={getRarityStyle} getRarityGradient={getRarityGradient}
                     />
                   </div>
-                  <div className="absolute top-[54%] left-1/2 -translate-x-1/2 scale-90">
+                  <div className="absolute top-[54%] left-1/2 -translate-x-1/2 scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="pants" label={t("Pernas")} item={player.equipment.pants} shape="vertical"
                       onHover={onHover} onClick={handleUnequip}
                       getItemIcon={getItemIcon} getRarityStyle={getRarityStyle} getRarityGradient={getRarityGradient}
                     />
                   </div>
-                  <div className="absolute top-[78%] left-1/2 -translate-x-1/2 scale-90">
+                  <div className="absolute top-[78%] left-1/2 -translate-x-1/2 scale-75 sm:scale-90">
                     <EquipmentSlot 
                       slotId="boots" label={t("Botas")} item={player.equipment.boots} shape="double"
                       onHover={onHover} onClick={handleUnequip}
@@ -177,7 +177,7 @@ export const EquipmentTerminal: React.FC<Props> = ({
              </div>
 
              {/* Accessories Grouped Side-by-Side (Floating Bottom Center) */}
-             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 bg-slate-900/80 p-1.5 rounded-lg border border-cyan-900/30 backdrop-blur-sm shadow-md z-20 scale-90">
+             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 bg-slate-900/80 p-1 sm:p-1.5 rounded-lg border border-cyan-900/30 backdrop-blur-sm shadow-md z-20 scale-75 sm:scale-90">
                  <EquipmentSlot 
                      slotId="accessory1" label={t("Sec.")} item={player.equipment.accessory1} shape="square"
                      onHover={onHover} onClick={handleUnequip}

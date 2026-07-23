@@ -9,14 +9,15 @@ export interface DamagePipelineArgs {
 /**
  * Pipeline de cálculo de dano explícita.
  * Aplica as seguintes etapas na ordem correta:
- * a) Dano base (ATK - DEF, mínimo 1)
+ * a) Dano base via curva de mitigação: Dano = (ATK * ATK) / (ATK + DEF)
  * b) Modificadores flat
  * c) Multiplicadores percentuais somados (1 + sum(%))
  * d) Multiplicadores independentes multiplicados sequencialmente
  */
 export function calculateDamage(args: DamagePipelineArgs): number {
-  // a) Dano base (mínimo 1)
-  let damage = Math.max(1, args.baseAtk - args.baseDef);
+  // a) Dano base (mínimo 1) usando mitigação não-linear
+  let damage = (args.baseAtk * args.baseAtk) / Math.max(1, (args.baseAtk + args.baseDef));
+  damage = Math.max(1, damage);
 
   // b) Modificadores flat
   if (args.flatModifiers) {

@@ -9,9 +9,10 @@ import { canClassUseSkill } from '../entities/skills';
 import { SKILLS_DATABASE } from '../entities/skills';
 import { calculateDamage } from '../math/damagePipeline';
 import { getRandomAnomaly } from '../entities/anomalies';
+import { getTimelineMetaBonus } from './timelineCodex';
 
 export interface CombatResult {
-  winner: 'player' | 'monster' | 'exhausted';
+  winner: 'player' | 'monster' | 'exhausted' | 'flee';
   updatedPlayer: Player;
   logs: string[];
   loot?: {
@@ -28,13 +29,24 @@ export interface CombatResult {
   };
 }
 
+export interface MonsterIntent {
+  type: 'attack' | 'skill' | 'buff' | 'debuff' | 'ultimate';
+  skillName?: string;
+  value?: number;
+}
+
 export interface CombatState {
   isActive: boolean;
   round: number;
   playerHp: number;
   playerMp: number;
   monsterHp: number;
+  monsterStagger: number;
+  monsterMaxStagger: number;
+  isMonsterStaggered?: boolean;
+  isPlayerGuarding?: boolean;
   monster: Monster;
+  monsterNextIntent?: MonsterIntent;
   logs: string[];
   cooldowns: Record<string, number>;
   isBossEnraged?: boolean;
@@ -52,7 +64,40 @@ export interface CombatState {
   anomaly?: import('../../types').CombatAnomaly;
 }
 
-export type CombatAction = { type: 'attack' } | { type: 'skill', skillId: string } | { type: 'boss_puzzle', port: number };
+export type CombatAction = { type: 'attack' } | { type: 'skill', skillId: string } | { type: 'boss_puzzle', port: number } | { type: 'flee' } | { type: 'guard' };
+
+function generateMonsterIntent(monster: Monster, round: number, isEnraged?: boolean): MonsterIntent {
+  // Bosses have specific patterns
+  if (monster.isBoss) {
+    if (monster.id === 'mainframe_prime' && round % 5 === 0) {
+      return { type: 'ultimate', skillName: 'Protocolo de Extermínio' };
+    }
+    if (isEnraged) {
+      if (random() < 0.4) return { type: 'attack', value: Math.floor(monster.stats.atk * 1.5) };
+      return { type: 'skill', skillName: 'Golpe Esmagador', value: Math.floor(monster.stats.atk * 2.0) };
+    }
+    // Normal Boss
+    const roll = random();
+    if (roll < 0.2) return { type: 'debuff', skillName: 'Anomalia Radiotiva' };
+    if (roll < 0.5) return { type: 'skill', skillName: 'Golpe Pesado', value: Math.floor(monster.stats.atk * 1.3) };
+    return { type: 'attack', value: monster.stats.atk };
+  }
+
+  // Normal monsters
+  const roll = random();
+  // Elites have a higher chance to use skills
+  const skillChance = 0.15;
+  
+  if (roll < skillChance) {
+    if (random() > 0.5) {
+       return { type: 'buff', skillName: 'Carregar Energia' };
+    } else {
+       return { type: 'skill', skillName: 'Ataque Selvagem', value: Math.floor(monster.stats.atk * 1.5) };
+    }
+  }
+  
+  return { type: 'attack', value: monster.stats.atk };
+}
 
 /**
  * Mitigação de Dano:
@@ -86,13 +131,20 @@ export function startCombat(player: Player, monster: Monster, currentFloor: numb
     }
   }
 
+  const mMaxStagger = monster.isBoss ? 250 : Math.max(50, Math.floor(mHp * 0.35));
+
   return {
     isActive: true,
     round: 1,
     playerHp: pStats.hp,
     playerMp: pStats.mp,
     monsterHp: mHp,
+    monsterStagger: mMaxStagger,
+    monsterMaxStagger: mMaxStagger,
+    isMonsterStaggered: false,
+    isPlayerGuarding: false,
     monster,
+    monsterNextIntent: generateMonsterIntent(monster, 1, false),
     logs,
     cooldowns: {},
     isBossEnraged: false,
@@ -146,6 +198,17 @@ export function processTurn(
   if (state.bossPuzzle) {
     nextState.bossPuzzle = { ...state.bossPuzzle };
   }
+  if (action.type === 'flee') {
+    nextState.logs.push(`🏃 Retirada Tática... Você abandonou o combate!`);
+    nextState.isActive = false;
+    let updatedPlayer = { ...player };
+    const xpPenalty = Math.floor(updatedPlayer.currentXp * 0.1);
+    const goldPenalty = Math.floor(updatedPlayer.gold * 0.1);
+    updatedPlayer.currentXp = Math.max(0, updatedPlayer.currentXp - xpPenalty);
+    updatedPlayer.gold = Math.max(0, updatedPlayer.gold - goldPenalty);
+    return { nextState, combatResult: { winner: 'flee', updatedPlayer, logs: nextState.logs } };
+  }
+
   const logs = nextState.logs;
 
   logs.push(`--- Turno ${nextState.round} ---`);
@@ -199,6 +262,14 @@ export function processTurn(
     let damageDealt = 0;
     const prevMonsterHp = nextState.monsterHp;
     
+    if (action.type === 'guard') {
+      nextState.isPlayerGuarding = true;
+      const epRegen = Math.max(10, Math.floor(pStats.mp * 0.15));
+      nextState.playerMp = Math.min(pStats.mp, nextState.playerMp + epRegen);
+      logs.push(`🛡️ [Guarda Ativa] Você adotou uma postura defensiva (+${epRegen} EP)! Dano sofrido reduzido em 50% neste turno.`);
+      return;
+    }
+
     if (action.type === 'boss_puzzle') {
       if (nextState.bossPuzzle && nextState.bossPuzzle.active) {
         if (action.port === nextState.bossPuzzle.correctPort) {
@@ -219,9 +290,12 @@ export function processTurn(
       return;
     }
     
+    let staggerDmg = 0;
+    
     if (action.type === 'attack') {
-      nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true);
+      nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
       nextState.adaptationTrackers.basicAttacks += 1;
+      staggerDmg = 25;
     } else if (action.type === 'skill') {
       const skill = SKILLS_DATABASE[action.skillId];
       let epCost = skill.mpCost;
@@ -236,10 +310,12 @@ export function processTurn(
       }
       if (nextState.playerMp < epCost) {
         logs.push(`Energia Insuficiente para usar ${skill.name}! Atacando normalmente.`);
-        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true);
+        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+        staggerDmg = 25;
       } else if (nextState.cooldowns[skill.id] > 0) {
         logs.push(`${skill.name} está em recarga (${nextState.cooldowns[skill.id]} turnos)! Atacando normalmente.`);
-        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true);
+        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+        staggerDmg = 25;
       } else {
         nextState.playerMp -= epCost;
         nextState.adaptationTrackers.epSpent += epCost;
@@ -257,15 +333,16 @@ export function processTurn(
         if (skill.type === 'damage') {
           const skillAtk = Math.floor(pStats.atk * finalMultiplier);
           logs.push(`Jogador usou ${skill.name}${upgradeTag}! (-${epCost} EP)`);
-          nextState.monsterHp = executeAttack('Jogador (Skill)', skillAtk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true);
+          nextState.monsterHp = executeAttack('Jogador (Skill)', skillAtk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+          staggerDmg = Math.floor(35 * finalMultiplier);
           
           if (skill.applyStatus && random() <= skill.applyStatus.chance) {
             let duration = skill.applyStatus.duration;
             if (skill.applyStatus.type === 'overheat' && state.anomaly?.id === 'hyper_cooling' ) {
-              // Wait, the action here is from player executing a skill on monster. Hyper Cooling is "Jogador imune a Sobreaquecimento". So player applying it to monster is fine.
+              // Hyper Cooling check
             }
             if (skill.applyStatus.type === 'overheat' && state.currentSector?.hazard === 'plasma_furnace') {
-              duration += 2; // dura mais na fornalha
+              duration += 2;
               logs.push(`🔥 [Setor: Fornalha] Sobreaquecimento estendido para ${duration} turnos!`);
             }
             nextState.monsterStatuses.push({ ...skill.applyStatus, duration });
@@ -288,6 +365,15 @@ export function processTurn(
             logs.push(`🧪 [Soro] Sistemas energéticos carregados em +${mpRegen} EP (10% de carga residual).`);
           }
         }
+      }
+    }
+    
+    if (staggerDmg > 0 && !nextState.isMonsterStaggered && nextState.monsterHp > 0) {
+      nextState.monsterStagger = Math.max(0, nextState.monsterStagger - staggerDmg);
+      if (nextState.monsterStagger <= 0) {
+        nextState.isMonsterStaggered = true;
+        logs.push(`💥 [QUEBRA DE POSTURA] A guarda de ${nextState.monster.name} foi QUEBRADA! O inimigo está ATORDOADO e vulnerável (+50% Dano)!`);
+        nextState.monsterStatuses.push({ type: 'stun', duration: 1, value: 0 });
       }
     }
     
@@ -325,8 +411,41 @@ export function processTurn(
       }
     }
     
+    const intent = nextState.monsterNextIntent || { type: 'attack', value: currentMonsterAtk };
+    
+    if (intent.type === 'ultimate') {
+      logs.push(`⏳ O Protocolo de Extermínio foi acionado pelo inimigo!`);
+      const dmg = Math.floor(pStats.hp * 0.8);
+      nextState.playerHp = Math.max(0, nextState.playerHp - dmg);
+      logs.push(`🔥 O inimigo dispara uma rajada massiva causando ${dmg} de dano letal!`);
+      return;
+    }
+
+    if (intent.type === 'buff') {
+      logs.push(`O inimigo canaliza energia usando ${intent.skillName}! (+ATK Temporário)`);
+      return;
+    }
+    
+    if (intent.type === 'debuff') {
+      logs.push(`O inimigo espalha esporos usando ${intent.skillName}!`);
+      if (random() >= pPassives.statusResistance) {
+         const type = random() > 0.5 ? 'corrosion' : 'overheat';
+         nextState.playerStatuses.push({ type, duration: 3, value: Math.floor(mStats.atk * 0.15) });
+         logs.push(`[ANOMALIA] Inimigo aplicou ${type.toUpperCase()}!`);
+      } else {
+         logs.push(`🛡️ [Filtro] Jogador resistiu ao efeito negativo!`);
+      }
+      return;
+    }
+
     const prevHp = nextState.playerHp;
-    nextState.playerHp = executeAttack(nextState.monster.name, currentMonsterAtk, pStats.def, nextState.playerHp, logs, nextState.monsterStatuses, nextState.playerStatuses, currentFloor, player.level, state.anomaly, false);
+    const atkToUse = intent.value || currentMonsterAtk;
+    
+    if (intent.type === 'skill') {
+      logs.push(`O inimigo usa ${intent.skillName}!`);
+    }
+
+    nextState.playerHp = executeAttack(nextState.monster.name, atkToUse, pStats.def, nextState.playerHp, logs, nextState.monsterStatuses, nextState.playerStatuses, currentFloor, player.level, state.anomaly, false);
     let damageTaken = prevHp - nextState.playerHp;
     if (player.originId === 'ciborgue_foragido' && damageTaken > 0) {
       const reduction = Math.floor(damageTaken * 0.05);
@@ -338,17 +457,6 @@ export function processTurn(
     }
     if (damageTaken > 0) {
       nextState.adaptationTrackers.damageTaken += damageTaken;
-      
-      // CHANCE DE STATUS DO MONSTRO (BOSS APLICA ANOMALIAS)
-      if (nextState.monster.isBoss && random() < 0.3) {
-        if (random() >= pPassives.statusResistance) {
-           const type = random() > 0.5 ? 'corrosion' : 'overheat';
-           nextState.playerStatuses.push({ type, duration: 3, value: Math.floor(mStats.atk * 0.15) });
-           logs.push(`[ANOMALIA] ${nextState.monster.name} aplicou ${type.toUpperCase()}!`);
-        } else {
-           logs.push(`🛡️ [Filtro] Jogador resistiu à anomalia do chefe!`);
-        }
-      }
     }
   };
 
@@ -422,6 +530,12 @@ export function processTurn(
     }
   }
 
+  if (nextState.isMonsterStaggered && !nextState.monsterStatuses.some(s => s.type === 'stun')) {
+    nextState.isMonsterStaggered = false;
+    nextState.monsterStagger = nextState.monsterMaxStagger;
+    logs.push(`🛡️ ${nextState.monster.name} reergueu sua guarda e se recuperou da Quebra de Postura!`);
+  }
+
   if (state.anomaly?.id === 'hyper_cooling') {
     nextState.playerStatuses = nextState.playerStatuses.filter(s => s.type !== 'overheat');
   }
@@ -451,8 +565,9 @@ export function processTurn(
     nextState.isActive = false;
     logs.push(`Vitória! ${nextState.monster.name} foi derrotado.`);
     
+    const timelineBonus = getTimelineMetaBonus();
     const xpReward = nextState.monster.xpReward;
-    const goldReward = nextState.monster.goldReward;
+    const goldReward = Math.floor(nextState.monster.goldReward * timelineBonus.goldMultiplier);
     const itemsDropped: Item[] = [];
 
     if (random() <= getDropChanceForFloor(currentFloor, nextState.monster.isBoss)) {
@@ -471,6 +586,9 @@ export function processTurn(
     if (nextState.monster.isBoss) {
       shardsDropped = Math.max(1, Math.floor(currentFloor / 10));
     }
+    if (currentFloor > 100) {
+      shardsDropped += Math.max(1, Math.floor((currentFloor - 100) / 5) + (nextState.monster.isBoss ? 5 : 1));
+    }
 
     logs.push(`Você recebeu ${xpReward} XP e ${goldReward} Ouro.`);
     if (itemsDropped.length > 0) {
@@ -483,11 +601,43 @@ export function processTurn(
     let updatedPlayer = addXpAndLevelUp(player, xpReward);
     updatedPlayer.gold += goldReward;
     updatedPlayer.soulShards += shardsDropped;
-    updatedPlayer.inventory = [...updatedPlayer.inventory, ...itemsDropped];
+    updatedPlayer.materials = { ...(updatedPlayer.materials || { common: 0, rare: 0, epic: 0 }) };
+    
+    let autoDismantledCount = 0;
+    const finalItems: Item[] = [];
+    const autoDismantleSettings = player.settings?.autoDismantleRarities || [];
+
+    for (const item of itemsDropped) {
+       if (autoDismantleSettings.includes(item.rarity)) {
+           const matKey = (item.rarity === 'legendary' || item.rarity === 'mythic') ? 'epic' : item.rarity;
+           if (updatedPlayer.materials[matKey] >= 300) {
+               // Capacity full, auto-sell
+               updatedPlayer.gold += (item.value || 5);
+           } else {
+               updatedPlayer.materials[matKey] += 1;
+           }
+           autoDismantledCount++;
+       } else {
+           finalItems.push(item);
+       }
+    }
+
+    if (autoDismantledCount > 0) {
+        logs.push(`🔧 Auto-Dismantle: ${autoDismantledCount} item(s) convertido(s) em materiais/ouro.`);
+    }
+
+    updatedPlayer.inventory = [...updatedPlayer.inventory, ...finalItems];
     updatedPlayer.gameStats = { ...updatedPlayer.gameStats };
     updatedPlayer.gameStats.monstersKilled += 1;
     if (nextState.monster.isBoss) {
       updatedPlayer.gameStats.bossesDefeated += 1;
+    }
+
+    if (currentFloor > 100) {
+      const abyssalDepth = currentFloor - 100;
+      if (abyssalDepth > (updatedPlayer.highestAbyssalDepth || 0)) {
+        updatedPlayer.highestAbyssalDepth = abyssalDepth;
+      }
     }
 
     // Bestiary Update
@@ -530,10 +680,12 @@ export function processTurn(
     };
   }
 
+  nextState.monsterNextIntent = generateMonsterIntent(nextState.monster, nextState.round, nextState.isBossEnraged);
+
   return { nextState };
 }
 
-function executeAttack(attackerName: string, atk: number, def: number, targetHp: number, logs: string[], attackerStatuses: import('../../types').StatusEffect[] = [], targetStatuses: import('../../types').StatusEffect[] = [], attackerLvl: number = 1, defenderLvl: number = 1, anomaly?: import('../../types').CombatAnomaly, isPlayerAttacking: boolean = false): number {
+function executeAttack(attackerName: string, atk: number, def: number, targetHp: number, logs: string[], attackerStatuses: import('../../types').StatusEffect[] = [], targetStatuses: import('../../types').StatusEffect[] = [], attackerLvl: number = 1, defenderLvl: number = 1, anomaly?: import('../../types').CombatAnomaly, isPlayerAttacking: boolean = false, isTargetStaggered: boolean = false): number {
   if (attackerStatuses.some(s => s.type === 'shock')) {
     if (random() < 0.3) {
       logs.push(`⚠️ [Curto-Circuito] ${attackerName} sofreu uma falha no sistema e errou o ataque!`);
@@ -548,6 +700,10 @@ function executeAttack(attackerName: string, atk: number, def: number, targetHp:
   
   let additivePercent = [];
   let independentMultipliers = [];
+
+  if (isTargetStaggered) {
+    independentMultipliers.push(1.5);
+  }
 
   // Anomaly effects on damage
   if (anomaly) {

@@ -1,20 +1,19 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Tower Climber RPG
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/da9be0b2-dfd5-45fc-934b-42392947a8e0
+Tower Climber RPG is a 2D isometric RPG focused on ascending an infinite tower with a deep class evolution system, synthetic augmentations, and a dark cyberpunk narrative. 
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Run the app:
    `npm run dev`
+
+## Features
+- **Class Evolution**: Upgrade your character through branching class paths (Alpha/Beta).
+- **Procedural Generation**: Infinite tower climbing with dynamic sectors and random events.
+- **Narrative System**: Integrated TTS voices and ambient dark synthesis music.
+- **Auto-Battle**: Fully featured automated combat to reduce farming grind.
+- **Multilingual Support**: Supports Portuguese (PT) and English (EN).

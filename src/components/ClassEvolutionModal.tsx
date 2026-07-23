@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal, Shield, Cpu, Zap, Activity } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
+import { TTSButton } from './TTSButton';
 
 interface Props {
   classId: string;
@@ -17,10 +18,13 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
   // Progressive typing effect
   useEffect(() => {
     let index = 0;
+    const fullText = t(narrativeText);
+    setTypedText('');
     const interval = setInterval(() => {
-      setTypedText(prev => prev + t(narrativeText).charAt(index));
       index++;
-      if (index >= t(narrativeText).length) {
+      if (index <= fullText.length) {
+        setTypedText(fullText.slice(0, index));
+      } else {
         clearInterval(interval);
       }
     }, 15); // Fast, snappy typing
@@ -107,11 +111,19 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
             </div>
 
             {/* Console output */}
-            <div className="bg-emerald-950/10 border border-emerald-500/20 rounded p-4 h-48 overflow-y-auto custom-scrollbar relative">
-              <div className="absolute top-2 right-2 text-[8px] text-emerald-500/30 tracking-widest select-none">
-                SYS.EXE // EXEC
+            <div className="bg-emerald-950/10 border border-emerald-500/20 rounded p-4 h-48 overflow-y-auto custom-scrollbar relative flex flex-col justify-between">
+              <div className="absolute top-2 right-2 flex items-center gap-2 select-none">
+                <TTSButton
+                  text={t(narrativeText)}
+                  id={`evolution-${classId}`}
+                  variant="emerald"
+                  size="sm"
+                />
+                <span className="text-[8px] text-emerald-500/30 tracking-widest hidden sm:inline">
+                  SYS.EXE // EXEC
+                </span>
               </div>
-              <p className="text-emerald-400 text-sm leading-relaxed whitespace-pre-line font-medium tracking-wide">
+              <p className="text-emerald-400 text-sm leading-relaxed whitespace-pre-line font-medium tracking-wide pt-6 sm:pt-4">
                 {typedText}
                 <span className="inline-block w-2 h-4 bg-emerald-400 ml-1 animate-pulse"></span>
               </p>

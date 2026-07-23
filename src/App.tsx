@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Sword, Power, Trophy, Shield, Cpu, Zap, Crosshair, Activity, Flame, Crosshair as CrosshairIcon, Terminal, Settings , Fingerprint, HardHat, Shirt, Footprints, Watch , User } from 'lucide-react';
+import { Sword, Swords, Wand2, Skull, Eye, Power, Trophy, Shield, Cpu, Zap, Crosshair, Activity, Flame, Crosshair as CrosshairIcon, Terminal, Settings, Fingerprint, HardHat, Shirt, Footprints, Watch, User, Info, Droplet, Ban, DoorOpen } from 'lucide-react';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Player, Item } from './types';
 import { CLASSES, getAvailableEvolutions, getClassEvolutionNarrative } from './core/entities/classes';
@@ -50,6 +50,7 @@ import { TimelineClosureScreen } from './components/TimelineClosureScreen';
 import { unlockMemory } from './core/engine/memoryArchive';
 import { MemoryFragmentScreen } from './components/MemoryFragmentScreen';
 import { MemoryArchivePanel } from './components/MemoryArchivePanel';
+import { QuantumPrestigePanel } from './components/QuantumPrestigePanel';
 import { useTranslation, translate, setLanguage, getLanguage, Language } from './core/engine/translation';
 import { random } from './core/engine/rng';
 import { motion, AnimatePresence } from 'motion/react';
@@ -170,7 +171,8 @@ function createDefaultPlayer() {
     },
     contracts: [],
     bestiary: {},
-    visitedSectors: []
+    visitedSectors: [],
+    totalPlaytimeSeconds: 0
   };
 }
 
@@ -180,6 +182,34 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
 
 export default function App() {
   const { t, language } = useTranslation();
+
+  const [savedPlayerPreview, setSavedPlayerPreview] = useState<{
+    name?: string;
+    avatar?: string;
+    className: string;
+    originName: string | null;
+    level: number;
+    highestFloorUnlocked: number;
+    totalPlaytimeSeconds: number;
+    gold: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const saved = loadGame();
+    if (saved) {
+      setSavedPlayerPreview({
+        name: saved.name || saved.playerName,
+        avatar: saved.avatar,
+        className: t(CLASSES[saved.currentClassId]?.name || 'Desconhecido'),
+        originName: saved.originId && ORIGINS[saved.originId] ? t(ORIGINS[saved.originId].name) : null,
+        level: saved.level,
+        highestFloorUnlocked: saved.highestFloorUnlocked,
+        totalPlaytimeSeconds: saved.totalPlaytimeSeconds || 0,
+        gold: saved.gold
+      });
+    }
+  }, [language]);
+
   const [player, setPlayer] = useState<Player>(() => {
     const saved = loadGame();
     if (saved) {
@@ -221,11 +251,14 @@ export default function App() {
         'dissipacao_calor': { level: 0, exp: 0 }
       },
       completedTutorials: [],
-      visitedSectors: []
+      visitedSectors: [],
+      totalPlaytimeSeconds: 0
     };
   });
 
-  const [scene, setScene] = useState<'main_menu' | 'intro' | 'hub' | 'combat' | 'event' | 'puzzle' | 'ending' | 'character_creation' | 'timeline_closure' | 'env_intro'>('main_menu');
+  const pStatsMemo = useMemo(() => calculatePlayerStats(player), [player]);
+
+  const [scene, setScene] = useState<'main_menu' | 'intro' | 'hub' | 'combat' | 'event' | 'puzzle' | 'ending' | 'character_creation' | 'timeline_closure' | 'env_intro' | 'loading'>('main_menu');
   const [justCompletedAll, setJustCompletedAll] = useState<boolean>(false);
   const [isContinueRun, setIsContinueRun] = useState(false);
   const [hubTab, setHubTab] = useState<'expedicao' | 'perfil' | 'geral' | 'habilidades' | 'forja' | 'soldagem' | 'reliquias' | 'adaptacoes' | 'auto' | 'conquistas' | 'mercado' | 'contratos' | 'bestiario' | 'memorias'>('expedicao');
@@ -242,6 +275,7 @@ export default function App() {
   const [introSector, setIntroSector] = useState<any | null>(null);
   const [introStep, setIntroStep] = useState<'danger' | 'details'>('danger');
   const [pendingDiveParams, setPendingDiveParams] = useState<{ floor: number; forceCombat: boolean } | null>(null);
+  const [showMonsterInfo, setShowMonsterInfo] = useState(false);
 
   const playerCombatSkills = React.useMemo(() => {
     return Object.keys(SKILLS_DATABASE).filter(skillId => {
@@ -271,21 +305,49 @@ export default function App() {
   // States para animações de combate
   const prevPlayerHpRef = useRef<number | null>(null);
   const prevMonsterHpRef = useRef<number | null>(null);
-  const [dmgPopups, setDmgPopups] = useState<{ target: 'player' | 'monster', amount: number, id: number }[]>([]);
+  const prevLogLengthRef = useRef<number>(0);
+  const [dmgPopups, setDmgPopups] = useState<{ target: 'player' | 'monster', amount: number | string, id: number, type: 'damage' | 'heal' | 'crit' | 'miss' }[]>([]);
   const popupIdRef = useRef(0);
+  const [enrageFlash, setEnrageFlash] = useState(false);
+  const [attackerAnimating, setAttackerAnimating] = useState<{ player: boolean, monster: boolean }>({ player: false, monster: false });
 
   
+  const playerRef = useRef(player);
   useEffect(() => {
-    const isCombatActive = scene === 'combat' && !combatEndMessage;
-    if (isCombatActive) {
-      const handler = setTimeout(() => {
-        saveGame(player);
-      }, 500);
-      return () => clearTimeout(handler);
-    } else {
-      saveGame(player);
-    }
-  }, [player, scene, combatEndMessage]);
+    playerRef.current = player;
+  }, [player]);
+
+  // Debounce Auto-Save para melhorar performance e evitar stutters (Problema #6)
+  useEffect(() => {
+    // Salva a cada 10 segundos incondicionalmente, sem bloquear a thread principal em cada turno
+    const interval = setInterval(() => {
+      saveGame(playerRef.current);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Salva imediatamente em pontos críticos (mudança de cena, fim de combate)
+    saveGame(player);
+  }, [scene, combatEndMessage]);
+
+  const sceneRef = useRef(scene);
+  useEffect(() => {
+    sceneRef.current = scene;
+  }, [scene]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible' && sceneRef.current !== 'main_menu') {
+        setPlayer(prev => ({
+          ...prev,
+          totalPlaytimeSeconds: (prev.totalPlaytimeSeconds || 0) + 60,
+          lastPlayedAt: Date.now()
+        }));
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
 
@@ -357,31 +419,77 @@ export default function App() {
     if (!combatState) {
       prevPlayerHpRef.current = null;
       prevMonsterHpRef.current = null;
+      prevLogLengthRef.current = 0;
       return;
     }
 
     const currentPHp = combatState.playerHp;
     const currentMHp = combatState.monsterHp;
     
-    if (prevPlayerHpRef.current !== null && currentPHp < prevPlayerHpRef.current) {
-      const dmg = prevPlayerHpRef.current - currentPHp;
-      const id = popupIdRef.current++;
-      setDmgPopups(prev => [...prev, { target: 'player', amount: dmg, id }]);
-      const popupDuration = combatSpeed === 'fast' ? 500 : 1000;
-      setTimeout(() => setDmgPopups(prev => prev.filter(p => p.id !== id)), popupDuration);
+    const newLogs = combatState.logs.slice(prevLogLengthRef.current);
+    prevLogLengthRef.current = combatState.logs.length;
+
+    let pDmgType: 'damage' | 'heal' | 'crit' = 'damage';
+    let mDmgType: 'damage' | 'heal' | 'crit' = 'damage';
+    const newPopups: { target: 'player' | 'monster', amount: number | string, id: number, type: 'damage' | 'heal' | 'crit' | 'miss' }[] = [];
+    let pAttacked = false;
+    let mAttacked = false;
+
+    for (const log of newLogs) {
+      if (log.includes('Sinergia')) {
+        pDmgType = 'crit';
+        mDmgType = 'crit';
+      }
+      if (log.includes('estado de FÚRIA')) {
+        setEnrageFlash(true);
+        setTimeout(() => setEnrageFlash(false), 500);
+      }
+      if (log.includes('sofreu uma falha no sistema')) {
+        const isMonster = log.includes(combatState.monster.name);
+        newPopups.push({ target: isMonster ? 'player' : 'monster', amount: 'FALHOU!', id: popupIdRef.current++, type: 'miss' });
+        if (isMonster) mAttacked = true; else pAttacked = true;
+      }
+      if (log.includes('Jogador ataca') || log.includes('Jogador usou') || log.includes('SOBRESCRITA BEM-SUCEDIDA')) {
+        pAttacked = true;
+      }
+      if (log.includes(`${combatState.monster.name} ataca`) || log.includes(`${combatState.monster.name} usou`) || log.includes('O Núcleo Matriz incinera')) {
+        mAttacked = true;
+      }
     }
     
-    if (prevMonsterHpRef.current !== null && currentMHp < prevMonsterHpRef.current) {
-      const dmg = prevMonsterHpRef.current - currentMHp;
-      const id = popupIdRef.current++;
-      setDmgPopups(prev => [...prev, { target: 'monster', amount: dmg, id }]);
+    if (pAttacked || mAttacked) {
+      setAttackerAnimating({ player: pAttacked, monster: mAttacked });
+      const animDuration = combatSpeed === 'fast' ? 125 : 250;
+      setTimeout(() => setAttackerAnimating({ player: false, monster: false }), animDuration);
+    }
+    
+    if (prevPlayerHpRef.current !== null) {
+      if (currentPHp < prevPlayerHpRef.current) {
+        newPopups.push({ target: 'player', amount: prevPlayerHpRef.current - currentPHp, id: popupIdRef.current++, type: pDmgType });
+      } else if (currentPHp > prevPlayerHpRef.current) {
+        newPopups.push({ target: 'player', amount: currentPHp - prevPlayerHpRef.current, id: popupIdRef.current++, type: 'heal' });
+      }
+    }
+    
+    if (prevMonsterHpRef.current !== null) {
+      if (currentMHp < prevMonsterHpRef.current) {
+        newPopups.push({ target: 'monster', amount: prevMonsterHpRef.current - currentMHp, id: popupIdRef.current++, type: mDmgType });
+      } else if (currentMHp > prevMonsterHpRef.current) {
+        newPopups.push({ target: 'monster', amount: currentMHp - prevMonsterHpRef.current, id: popupIdRef.current++, type: 'heal' });
+      }
+    }
+
+    if (newPopups.length > 0) {
+      setDmgPopups(prev => [...prev, ...newPopups]);
       const popupDuration = combatSpeed === 'fast' ? 500 : 1000;
-      setTimeout(() => setDmgPopups(prev => prev.filter(p => p.id !== id)), popupDuration);
+      newPopups.forEach(p => {
+        setTimeout(() => setDmgPopups(prev => prev.filter(item => item.id !== p.id)), popupDuration);
+      });
     }
 
     prevPlayerHpRef.current = currentPHp;
     prevMonsterHpRef.current = currentMHp;
-  }, [combatState?.playerHp, combatState?.monsterHp, combatSpeed]);
+  }, [combatState, combatSpeed]);
 
   // Auto-ascensão de nível 100
   useEffect(() => {
@@ -479,7 +587,23 @@ export default function App() {
   const handleStartDive = (floor: number, forceCombat: boolean = false) => {
     const pending = getPendingTutorials(player);
     if (pending.length > 0) {
-      triggerToast(`⚠️ Calibração pendente! Por favor, conclua o tutorial do sistema.`);
+      const tutorialKey = pending[0];
+      const tabMap: Record<string, 'expedicao' | 'perfil' | 'geral' | 'habilidades' | 'forja' | 'soldagem' | 'reliquias' | 'adaptacoes' | 'auto' | 'conquistas' | 'mercado' | 'contratos' | 'bestiario' | 'memorias'> = {
+        'adaptacoes': 'adaptacoes',
+        'conquistas': 'conquistas',
+        'forja': 'forja',
+        'contratos': 'contratos',
+        'soldagem': 'soldagem',
+        'habilidades': 'habilidades',
+        'reliquias': 'reliquias',
+        'mercado': 'mercado',
+        'auto': 'auto'
+      };
+      const targetTab = tabMap[tutorialKey];
+      if (targetTab) {
+        setHubTab(targetTab);
+      }
+      triggerToast(`⚠️ Calibração pendente! Abrindo painel correspondente...`);
       setScene('hub');
       return;
     }
@@ -559,7 +683,7 @@ export default function App() {
       }
     } else {
       AudioManager.playSfx('event.puzzle_incorrect');
-      const hpDamage = Math.floor(calculatePlayerStats(player).hp * 0.25);
+      const hpDamage = Math.floor(pStatsMemo.hp * 0.25);
       const materialsLost = Math.floor(player.materials.common * 0.2);
       nextPlayer.materials.common = Math.max(0, nextPlayer.materials.common - materialsLost);
       if (selectedFloor === nextPlayer.highestFloorUnlocked) {
@@ -797,6 +921,12 @@ export default function App() {
           title: 'Vitória!',
           subtitle: `Você derrotou o ${nextState.monster.name} e obteve ${combatResult.loot?.xp} XP e ${combatResult.loot?.gold} Ouro.`,
           isVictory: true
+        });
+      } else if (combatResult.winner === 'flee') {
+        setCombatEndMessage({
+          title: 'Retirada',
+          subtitle: 'Você escapou com vida, perdendo 10% do Ouro e XP atual.',
+          isVictory: false
         });
       } else {
         setCombatEndMessage({
@@ -1174,10 +1304,59 @@ export default function App() {
       });
   }, [player.currentClassId]);
 
+  useEffect(() => {
+    if (scene !== 'combat') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignora atalhos se a batalha automática estiver rodando ou em inputs
+      if (player.isAutoBattleActive && combatState?.isActive) return;
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'Escape') {
+        if (combatEndMessage) {
+          handleReturnToHub();
+        }
+        return;
+      }
+
+      // Se combate já acabou, não aceita teclas de ataque/skills
+      if (combatEndMessage || !combatState?.isActive) return;
+
+      if (e.key === '1' || e.key === ' ') {
+        e.preventDefault();
+        handleCombatAction({ type: 'attack' });
+        return;
+      }
+
+      const keyNum = parseInt(e.key);
+      if (!isNaN(keyNum) && keyNum >= 2 && keyNum <= 9) {
+        const skillIndex = keyNum - 2;
+        const skillId = playerCombatSkills[skillIndex];
+        if (skillId) {
+          const skill = SKILLS_DATABASE[skillId];
+          const isNeuralUnlocked = player.unlockedNodes?.some(nodeId => NEURAL_MATRIX_DATABASE[nodeId]?.skillId === skill.id);
+          const isClassSkill = canClassUseSkill(player.currentClassId, skill);
+          const canUseClass = isClassSkill || isNeuralUnlocked || player.learnedSkills.includes(skill.id);
+          const cd = combatState.cooldowns[skill.id] || 0;
+          const noMp = combatState.playerMp < skill.mpCost;
+          
+          if (canUseClass && cd === 0 && !noMp) {
+            e.preventDefault();
+            handleCombatAction({ type: 'skill', skillId: skill.id });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [scene, player.isAutoBattleActive, combatState, combatEndMessage, playerCombatSkills, player.currentClassId, player.unlockedNodes, player.learnedSkills]);
+
   if (scene === 'main_menu') {
     return (
       <MainMenu
         hasSaveFile={!!loadGame()}
+        savedPlayerPreview={savedPlayerPreview}
         onContinue={() => {
           const saved = loadGame();
           if (saved) {
@@ -1212,14 +1391,27 @@ export default function App() {
     );
   }
 
+  if (scene === 'loading') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-8"></div>
+        <div className="text-cyan-400 font-mono tracking-widest text-sm uppercase animate-pulse">
+          {t("Inicializando Módulos do Pináculo...")}
+        </div>
+      </div>
+    );
+  }
+
   if (scene === 'character_creation') {
     return (
       <CharacterCreation 
-        onComplete={(originId) => {
+        onComplete={(originId, name, avatar) => {
           setPlayer(prev => {
             const originSkillId = ORIGINS[originId].skillId;
             const updated = { 
               ...prev, 
+              name,
+              avatar,
               originId,
               learnedSkills: originSkillId && !prev.learnedSkills.includes(originSkillId)
                 ? [...prev.learnedSkills, originSkillId]
@@ -1228,7 +1420,8 @@ export default function App() {
             saveGame(updated);
             return updated;
           });
-          setScene('hub');
+          setScene('loading');
+          setTimeout(() => setScene('hub'), 2000);
         }} 
       />
     );
@@ -1301,7 +1494,7 @@ export default function App() {
                 <EquipmentTerminal 
                   handleAutoEquip={handleAutoEquip}
                   player={player}
-                  stats={calculatePlayerStats(player)}
+                  stats={pStatsMemo}
                   CLASSES={CLASSES}
                   inventoryMessage={inventoryMessage}
                   handleEquip={handleEquip}
@@ -1419,13 +1612,21 @@ export default function App() {
                 />
               )}
 
+              {hubTab === 'prestagio' && (
+                <QuantumPrestigePanel
+                  player={player}
+                  onUpdatePlayer={(upd) => setPlayer(upd)}
+                  onResetToFloor1={() => setSelectedFloor(1)}
+                />
+              )}
+
             </div>
             </div>
           </div>
           </div>
           </div>
         ) : scene === 'combat' ? (
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className={`flex flex-col lg:flex-row gap-6 ${dmgPopups.some(p => p.type === 'crit') ? 'animate-screen-shake' : ''}`}>
             
             {/* Painel de Ações Esquerdo */}
             <div className="system-panel flex flex-col w-full lg:w-[35%] min-w-[320px]">
@@ -1434,13 +1635,27 @@ export default function App() {
                   <Terminal className="w-4 h-4 text-cyan-400" />
                   <span className="font-bold text-cyan-50 tracking-widest uppercase text-sm">Módulos de Combate</span>
                 </div>
-                <button 
-                  onClick={() => setPlayer(p => ({ ...p, isAutoBattleActive: !p.isAutoBattleActive }))}
-                  className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded transition-colors border cursor-pointer ${player.isAutoBattleActive ? 'bg-emerald-900/60 text-emerald-400 border-emerald-500/50 hover:bg-emerald-800/60 shadow-[0_0_10px_rgba(52,211,153,0.3)]' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-cyan-400 hover:border-cyan-700'}`}
-                  title="Modo Automático"
-                >
-                  AUTO {player.isAutoBattleActive ? 'ON' : 'OFF'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleCombatSpeed}
+                    className={`px-2 py-1 rounded font-mono text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                      combatSpeed === 'fast'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                    }`}
+                    title={t("Velocidade de Combate")}
+                  >
+                    {combatSpeed === 'fast' ? t('⚡ 2X') : t('🐢 1X')}
+                  </button>
+                  <button 
+                    onClick={() => setPlayer(p => ({ ...p, isAutoBattleActive: !p.isAutoBattleActive }))}
+                    className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded transition-colors border cursor-pointer ${player.isAutoBattleActive ? 'bg-emerald-900/60 text-emerald-400 border-emerald-500/50 hover:bg-emerald-800/60 shadow-[0_0_10px_rgba(52,211,153,0.3)]' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-cyan-400 hover:border-cyan-700'}`}
+                    title={t("Modo Automático")}
+                  >
+                    AUTO {player.isAutoBattleActive ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
               
               <div className="p-4 space-y-3 flex-1 flex flex-col relative">
@@ -1480,16 +1695,42 @@ export default function App() {
                       </div>
                     )}
                     
-                    <button 
-                      onClick={() => handleCombatAction({ type: 'attack' })}
-                      className="w-full bg-slate-900/80 hover:bg-cyan-950/60 border border-cyan-800/50 hover:border-cyan-500 text-white font-bold py-3 px-4 rounded transition-all text-left flex justify-between items-center cursor-pointer hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] active:scale-[0.98] group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <CrosshairIcon className="w-5 h-5 text-cyan-500 group-hover:text-cyan-400 transition-colors" />
-                        <span className="uppercase tracking-widest text-sm text-cyan-50">Ataque Básico</span>
-                      </div>
-                      <span className="text-cyan-500/50 text-[10px] font-mono border border-cyan-900/50 px-2 py-0.5 rounded">SYS.ATK</span>
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleCombatAction({ type: 'attack' })}
+                        className="flex-1 bg-slate-900/80 hover:bg-cyan-950/60 border border-cyan-800/50 hover:border-cyan-500 text-white font-bold py-3 px-3 rounded transition-all text-left flex justify-between items-center cursor-pointer hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] active:scale-[0.98] group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CrosshairIcon className="w-5 h-5 text-cyan-500 group-hover:text-cyan-400 transition-colors" />
+                          <span className="uppercase tracking-widest text-xs text-cyan-50">{t("Ataque")}</span>
+                        </div>
+                        <span className="text-cyan-500/50 text-[10px] font-mono border border-cyan-900/50 px-1.5 py-0.5 rounded">ATK</span>
+                      </button>
+
+                      <button 
+                        onClick={() => handleCombatAction({ type: 'guard' })}
+                        className="flex-1 bg-slate-900/80 hover:bg-blue-950/60 border border-blue-800/50 hover:border-blue-500 text-white font-bold py-3 px-3 rounded transition-all text-left flex justify-between items-center cursor-pointer hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] active:scale-[0.98] group"
+                        title={t("Guarda Ativa: Reduz dano em 50% e restaura 15% EP neste turno")}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                          <span className="uppercase tracking-widest text-xs text-blue-50">{t("Defesa")}</span>
+                        </div>
+                        <span className="text-blue-400/80 text-[10px] font-mono border border-blue-900/50 px-1.5 py-0.5 rounded">-50% DMG</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          if (confirm(t("Deseja realizar uma Retirada Tática? Você perderá 10% do seu Ouro e XP atual, mas fugirá em segurança."))) {
+                             handleCombatAction({ type: 'flee' });
+                          }
+                        }}
+                        className="w-12 bg-slate-900/80 hover:bg-red-950/60 border border-slate-800 hover:border-red-500/50 text-white font-bold py-3 px-0 rounded transition-all flex justify-center items-center cursor-pointer hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98] group"
+                        title={t("Retirada Tática (Fugir)")}
+                      >
+                        <DoorOpen className="w-5 h-5 text-slate-500 group-hover:text-red-400 transition-colors" />
+                      </button>
+                    </div>
                     
                     <div className="w-full h-px bg-cyan-900/30 my-2 relative">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
@@ -1498,7 +1739,13 @@ export default function App() {
                     {playerCombatSkills.map(skillId => {
                       const skill = SKILLS_DATABASE[skillId];
                       const isNeuralUnlocked = player.unlockedNodes?.some(nodeId => NEURAL_MATRIX_DATABASE[nodeId]?.skillId === skill.id);
-                      const canUseClass = canClassUseSkill(player.currentClassId, skill) || isNeuralUnlocked || player.learnedSkills.includes(skill.id);
+                      const isClassSkill = canClassUseSkill(player.currentClassId, skill);
+                      const isUpgraded = isClassSkill && isNeuralUnlocked;
+                      const finalMultiplier = isUpgraded ? skill.multiplier * 1.5 : skill.multiplier;
+                      const pStats = pStatsMemo;
+                      const estVal = Math.floor((skill.type === 'damage' ? pStats.atk : pStats.hp) * finalMultiplier);
+                      
+                      const canUseClass = isClassSkill || isNeuralUnlocked || player.learnedSkills.includes(skill.id);
                       const cd = combatState.cooldowns[skill.id] || 0;
                       const noMp = combatState.playerMp < skill.mpCost;
                       
@@ -1535,10 +1782,16 @@ export default function App() {
                             <Zap className={`w-5 h-5 ${isDesligado ? 'text-red-900/50' : 'text-current opacity-80 group-hover:opacity-100'}`} />
                             <div className="flex flex-col">
                               <span className="uppercase tracking-widest text-sm">{skill.name}</span>
-                              <span className="text-[10px] font-mono font-normal mt-0.5 opacity-60 flex gap-2">
-                                <span>{skill.type === 'damage' ? `PWR:${skill.multiplier * 100}%` : skill.type === 'heal' ? `HEAL:${skill.multiplier * 100}%` : 'BUFF'}</span>
+                              <span className="text-[10px] font-mono font-normal mt-0.5 opacity-60 flex items-center gap-2">
+                                <span>{skill.type === 'damage' ? `PWR:${Math.round(finalMultiplier * 100)}%` : skill.type === 'heal' ? `HEAL:${Math.round(finalMultiplier * 100)}%` : 'BUFF'}</span>
+                                {skill.type !== 'buff' && (
+                                  <>
+                                    <span className="opacity-50">|</span>
+                                    <span className={skill.type === 'damage' ? 'text-red-400/90' : 'text-emerald-400/90'}>~{estVal} {skill.type === 'damage' ? 'dano' : 'HP'}</span>
+                                  </>
+                                )}
                                 <span className="opacity-50">|</span>
-                                <span>CD:{skill.cooldown}</span>
+                                <span>CD:{isUpgraded ? Math.max(1, skill.cooldown - 1) : skill.cooldown}</span>
                               </span>
                             </div>
                           </div>
@@ -1557,6 +1810,10 @@ export default function App() {
                         </button>
                       );
                     })}
+                    
+                    <div className="w-full text-center mt-3 text-[9px] font-mono text-cyan-500/40 uppercase tracking-widest border-t border-cyan-900/30 pt-2">
+                      {t("[1] Atacar [2-9] Habilidades [ESC] Voltar")}
+                    </div>
                   </>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
@@ -1575,22 +1832,6 @@ export default function App() {
                       </div>
                     )}
                     
-                    {/* Controle de Velocidade de Combate */}
-                    <div className="w-full flex items-center justify-between bg-slate-900/60 border border-slate-800 p-2.5 rounded-lg">
-                      <span className="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider">{t("Velocidade de Combate")}</span>
-                      <button
-                        type="button"
-                        onClick={toggleCombatSpeed}
-                        className={`px-3 py-1.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                          combatSpeed === 'fast'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
-                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
-                        }`}
-                      >
-                        {combatSpeed === 'fast' ? t('⚡ Rápida (2x)') : t('🐢 Normal')}
-                      </button>
-                    </div>
-
                     <div className="flex flex-col gap-3 w-full">
                       {combatEndMessage?.isVictory && (
                         <button 
@@ -1664,9 +1905,53 @@ export default function App() {
                 </div>
               )}
 
+              {/* Linha do Tempo de Iniciativa e Ordem de Ação */}
+              {combatState && (
+                <div className="bg-slate-950/90 border border-cyan-900/50 rounded-lg p-2.5 mb-2 shadow-lg backdrop-blur-md">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-cyan-400/80 mb-1.5 px-1">
+                    <span className="uppercase tracking-widest flex items-center gap-1.5 font-bold">
+                      <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                      Linha do Tempo (Iniciativa SPD)
+                    </span>
+                    <span className="text-slate-400 font-bold">Turno {combatState.round}</span>
+                  </div>
+                  {(() => {
+                    const pSpd = pStatsMemo.spd;
+                    const mSpd = combatState.monster.stats.spd;
+                    const playerFirst = pSpd >= mSpd;
+                    const first = playerFirst ? { name: player.name || 'Operador', spd: pSpd, isPlayer: true } : { name: combatState.monster.name, spd: mSpd, isPlayer: false };
+                    const second = playerFirst ? { name: combatState.monster.name, spd: mSpd, isPlayer: false } : { name: player.name || 'Operador', spd: pSpd, isPlayer: true };
+
+                    return (
+                      <div className="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                        <div className={`flex items-center gap-2 flex-1 px-2.5 py-1 rounded border ${first.isPlayer ? 'bg-cyan-950/40 border-cyan-500/60 shadow-[0_0_10px_rgba(34,211,238,0.2)]' : 'bg-red-950/40 border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.2)]'}`}>
+                          <span className="text-[9px] font-mono font-bold bg-cyan-500 text-slate-950 px-1 rounded uppercase">1º A AGIR</span>
+                          <span className={`text-xs font-bold font-mono ${first.isPlayer ? 'text-cyan-300' : 'text-red-400'}`}>{first.name}</span>
+                          <span className="text-[10px] font-mono text-cyan-400/70 ml-auto">{first.spd} SPD</span>
+                        </div>
+                        <Swords className="w-4 h-4 text-slate-500 shrink-0" />
+                        <div className={`flex items-center gap-2 flex-1 px-2.5 py-1 rounded border opacity-75 ${second.isPlayer ? 'bg-cyan-950/20 border-cyan-900/40' : 'bg-slate-950/40 border-slate-800'}`}>
+                          <span className="text-[9px] font-mono font-bold bg-slate-800 text-slate-300 px-1 rounded uppercase">2º</span>
+                          <span className={`text-xs font-bold font-mono ${second.isPlayer ? 'text-cyan-300' : 'text-red-400'}`}>{second.name}</span>
+                          <span className="text-[10px] font-mono text-slate-500 ml-auto">{second.spd} SPD</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Palco Isométrico de Combate */}
               {combatState && (
                 <div className="system-panel h-64 relative overflow-hidden flex items-center justify-center iso-stage" style={{ '--sector-rgb': getSectorForFloor(selectedFloor).rgb } as React.CSSProperties}>
+                  {enrageFlash && (
+                    <div className="absolute inset-0 bg-red-600/40 z-50 pointer-events-none transition-all duration-300"></div>
+                  )}
+                  <div className="absolute top-2 left-2 bg-slate-900/80 border border-slate-700 text-slate-300 p-1.5 rounded z-20 text-[10px] font-mono shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-widest flex items-center gap-1.5">
+                    <Activity className="w-3 h-3 text-cyan-500" />
+                    <span>{t("Turno")}</span>
+                    <span className="text-cyan-400 font-bold">{combatState.round}</span>
+                  </div>
 
                   {combatState.anomaly && combatState.isBossEnraged && (
                     <div className="absolute top-2 right-2 bg-yellow-950/80 border border-yellow-500/50 text-yellow-400 p-1 rounded z-20 text-[8px] font-mono shadow-[0_0_10px_rgba(234,179,8,0.3)]">
@@ -1681,61 +1966,124 @@ export default function App() {
                     
                     {/* Jogador Sprite Box */}
                     <div className="relative flex flex-col items-center">
+                      {pStatsMemo.spd >= combatState.monster.stats.spd && (
+                        <div className="absolute -top-6 -left-6 bg-cyan-950/80 border border-cyan-400 p-1 rounded-full z-20 shadow-[0_0_10px_rgba(34,211,238,0.3)] animate-pulse" title={t("Iniciativa (Age primeiro)")}>
+                          <Zap className="w-3 h-3 text-cyan-400" />
+                        </div>
+                      )}
                       {dmgPopups.filter(p => p.target === 'player').map(p => (
-                        <div key={p.id} className="absolute -top-8 text-red-500 font-bold font-mono text-xl animate-float-up z-20 text-shadow" style={{ animationDuration: combatSpeed === 'fast' ? '0.5s' : '1s' }}>-{p.amount}</div>
+                        <div key={p.id} className={`absolute -top-8 font-bold font-mono text-xl animate-float-up z-20 text-shadow ${p.type === 'heal' ? 'text-green-400' : p.type === 'crit' ? 'text-amber-400 text-3xl drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : p.type === 'miss' ? 'text-slate-400 text-lg' : 'text-red-500'}`} style={{ animationDuration: combatSpeed === 'fast' ? '0.5s' : '1s' }}>
+                          {p.type === 'heal' ? '+' : p.type === 'damage' || p.type === 'crit' ? '-' : ''}{p.amount}{p.type === 'crit' ? '!' : ''}
+                        </div>
                       ))}
                       <img 
                         src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${player.currentClassId}`} 
                         onError={handleImageError} 
                         alt="Player" 
-                        className={`w-24 h-24 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake animate-hit-flash' : ''}`} 
-                        style={dmgPopups.some(p => p.target === 'player') ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
+                        className={`w-24 h-24 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.player ? 'animate-attack-right' : ''}`} 
+                        style={(dmgPopups.some(p => p.target === 'player') || attackerAnimating.player) ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
                       />
                       
                       {/* Barras de Status do Jogador flutuantes */}
-                      <div className="absolute top-24 w-20 space-y-1">
-                        <div className="flex gap-1 justify-center flex-wrap mb-1 w-[120%] -ml-[10%]">
+                      <div className="absolute top-24 w-24 space-y-1">
+                        <div className="flex gap-1 justify-center flex-wrap mb-1 w-full">
                           {combatState.playerStatuses?.map((s, i) => (
-                            <span key={i} className={`text-[8px] px-1 rounded font-bold ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`}>
-                              {s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}{s.duration}t]
-                            </span>
+                            <div key={i} className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold cursor-help ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':s.type==='stun'?'bg-slate-500/20 text-slate-400 border border-slate-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`} title={t(s.type==='overheat'?'Superaquecimento: Sofre Dano Verdadeiro ao realizar ações.':s.type==='corrosion'?'Corrosão: Todos os ataques recebidos ignoram a DEF.':s.type==='stun'?'Atordoamento: Incapaz de realizar ações no próximo turno.':'Choque Elétrico: Sofre Dano Verdadeiro ao final do turno.')}>
+                              {s.type==='overheat'?<Flame className="w-3 h-3" />:s.type==='corrosion'?<Droplet className="w-3 h-3" />:s.type==='stun'?<Ban className="w-3 h-3" />:<Zap className="w-3 h-3" />}
+                              <span>{s.duration}</span>
+                            </div>
                           ))}
                         </div>
                         <div className="w-full bg-slate-900 h-2 rounded border border-slate-700 overflow-hidden">
-                          <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(combatState.playerHp / calculatePlayerStats(player).hp) * 100}%` }}></div>
+                          <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(combatState.playerHp / pStatsMemo.hp) * 100}%` }}></div>
                         </div>
                         <div className="w-full bg-slate-900 h-1.5 rounded border border-slate-700 overflow-hidden">
-                          <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(combatState.playerMp / calculatePlayerStats(player).mp) * 100}%` }}></div>
+                          <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(combatState.playerMp / pStatsMemo.mp) * 100}%` }}></div>
                         </div>
                       </div>
                     </div>
                     
                     {/* Monstro Sprite Box */}
                     <div className="relative flex flex-col items-center">
+                      {pStatsMemo.spd < combatState.monster.stats.spd && (
+                        <div className="absolute -top-6 -right-6 bg-red-950/80 border border-red-500 p-1 rounded-full z-20 shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse" title={t("Iniciativa (Age primeiro)")}>
+                          <Zap className="w-3 h-3 text-red-500" />
+                        </div>
+                      )}
+
+                      {/* Monster Intent Telegraph */}
+                      {combatState.monsterNextIntent && (
+                        <div className="absolute -top-12 z-30 flex items-center justify-center animate-bounce shadow-xl" title={`Intenção: ${combatState.monsterNextIntent.type === 'attack' ? 'Atacar' : combatState.monsterNextIntent.skillName}`}>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-slate-900/95 backdrop-blur-md ${
+                            combatState.monsterNextIntent.type === 'ultimate' ? 'border-red-500/80 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.6)]' :
+                            combatState.monsterNextIntent.type === 'skill' ? 'border-purple-500/60 text-purple-400' :
+                            combatState.monsterNextIntent.type === 'buff' ? 'border-blue-500/60 text-blue-400' :
+                            combatState.monsterNextIntent.type === 'debuff' ? 'border-green-500/60 text-green-400' :
+                            'border-amber-500/60 text-amber-400'
+                          }`}>
+                            {combatState.monsterNextIntent.type === 'ultimate' && <Skull className="w-4 h-4 animate-pulse" />}
+                            {combatState.monsterNextIntent.type === 'skill' && <Wand2 className="w-4 h-4" />}
+                            {combatState.monsterNextIntent.type === 'buff' && <Shield className="w-4 h-4" />}
+                            {combatState.monsterNextIntent.type === 'debuff' && <Eye className="w-4 h-4" />}
+                            {combatState.monsterNextIntent.type === 'attack' && <Swords className="w-4 h-4" />}
+                            
+                            {(combatState.monsterNextIntent.type === 'attack' || combatState.monsterNextIntent.type === 'skill') && combatState.monsterNextIntent.value && (
+                              <span className="font-mono text-xs font-bold">{combatState.monsterNextIntent.value}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                        {dmgPopups.filter(p => p.target === 'monster').map(p => (
-                        <div key={p.id} className="absolute -top-8 text-red-500 font-bold font-mono text-xl animate-float-up z-20 text-shadow" style={{ animationDuration: combatSpeed === 'fast' ? '0.5s' : '1s' }}>-{p.amount}</div>
+                        <div key={p.id} className={`absolute -top-8 font-bold font-mono text-xl animate-float-up z-20 text-shadow ${p.type === 'heal' ? 'text-green-400' : p.type === 'crit' ? 'text-amber-400 text-3xl drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : p.type === 'miss' ? 'text-slate-400 text-lg' : 'text-red-500'}`} style={{ animationDuration: combatSpeed === 'fast' ? '0.5s' : '1s' }}>
+                          {p.type === 'heal' ? '+' : p.type === 'damage' || p.type === 'crit' ? '-' : ''}{p.amount}{p.type === 'crit' ? '!' : ''}
+                        </div>
                       ))}
+                      
+                      <button 
+                        onClick={() => setShowMonsterInfo(true)}
+                        className="absolute -right-8 top-4 text-cyan-500/50 hover:text-cyan-400 bg-slate-900/80 p-1.5 rounded-full border border-cyan-900/50 hover:border-cyan-500 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all z-20"
+                        title={t("Informações do Alvo")}
+                      >
+                        <Info className="w-4 h-4" />
+                      </button>
+
                       <img 
                         src={`https://robohash.org/${combatState.monster.name}?set=set2&size=150x150`} 
                         onError={handleImageError} 
                         alt="Monster" 
-                        className={`w-32 h-32 drop-shadow-[0_15px_15px_rgba(255,0,0,0.3)] ${dmgPopups.some(p => p.target === 'monster') ? 'animate-shake animate-hit-flash' : ''} ${combatState.isBossEnraged ? 'animate-pulse drop-shadow-[0_0_40px_rgba(255,0,0,1)]' : ''}`} 
-                        style={dmgPopups.some(p => p.target === 'monster') ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
+                        className={`w-32 h-32 drop-shadow-[0_15px_15px_rgba(255,0,0,0.3)] ${dmgPopups.some(p => p.target === 'monster') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.monster ? 'animate-attack-left' : ''} ${combatState.isBossEnraged ? 'animate-pulse drop-shadow-[0_0_40px_rgba(255,0,0,1)]' : ''}`} 
+                        style={(dmgPopups.some(p => p.target === 'monster') || attackerAnimating.monster) ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
                       />
                       
                       {/* Barras de Status do Monstro flutuantes */}
                       <div className="absolute top-28 w-24 space-y-1">
-                        <div className="flex gap-1 justify-center flex-wrap mb-1 w-[120%] -ml-[10%]">
+                        <div className="flex gap-1 justify-center flex-wrap mb-1 w-full">
                           {combatState.monsterStatuses?.map((s, i) => (
-                            <span key={i} className={`text-[8px] px-1 rounded font-bold ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`}>
-                              {s.type==='overheat'?'[CALOR:':s.type==='corrosion'?'[ÁCIDO:':'[CHOQUE:'}{s.duration}t]
-                            </span>
+                            <div key={i} className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-bold cursor-help ${s.type==='overheat'?'bg-orange-500/20 text-orange-400 border border-orange-500/50':s.type==='corrosion'?'bg-green-500/20 text-green-400 border border-green-500/50':s.type==='stun'?'bg-slate-500/20 text-slate-400 border border-slate-500/50':'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'}`} title={t(s.type==='overheat'?'Superaquecimento: Sofre Dano Verdadeiro ao realizar ações.':s.type==='corrosion'?'Corrosão: Todos os ataques recebidos ignoram a DEF.':s.type==='stun'?'Atordoamento: Incapaz de realizar ações no próximo turno.':'Choque Elétrico: Sofre Dano Verdadeiro ao final do turno.')}>
+                              {s.type==='overheat'?<Flame className="w-3 h-3" />:s.type==='corrosion'?<Droplet className="w-3 h-3" />:s.type==='stun'?<Ban className="w-3 h-3" />:<Zap className="w-3 h-3" />}
+                              <span>{s.duration}</span>
+                            </div>
                           ))}
                         </div>
                         <div className="w-full bg-slate-900 h-2 rounded border border-slate-700 overflow-hidden">
                           <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(combatState.monsterHp / combatState.monster.stats.hp) * 100}%` }}></div>
                         </div>
-                        <div className="text-center text-[10px] font-mono font-bold text-red-200 mt-1 uppercase tracking-widest bg-slate-900/80 rounded px-1">{combatState.monster.name}</div>
+
+                        {/* Barra de Stagger / Postura */}
+                        <div className="w-full bg-slate-950 h-1.5 rounded border border-amber-900/60 overflow-hidden relative shadow-sm" title={combatState.isMonsterStaggered ? "💥 GUARDA QUEBRADA! Dano recebido +50%" : `Postura: ${combatState.monsterStagger}/${combatState.monsterMaxStagger}`}>
+                          <div 
+                            className={`h-full transition-all duration-300 ${combatState.isMonsterStaggered ? 'bg-amber-400 animate-pulse shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'bg-gradient-to-r from-amber-600 to-amber-400'}`} 
+                            style={{ width: `${Math.max(0, Math.min(100, (combatState.monsterStagger / combatState.monsterMaxStagger) * 100))}%` }}
+                          />
+                        </div>
+
+                        <div className="text-center text-[10px] font-mono font-bold text-red-200 mt-1 uppercase tracking-widest bg-slate-900/80 rounded px-1 flex justify-between items-center">
+                          <span className="truncate">{combatState.monster.name}</span>
+                          {combatState.isMonsterStaggered && (
+                            <span className="text-[8px] text-amber-400 font-extrabold animate-bounce ml-1">STAGGER!</span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1804,7 +2152,68 @@ export default function App() {
                   })}
                 </div>
               </div>
-              
+            
+            {showMonsterInfo && combatState?.monster && (
+              <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                <div className="system-panel max-w-md w-full relative">
+                  <div className="tech-panel-header px-4 py-3 flex justify-between items-center border-b border-cyan-900/50">
+                    <span className="font-bold text-cyan-400 tracking-widest uppercase flex items-center gap-2">
+                      <Info className="w-5 h-5" /> 
+                      {t("Dados do Alvo")}
+                    </span>
+                    <button onClick={() => setShowMonsterInfo(false)} className="text-cyan-500 hover:text-cyan-300">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4 font-mono text-sm">
+                    <div className="flex items-center gap-4 border-b border-cyan-900/30 pb-4">
+                      <img 
+                        src={`https://robohash.org/${combatState.monster.name}?set=set2&size=80x80`} 
+                        onError={handleImageError} 
+                        alt="Monster" 
+                        className="w-16 h-16 bg-slate-900 rounded border border-cyan-900/50"
+                      />
+                      <div>
+                        <div className="font-bold text-lg text-cyan-50">{combatState.monster.name}</div>
+                        {combatState.monster.isBoss && (
+                          <div className="text-red-400 font-bold text-xs uppercase mt-1 tracking-widest">Ameaça Classe Ômega</div>
+                        )}
+                        <div className="text-cyan-500/70 text-xs uppercase mt-0.5">Nível {combatState.monster.level}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="bg-slate-900/80 p-2 rounded border border-cyan-900/30">
+                        <div className="text-cyan-500/50 mb-1">ATK</div>
+                        <div className="text-cyan-100 font-bold">{combatState.monster.stats.atk}</div>
+                      </div>
+                      <div className="bg-slate-900/80 p-2 rounded border border-cyan-900/30">
+                        <div className="text-cyan-500/50 mb-1">DEF</div>
+                        <div className="text-cyan-100 font-bold">{combatState.monster.stats.def}</div>
+                      </div>
+                      <div className="bg-slate-900/80 p-2 rounded border border-cyan-900/30">
+                        <div className="text-cyan-500/50 mb-1">SPD</div>
+                        <div className="text-cyan-100 font-bold">{combatState.monster.stats.spd}</div>
+                      </div>
+                    </div>
+
+                    {combatState.monster.loreEntry && (
+                      <div className="bg-cyan-950/20 p-3 rounded border border-cyan-900/30 text-cyan-100/80 text-xs leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">
+                        <p>{t(combatState.monster.loreEntry)}</p>
+                      </div>
+                    )}
+                    
+                    {combatState.monster.isBoss && (
+                      <div className="bg-red-950/20 p-3 rounded border border-red-900/30 text-red-300 text-xs flex items-start gap-2">
+                        <Flame className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                        <p>{t("Entra em fúria abaixo de 35% HP ou após 8 turnos.")}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             </div>
           </div>
         ) : scene === 'event' && activeEvent ? (

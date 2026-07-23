@@ -4,7 +4,7 @@ import { calculatePlayerStats } from '../entities/player';
 import { SKILLS_DATABASE, canClassUseSkill } from '../entities/skills';
 import { NEURAL_MATRIX_DATABASE } from '../entities/neuralMatrix';
 
-export function evaluateCondition(condition: AutoBattleCondition, player: Player, combatState: CombatState): boolean {
+function evaluateCondition(condition: AutoBattleCondition, player: Player, combatState: CombatState): boolean {
   const pStats = calculatePlayerStats(player);
   const pMaxHp = pStats.hp;
   const pMaxMp = pStats.mp;

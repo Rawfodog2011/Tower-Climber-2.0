@@ -86,8 +86,30 @@ export function saveTimelineCodex(codex: TimelineCodex): void {
 }
 
 /**
+ * Retorna os multiplicadores de bônus meta-persistente da Linha Temporal.
+ * Cada origem completada concede +2% de XP e +2% de Ouro obtidos em combate (máx +8%).
+ */
+export function getTimelineMetaBonus(): { bonusPercent: number; xpMultiplier: number; goldMultiplier: number; completedCount: number } {
+  const codex = loadTimelineCodex();
+  const standardOrigins = ['ciborgue_foragido', 'nomade_silicio', 'quimico_sintetico', 'mercenario_elite'];
+  let completedCount = 0;
+  standardOrigins.forEach(key => {
+    if (codex.origins[key]?.completed) {
+      completedCount++;
+    }
+  });
+  const bonusPercent = Math.min(completedCount, 4) * 2;
+  const multiplier = 1 + (bonusPercent / 100);
+  return {
+    bonusPercent,
+    xpMultiplier: multiplier,
+    goldMultiplier: multiplier,
+    completedCount
+  };
+}
+
+/**
  * Concede as recompensas de conclusão de linha temporal.
- * // TODO: valores a definir em sessão de recompensas.
  */
 export function grantTimelineRewards(originId: string) {
   const titles: Record<string, string> = {
@@ -105,12 +127,13 @@ export function grantTimelineRewards(originId: string) {
   };
 
   const title = titles[originId] || `Explorador Temporal (${originId})`;
+  const { bonusPercent } = getTimelineMetaBonus();
 
-  // TODO: valor percentual a definir em sessão de recompensas dedicada
   return {
     title,
-    pendingRewardType: 'meta_bonus', // apenas registra que uma recompensa "a definir" foi concedida sem valor numérico associado
-    passiveSkillId: `resistencia_temporal_${originId}`, // apenas existe como referência futura, sem efeito mecânico real
+    xpBonusPercent: 2,
+    goldBonusPercent: 2,
+    totalBonusPercent: bonusPercent,
     epilogueHint: epilogueHints[originId] || ''
   };
 }

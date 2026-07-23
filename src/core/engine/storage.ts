@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
  */
 export function getStorageItem<T>(key: string, fallback: T): T {
   try {
+    if (typeof localStorage === 'undefined') return fallback;
     const raw = localStorage.getItem(key);
     if (raw === null) return fallback;
     return JSON.parse(raw) as T;
@@ -29,6 +30,7 @@ export function getStorageItem<T>(key: string, fallback: T): T {
  */
 export function setStorageItem<T>(key: string, value: T): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.error(`Erro ao gravar JSON no localStorage[${key}]:`, error);
@@ -40,6 +42,7 @@ export function setStorageItem<T>(key: string, value: T): void {
  */
 export function getStorageString(key: string, fallback: string): string {
   try {
+    if (typeof localStorage === 'undefined') return fallback;
     const raw = localStorage.getItem(key);
     if (raw === null) return fallback;
     return raw;
@@ -54,6 +57,7 @@ export function getStorageString(key: string, fallback: string): string {
  */
 export function setStorageString(key: string, value: string): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(key, value);
   } catch (error) {
     console.error(`Erro ao gravar string no localStorage[${key}]:`, error);
@@ -63,8 +67,9 @@ export function setStorageString(key: string, value: string): void {
 /**
  * Remove um item do localStorage.
  */
-export function removeStorageItem(key: string): void {
+function removeStorageItem(key: string): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.removeItem(key);
   } catch (error) {
     console.error(`Erro ao remover do localStorage[${key}]:`, error);
