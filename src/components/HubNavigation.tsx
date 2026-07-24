@@ -4,13 +4,16 @@ import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
 
-interface Props {
-  hubTab: string;
-  setHubTab: (tab: any) => void;
-  player: Player;
-}
 
-export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) => {
+
+
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useGameUIStore } from '../store/useGameUIStore';
+
+export const HubNavigation: React.FC = () => {
+  const { player } = usePlayerStore();
+  const { hubTab, setHubTab } = useGameUIStore();
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const { playSfx } = useAudio();
@@ -139,7 +142,7 @@ export const HubNavigation: React.FC<Props> = ({ hubTab, setHubTab, player }) =>
             <button 
               key={tab.id}
               onClick={() => {
-                setHubTab(tab.id);
+                setHubTab(tab.id as any);
                 playSfx('ui.tab_switch');
               }} 
               onMouseEnter={() => playSfx('ui.hover')}

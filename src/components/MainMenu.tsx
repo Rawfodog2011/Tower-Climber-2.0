@@ -1,3 +1,4 @@
+import { HybridFlag } from './HybridFlag';
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Play, Settings, FileText, RotateCcw, Cpu, Power, Volume2, VolumeX, Bot, Ghost, UserRound, Crosshair, Fingerprint, Eye, Hexagon } from 'lucide-react';
 import { useTranslation, Language } from '../core/engine/translation';
@@ -604,16 +605,7 @@ export const MainMenu: React.FC<Props> = ({
                      }`}
                      title="Português (BR/PT)"
                    >
-                     {/* Diagonal division: top-left BR, bottom-right PT */}
-                     <div className="absolute inset-0 bg-gradient-to-br from-[#009b3a] from-50% to-[#ff0000] to-50%" />
-                     {/* Brazil details in top-left */}
-                     <div className="absolute top-[5px] left-[5px] w-[14px] h-[10px] bg-[#fedd00]" style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}>
-                       <div className="absolute top-[2px] left-[3px] w-[4px] h-[4px] bg-[#002776] rounded-full" />
-                     </div>
-                     {/* Portugal details in bottom-right (green circle on red) */}
-                     <div className="absolute bottom-[4px] right-[5px] w-[10px] h-[10px] bg-[#006600] rounded-full border border-[#ffcc00] flex items-center justify-center">
-                       <div className="w-[4px] h-[4px] bg-[#ff0000] rounded-full" />
-                     </div>
+                     <HybridFlag primaryCountry="PT" secondaryCountry="BR" />
                    </button>
 
                    {/* USA / UK Flag */}
@@ -627,36 +619,7 @@ export const MainMenu: React.FC<Props> = ({
                      }`}
                      title="English (US/UK)"
                    >
-                     {/* USA half: top-left side */}
-                     <div className="absolute inset-0" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}>
-                       {/* USA background: Red and white stripes */}
-                       <div className="absolute inset-0 bg-slate-100 flex flex-col justify-between py-0.5">
-                         <div className="h-[1.5px] bg-red-600 w-full" />
-                         <div className="h-[1.5px] bg-red-600 w-full" />
-                         <div className="h-[1.5px] bg-red-600 w-full" />
-                         <div className="h-[1.5px] bg-red-600 w-full" />
-                       </div>
-                       {/* Blue canton with a white dot */}
-                       <div className="absolute top-0 left-0 w-5 h-3 bg-blue-800 flex items-center justify-center">
-                         <div className="w-1 h-1 bg-white rounded-full" />
-                       </div>
-                     </div>
-                     {/* UK half: bottom-right side */}
-                     <div className="absolute inset-0" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}>
-                       {/* UK background: blue with Union Jack lines */}
-                       <div className="absolute inset-0 bg-[#00247d]">
-                         {/* White diagonal */}
-                         <div className="absolute top-0 left-0 w-full h-full border-t-[2px] border-b-[2px] border-white transform rotate-[33deg] origin-center" />
-                         {/* Red diagonal */}
-                         <div className="absolute top-0 left-0 w-full h-full border-t-[0.8px] border-b-[0.8px] border-[#cf142b] transform rotate-[33deg] origin-center" />
-                         {/* White cross */}
-                         <div className="absolute inset-y-0 left-[24px] w-[5px] bg-white" />
-                         <div className="absolute inset-x-0 top-[14px] h-[5px] bg-white" />
-                         {/* Red cross */}
-                         <div className="absolute inset-y-0 left-[25.5px] w-[2px] bg-[#cf142b]" />
-                         <div className="absolute inset-x-0 top-[15.5px] h-[2px] bg-[#cf142b]" />
-                       </div>
-                     </div>
+                     <HybridFlag primaryCountry="GB" secondaryCountry="US" />
                    </button>
                  </div>
                </div>

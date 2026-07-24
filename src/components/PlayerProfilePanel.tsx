@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Player, ClassDefinition } from '../types';
+import { Player } from '../types';
 import { getAvailableEvolutions } from '../core/entities/classes';
 import { calculatePlayerStats } from '../core/entities/player';
 import { getXpRequiredForNextLevel } from '../core/math/progression';
@@ -10,12 +10,6 @@ import { Activity, Shield, Zap, Info, X, Bot, Ghost, UserRound, Crosshair, Finge
 import { ORIGINS } from '../core/entities/origins';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
-
-interface Props {
-  player: Player;
-  CLASSES: Record<string, ClassDefinition>;
-  handleEvolveClass: (classId: string) => void;
-}
 
 const getAvatarIcon = (id?: string) => {
   switch (id) {
@@ -30,7 +24,13 @@ const getAvatarIcon = (id?: string) => {
   }
 };
 
-export const PlayerProfilePanel: React.FC<Props> = ({ player, CLASSES, handleEvolveClass }) => {
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useClassEvolution } from '../hooks/useClassEvolution';
+import { CLASSES } from '../core/entities/classes';
+
+export const PlayerProfilePanel: React.FC = () => {
+  const { player } = usePlayerStore();
+  const { handleEvolveClass } = useClassEvolution();
   const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
   const stats = React.useMemo(() => calculatePlayerStats(player), [player]);
   const { t } = useTranslation();

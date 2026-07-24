@@ -7,10 +7,6 @@ import { CoreArchiveEntry } from './CoreArchiveEntry';
 import { TTSButton } from './TTSButton';
 import { SystemVoiceSelector } from './SystemVoiceSelector';
 
-interface CharacterCreationProps {
-  onComplete: (originId: string, name?: string, avatar?: string) => void;
-}
-
 const AVATARS = [
   { id: 'user', icon: UserRound },
   { id: 'bot', icon: Bot },
@@ -27,7 +23,18 @@ const CYBERPUNK_NAMES = [
   "A14X", "C0R3", "GL1TCH", "LUPU5", "M4TR1X", "0R10N", "PUL53", "QU4RK", "R4V3N", "S1LK"
 ];
 
-export function CharacterCreation({ onComplete }: CharacterCreationProps) {
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useGameUIStore } from '../store/useGameUIStore';
+import { Player } from '../types';
+
+export function CharacterCreation() {
+  const { setPlayer } = usePlayerStore();
+  const { setScene } = useGameUIStore();
+  
+  const onComplete = (originId: string, name?: string, avatar?: string) => {
+    setPlayer((prev: Player) => ({ ...prev, originId, name, avatar }));
+    setScene('intro');
+  };
   const [step, setStep] = useState<1 | 2>(1);
   const [playerName, setPlayerName] = useState<string>('');
   const [selectedAvatar, setSelectedAvatar] = useState<string>('user');

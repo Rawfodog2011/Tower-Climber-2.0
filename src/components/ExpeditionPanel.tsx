@@ -4,15 +4,18 @@ import { Activity, Flame, Crosshair, Cpu } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
 import { getSectorForFloor } from '../core/math/worldScaling';
 
-interface Props {
-  player: Player;
-  selectedFloor: number;
-  setSelectedFloor: (floor: number) => void;
-  handleStartDive: (floor: number) => void;
-  setPlayer: React.Dispatch<React.SetStateAction<Player>>;
-}
 
-export const ExpeditionPanel: React.FC<Props> = ({ player, selectedFloor, setSelectedFloor, handleStartDive, setPlayer }) => {
+
+
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useExplorationStore } from '../store/useExplorationStore';
+import { useExploration } from '../hooks/useExploration';
+
+export const ExpeditionPanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
+  const { selectedFloor, setSelectedFloor } = useExplorationStore();
+  const { handleStartDive } = useExploration();
+
   const sector = getSectorForFloor(selectedFloor);
   const SectorIcon = sector.hazard === 'plasma_furnace' ? Flame : Activity;
   const { t } = useTranslation();

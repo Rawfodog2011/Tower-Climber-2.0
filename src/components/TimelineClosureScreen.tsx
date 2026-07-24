@@ -5,11 +5,7 @@ import { ORIGINS } from '../core/entities/origins';
 import { grantTimelineRewards, loadTimelineCodex } from '../core/engine/timelineCodex';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  justCompletedAll: boolean;
-  onComplete: () => void;
-}
+
 
 const CLOSURE_TEXTS: Record<string, { cosmeticTitle: string; text: string }> = {
   ciborgue_foragido: {
@@ -30,7 +26,17 @@ const CLOSURE_TEXTS: Record<string, { cosmeticTitle: string; text: string }> = {
   }
 };
 
-export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAll, onComplete }) => {
+
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useExplorationStore } from '../store/useExplorationStore';
+
+import { useGameUIStore } from '../store/useGameUIStore';
+
+export const TimelineClosureScreen: React.FC = () => {
+  const { setScene } = useGameUIStore();
+  const { player } = usePlayerStore();
+  const { justCompletedAll } = useExplorationStore();
+
   const [bootLines, setBootLines] = useState<string[]>([]);
   const [phase, setPhase] = useState<'boot' | 'details' | 'celebration'>('boot');
   const [displayedTextIndex, setDisplayedTextIndex] = useState<number>(0);
@@ -115,7 +121,7 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
     if (justCompletedAll && phase === 'details') {
       setPhase('celebration');
     } else {
-      onComplete();
+      setScene('main_menu');
     }
   };
 
@@ -262,7 +268,7 @@ export const TimelineClosureScreen: React.FC<Props> = ({ player, justCompletedAl
             </div>
 
             <button
-              onClick={onComplete}
+              onClick={() => setScene('main_menu')}
               className="w-full flex items-center justify-center gap-2 py-3 bg-amber-950 border border-amber-500 text-amber-300 hover:bg-amber-900 font-bold uppercase tracking-widest rounded transition-all cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)]"
             >
               {t("Retornar para Seleção de Origem")}

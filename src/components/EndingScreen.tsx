@@ -3,12 +3,16 @@ import { Player } from '../types';
 import { Trophy, RefreshCw, Cpu, Activity, Clock, Zap } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
 
-interface EndingScreenProps {
-  player: Player;
-  onContinue: () => void;
-}
 
-export function EndingScreen({ player, onContinue }: EndingScreenProps) {
+
+
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useGameUIStore } from '../store/useGameUIStore';
+
+export function EndingScreen() {
+  const { player } = usePlayerStore();
+  const { setScene } = useGameUIStore();
+
   const { t } = useTranslation();
 
   return (
@@ -64,7 +68,7 @@ export function EndingScreen({ player, onContinue }: EndingScreenProps) {
 
         <div className="flex justify-center animate-[fadeIn_3s_ease-out]">
           <button
-            onClick={onContinue}
+            onClick={() => setScene('timeline_closure')}
             className="flex items-center gap-3 px-8 py-4 bg-indigo-900 hover:bg-indigo-800 text-white rounded font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] border border-indigo-400 cursor-pointer"
           >
             <RefreshCw className="w-5 h-5" />

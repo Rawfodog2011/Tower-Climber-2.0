@@ -7,13 +7,14 @@ import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
 import { TTSButton } from './TTSButton';
 
-interface Props {
-  player: Player;
-  memoryKey: string;
-  onComplete: () => void;
-}
 
-export const MemoryFragmentScreen: React.FC<Props> = ({ player, memoryKey, onComplete }) => {
+
+
+import { usePlayerStore } from '../store/usePlayerStore';
+
+export const MemoryFragmentScreen: React.FC<{ memoryKey: string, onComplete: () => void }> = ({ memoryKey, onComplete }) => {
+  const { player } = usePlayerStore();
+
   const [displayedCoreText, setDisplayedCoreText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [autoAdvanceTime, setAutoAdvanceTime] = useState(15); // 15 seconds auto-advance

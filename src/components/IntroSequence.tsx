@@ -5,11 +5,6 @@ import { STORAGE_KEYS, getStorageString, setStorageString } from '../core/engine
 import { useAudio } from '../core/engine/useAudio';
 import { TTSButton } from './TTSButton';
 
-interface Props {
-  onComplete: () => void;
-  isContinue?: boolean;
-}
-
 const BOOT_LINES = [
   "TOWER CLIMBER OS v1.2.0 BIOS",
   "INITIALIZING BOOT SEQUENCE...",
@@ -21,7 +16,11 @@ const BOOT_LINES = [
   "ACCESS GRANTED."
 ];
 
-export const IntroSequence: React.FC<Props> = ({ onComplete, isContinue }) => {
+import { useGameUIStore } from '../store/useGameUIStore';
+
+export const IntroSequence: React.FC = () => {
+  const { isContinueRun: isContinue, setScene } = useGameUIStore();
+  const onComplete = () => setScene('hub');
   const [phase, setPhase] = useState<number>(0);
   const [bootLines, setBootLines] = useState<string[]>([]);
   const [showStartButton, setShowStartButton] = useState<boolean>(false);
