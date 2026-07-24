@@ -204,6 +204,7 @@ export interface CombatFsmContext {
   pStats: any;
   pPassives: any;
   changeState(newState: CombatFsmStateId): void;
+  combatResult?: CombatResult;
 }
 
 export interface FsmState {
@@ -232,7 +233,11 @@ class ResolvePlayerActionState implements FsmState {
       builder.startAction('player', 'Fugir', false);
       const fleeChance = state.monster.isBoss ? 0 : 0.5;
       if (random() < fleeChance) {
-        builder.endCombat('flee', null);
+        let updatedPlayer = { ...player };
+        updatedPlayer.gold = Math.max(0, Math.floor(updatedPlayer.gold * 0.9));
+        const combatResult = { winner: "flee" as const, updatedPlayer, logs: [] };
+        builder.endCombat('flee', combatResult);
+        context.combatResult = combatResult;
         context.changeState('BattleFinished');
         return;
       } else {
@@ -343,7 +348,7 @@ class EnemyTurnState implements FsmState {
 
 class ResolveDeathsState implements FsmState {
   update(context: CombatFsmContext) {
-    const { builder } = context;
+    const { builder, player } = context;
     const state = builder.getState();
     
     if (state.playerHp <= 0) {
@@ -382,7 +387,7 @@ class ResolveEffectsState implements FsmState {
 
 class EndRoundState implements FsmState {
   update(context: CombatFsmContext) {
-    const { builder } = context;
+    const { builder, player } = context;
     const state = builder.getState();
     
     builder.tickStatuses();
@@ -396,7 +401,9 @@ class EndRoundState implements FsmState {
     builder.setMonsterNextIntent(generateMonsterIntent(state.monster, builder.getState().round, state.isBossEnraged));
     
     if (builder.getState().round > 100) {
-      builder.endCombat('exhausted', null);
+      const combatResult = { winner: "exhausted" as const, updatedPlayer: player, logs: [] };
+      builder.endCombat('exhausted', combatResult);
+      context.combatResult = combatResult;
       context.changeState('BattleFinished');
     } else {
       context.changeState('PlayerTurn');
@@ -407,10 +414,12 @@ class EndRoundState implements FsmState {
 class ResolveDefeatState implements FsmState {
   update(context: CombatFsmContext) {
     const { builder, player } = context;
-    builder.endCombat('monster', null);
     
     const penalizedPlayer = applyDeathPenalty(player);
-    (context as any).combatResult = { winner: 'monster', updatedPlayer: penalizedPlayer, logs: [], trackers: builder.getState().adaptationTrackers };
+    const combatResult = { winner: "monster" as const, updatedPlayer: penalizedPlayer, logs: [], trackers: builder.getState().adaptationTrackers };
+    
+    builder.endCombat('monster', combatResult);
+    context.combatResult = combatResult;
     
     context.changeState('BattleFinished');
   }
@@ -486,9 +495,10 @@ class ResolveVictoryState implements FsmState {
     updatedPlayer = updateHuntContracts(updatedPlayer, monsterIdForHunt);
     
     const loot = { xp: xpReward, gold: goldReward, items: itemsDropped };
-    builder.endCombat('player', loot);
     
-    (context as any).combatResult = { winner: 'player', updatedPlayer, logs: [], loot, trackers: state.adaptationTrackers };
+    const combatResult = { winner: "player" as const, updatedPlayer, logs: [], loot, trackers: state.adaptationTrackers };
+    builder.endCombat('player', combatResult);
+    context.combatResult = combatResult;
     
     context.changeState('BattleFinished');
   }

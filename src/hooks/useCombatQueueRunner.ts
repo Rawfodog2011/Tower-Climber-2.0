@@ -158,6 +158,7 @@ export const useCombatQueueRunner = () => {
             break;
 
           case 'COMBAT_END':
+            store.setVisualCombatState(prev => prev ? { ...prev, isActive: false } : prev);
             if (action.result) {
               let updatedPlayer = action.result.updatedPlayer;
               if (action.result.trackers) {

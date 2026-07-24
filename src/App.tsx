@@ -92,7 +92,7 @@ export default function App() {
           />
         )}
       </AnimatePresence>
-      {!['main_menu', 'character_creation', 'intro', 'timeline_closure'].includes(scene) && (
+      {['hub', 'env_intro', 'combat', 'event', 'puzzle'].includes(scene) && (
         <TutorialManager />
       )}
     </>

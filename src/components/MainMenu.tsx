@@ -1,3 +1,4 @@
+import { useGameUIStore } from '../store/useGameUIStore';
 import { HybridFlag } from './HybridFlag';
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Play, Settings, FileText, RotateCcw, Cpu, Power, Volume2, VolumeX, Bot, Ghost, UserRound, Crosshair, Fingerprint, Eye, Hexagon } from 'lucide-react';
@@ -98,35 +99,27 @@ const GlitchFooter: React.FC<GlitchFooterProps> = ({
   );
 };
 
-interface Props {
-  hasSaveFile: boolean;
-  savedPlayerPreview?: {
-    name?: string;
-    avatar?: string;
-    className: string;
-    originName: string | null;
-    level: number;
-    highestFloorUnlocked: number;
-    totalPlaytimeSeconds: number;
-    gold: number;
-  } | null;
-  onContinue: () => void;
-  onNewGame: () => void;
-  currentLanguage: Language;
-  onLanguageChange: (lang: Language) => void;
-}
 
-export const MainMenu: React.FC<Props> = ({ 
-  hasSaveFile, 
-  savedPlayerPreview,
-  onContinue, 
-  onNewGame,
-  currentLanguage,
-  onLanguageChange
-}) => {
+
+
+
+export const MainMenu: React.FC = () => {
+  const { savedPlayerPreview, setScene } = useGameUIStore();
+  const hasSaveFile = !!savedPlayerPreview;
+  
+  const onContinue = () => {
+    setScene('hub');
+  };
+  
+  const onNewGame = () => {
+    setScene('character_creation');
+  };
+  
+  const { t, language: currentLanguage, setLanguage: onLanguageChange } = useTranslation();
+
   const [showConfirmNew, setShowConfirmNew] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'main' | 'settings' | 'changelog'>('main');
-  const { t } = useTranslation();
+  
   const { 
     init: initAudio, 
     playSfx, 

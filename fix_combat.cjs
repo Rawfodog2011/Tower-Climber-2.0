@@ -1,7 +1,14 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/core/engine/combat.ts', 'utf8');
+let file = fs.readFileSync('src/core/engine/combat.ts', 'utf8');
 
-code = code.replace(/builder\.staggerChange\('monster', Math\.max\(0, builder\.getState\(\)\.monsterStagger - 0\)\);/g, 'builder.setStagger(Math.max(0, builder.getState().monsterStagger - 0), builder.getState().monsterMaxStagger);');
-code = code.replace(/builder\.applyDamage\(target, finalDmg, attackerName, isCrit\);/g, 'builder.applyDamage(target, finalDmg, isCrit, attackerName);');
+file = file.replace(
+  'changeState(newState: CombatFsmStateId): void;\n}',
+  'changeState(newState: CombatFsmStateId): void;\n  combatResult?: CombatResult;\n}'
+);
 
-fs.writeFileSync('src/core/engine/combat.ts', code);
+file = file.replace(
+  'const { builder } = context;\n    const state = builder.getState();',
+  'const { builder, player } = context;\n    const state = builder.getState();'
+);
+
+fs.writeFileSync('src/core/engine/combat.ts', file);
