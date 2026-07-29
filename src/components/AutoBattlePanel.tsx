@@ -1,20 +1,17 @@
+import { SKILLS_DATABASE } from '../core/entities/skills';
 import React from 'react';
 import { Player } from '../types';
-import { SKILLS_DATABASE } from '../core/entities/skills';
 import { random } from '../core/engine/rng';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  setPlayer: React.Dispatch<React.SetStateAction<Player>>;
-  playerCombatSkills: string[];
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
-export const AutoBattlePanel: React.FC<Props> = ({
-  player,
-  setPlayer,
-  playerCombatSkills,
-}) => {
+export const AutoBattlePanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
+  
+  const playerCombatSkills = React.useMemo(() => {
+    return player.learnedSkills.filter(id => !(SKILLS_DATABASE[id] as any)?.isPassive);
+  }, [player.learnedSkills]);
   const { t } = useTranslation();
 
   return (
@@ -43,7 +40,7 @@ export const AutoBattlePanel: React.FC<Props> = ({
             <button 
               id="btn-new-directive"
               onClick={() => {
-                const newRule = { id: random().toString(36).substr(2, 9), condition: 'always', action: 'attack' };
+                const newRule = { id: random().toString(36).substr(2, 9), condition: 'always' as any, action: 'attack' };
                 setPlayer(p => ({ ...p, autoBattleRules: [...(p.autoBattleRules || []), newRule] }));
               }}
               className="text-[10px] bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-800 px-3 py-1 rounded uppercase tracking-widest transition-colors cursor-pointer"

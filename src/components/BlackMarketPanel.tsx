@@ -6,12 +6,10 @@ import { RELICS_DATABASE } from '../core/entities/relics';
 import { MATERIAL_NAMES } from '../core/engine/crafting';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  setPlayer: (p: Player) => void;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
-export const BlackMarketPanel: React.FC<Props> = ({ player, setPlayer }) => {
+export const BlackMarketPanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const { t } = useTranslation();
 

@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { Player } from '../types';
-import { Sparkles, RefreshCw, Zap, Shield, Flame, Cpu, Award, Activity, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import { Sparkles, Heart, Coins, Star, RefreshCw, Zap, Shield, Flame, Cpu, Award, Activity, AlertTriangle, ArrowUpRight } from 'lucide-react';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  onUpdatePlayer: (updated: Player) => void;
-  onResetToFloor1?: () => void;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
+
 
 export interface QuantumUpgradeDef {
   id: string;
@@ -20,70 +17,20 @@ export interface QuantumUpgradeDef {
   bonusText: (level: number) => string;
 }
 
-const QUANTUM_UPGRADES: QuantumUpgradeDef[] = [
+export const QUANTUM_UPGRADES: QuantumUpgradeDef[] = [
   {
-    id: 'quantum_bio',
-    name: 'Matriz Bio-Sintética',
-    description: 'Aumenta permanentemente o HP Máximo do operador em todas as linhas temporais.',
-    icon: Activity,
-    baseCost: 5,
-    costMultiplier: 1.8,
-    maxLevel: 20,
-    bonusText: (lvl) => `+${lvl * 5}% HP Máximo`
-  },
+    id: 'hp_boost', name: 'Vitalidade Quântica', description: 'Aumenta permanentemente o HP base em +50 por nível.', icon: Heart, baseCost: 1, costMultiplier: 1.5, maxLevel: 10, bonusText: (lvl) => '+' + (lvl * 50) + ' HP' },
   {
-    id: 'quantum_atk',
-    name: 'Overclock de Combate',
-    description: 'Sintoniza os reatores de pulso, aumentando o Dano (ATK) em todas as realidades.',
-    icon: Flame,
-    baseCost: 5,
-    costMultiplier: 1.8,
-    maxLevel: 20,
-    bonusText: (lvl) => `+${lvl * 5}% ATK Global`
-  },
+    id: 'atk_boost', name: 'Sobrecarga de Dano', description: 'Aumenta permanentemente o ATK base em +5 por nível.', icon: Zap, baseCost: 1, costMultiplier: 1.5, maxLevel: 10, bonusText: (lvl) => '+' + (lvl * 5) + ' ATK' },
   {
-    id: 'quantum_def',
-    name: 'Armadura de Vácuo',
-    description: 'Reforça a liga atômica do traje, garantindo Bônus de DEF permanente.',
-    icon: Shield,
-    baseCost: 5,
-    costMultiplier: 1.8,
-    maxLevel: 20,
-    bonusText: (lvl) => `+${lvl * 5}% DEF Global`
-  },
+    id: 'gold_boost', name: 'Algoritmo de Riqueza', description: 'Aumenta o ganho de Ouro em +10% por nível.', icon: Coins, baseCost: 2, costMultiplier: 2.0, maxLevel: 5, bonusText: (lvl) => '+' + (lvl * 10) + '% Ouro' },
   {
-    id: 'quantum_mp',
-    name: 'Capacitador Sub-Espacial',
-    description: 'Expande o reservatório de energia neural (EP/MP) do operador.',
-    icon: Zap,
-    baseCost: 5,
-    costMultiplier: 1.8,
-    maxLevel: 20,
-    bonusText: (lvl) => `+${lvl * 5}% EP/MP Máximo`
-  },
-  {
-    id: 'quantum_spd',
-    name: 'Impulso de Fótons',
-    description: 'Aumenta a velocidade de reação e iniciativa tática (SPD) nos combates.',
-    icon: ArrowUpRight,
-    baseCost: 8,
-    costMultiplier: 2.0,
-    maxLevel: 15,
-    bonusText: (lvl) => `+${lvl * 3}% SPD Global`
-  },
-  {
-    id: 'quantum_loot',
-    name: 'Filtro Recombinante',
-    description: 'Aumenta a probabilidade de encontrar equipamentos raros e estilhaços adicionais.',
-    icon: Sparkles,
-    baseCost: 10,
-    costMultiplier: 2.2,
-    maxLevel: 10,
-    bonusText: (lvl) => `+${lvl * 10}% Bônus de Drop`
-  }
+    id: 'xp_boost', name: 'Aprendizado Acelerado', description: 'Aumenta o ganho de XP em +10% por nível.', icon: Star, baseCost: 2, costMultiplier: 2.0, maxLevel: 5, bonusText: (lvl) => '+' + (lvl * 10) + '% XP' }
 ];
 
-export const QuantumPrestigePanel: React.FC<Props> = ({ player, onUpdatePlayer, onResetToFloor1 }) => {
+export const QuantumPrestigePanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
+  const onUpdatePlayer = setPlayer;
   const { t } = useTranslation();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -112,9 +59,7 @@ export const QuantumPrestigePanel: React.FC<Props> = ({ player, onUpdatePlayer, 
 
     onUpdatePlayer(updatedPlayer);
     setShowConfirmModal(false);
-    if (onResetToFloor1) {
-      onResetToFloor1();
-    }
+    
   };
 
   const buyUpgrade = (upgrade: QuantumUpgradeDef) => {

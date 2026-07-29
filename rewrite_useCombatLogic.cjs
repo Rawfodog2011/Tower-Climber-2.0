@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+const fs = require('fs');
+
+const code = `import { useCallback } from 'react';
 import { CombatAction, processTurn } from '../core/engine/combat';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useCombatStore } from '../store/useCombatStore';
@@ -41,12 +43,9 @@ export const useCombatLogic = () => {
       }
 
       if (combatResult.winner === 'player') {
-        if (selectedFloor === updatedPlayer.highestFloorUnlocked) {
-          updatedPlayer.highestFloorUnlocked += 1;
-        }
         if (combatResult.loot?.items && combatResult.loot.items.length > 0) {
           combatResult.loot.items.forEach((item, index) => {
-            triggerToast(`💎 Drop Raro: ${item.name}!`);
+            triggerToast(\`💎 Drop Raro: \${item.name}!\`);
             setTimeout(() => {
               let lootId = 'combat.loot_common';
               if (item.rarity === 'rare') lootId = 'combat.loot_rare';
@@ -60,7 +59,7 @@ export const useCombatLogic = () => {
         AudioManager.playSfx('combat.victory');
         setCombatEndMessage({
           title: 'Vitória!',
-          subtitle: `Você derrotou o ${combatState.monster.name} e obteve ${combatResult.loot?.xp} XP e ${combatResult.loot?.gold} Ouro.`,
+          subtitle: \`Você derrotou o \${combatState.monster.name} e obteve \${combatResult.loot?.xp} XP e \${combatResult.loot?.gold} Ouro.\`,
           isVictory: true
         });
       } else if (combatResult.winner === 'flee') {
@@ -87,7 +86,7 @@ export const useCombatLogic = () => {
       const achResult = checkAchievements(updatedPlayer);
       if (achResult.unlocked.length > 0) {
         AudioManager.playSfx('event.achievement_unlock');
-        achResult.unlocked.forEach(ach => triggerToast(`🏆 Conquista Desbloqueada: ${ach.name}!`));
+        achResult.unlocked.forEach(ach => triggerToast(\`🏆 Conquista Desbloqueada: \${ach.name}!\`));
       }
       const finalPlayer = achResult.updatedPlayer;
       
@@ -99,7 +98,7 @@ export const useCombatLogic = () => {
 
       if (newlyUnlocked.length > 0) {
         const unlockNames = newlyUnlocked.map(t => getTutorialName(t)).join(', ');
-        triggerToast(`✨ Novo Recurso Desbloqueado: ${unlockNames}! Retornando ao Hub para calibração...`);
+        triggerToast(\`✨ Novo Recurso Desbloqueado: \${unlockNames}! Retornando ao Hub para calibração...\`);
         setTimeout(() => {
           setScene('hub');
           setCombatState(null);
@@ -111,3 +110,5 @@ export const useCombatLogic = () => {
 
   return { handleCombatAction };
 };
+`;
+fs.writeFileSync('src/hooks/useCombatLogic.ts', code);

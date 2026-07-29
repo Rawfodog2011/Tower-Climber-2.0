@@ -4,9 +4,7 @@ import { BookOpen, Skull, MapPin, Search, ShieldAlert, CheckCircle } from 'lucid
 import { getMonsterLore } from '../core/entities/monsters';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
 const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
   e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231f2937' stroke='%23374151' stroke-width='4'/><text x='50' y='55' font-family='monospace' font-size='40' fill='%23ef4444' text-anchor='middle'>X</text></svg>";
@@ -31,7 +29,8 @@ const ALL_BASE_THREATS = [
   { id: 'mutante_biomecanico', name: 'Mutante Biomecânico', isBoss: false },
 ];
 
-export const BestiaryPanel: React.FC<Props> = ({ player }) => {
+export const BestiaryPanel: React.FC = () => {
+  const { player } = usePlayerStore();
   const [searchTerm, setSearchTerm] = useState('');
   const { t } = useTranslation();
 

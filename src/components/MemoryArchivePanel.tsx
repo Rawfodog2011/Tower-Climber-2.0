@@ -8,11 +8,10 @@ import { loadMemoryArchive } from '../core/engine/memoryArchive';
 import { useTranslation } from '../core/engine/translation';
 import { TTSButton } from './TTSButton';
 
-interface Props {
-  player: Player;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
-export const MemoryArchivePanel: React.FC<Props> = ({ player }) => {
+export const MemoryArchivePanel: React.FC = () => {
+  const { player } = usePlayerStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOriginId, setSelectedOriginId] = useState<string>('ciborgue_foragido');
   const [selectedFragmentKey, setSelectedFragmentKey] = useState<string | null>(null);

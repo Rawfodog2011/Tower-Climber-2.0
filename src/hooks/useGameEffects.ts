@@ -29,7 +29,7 @@ export const useGameEffects = () => {
   } = useGameUIStore();
   const { selectedFloor } = useExplorationStore();
   const {
-    logicalCombatState: combatState, combatEndMessage, combatSpeed,
+    combatState: combatState, combatEndMessage, combatSpeed,
     setEnrageFlash, setAttackerAnimating, setDmgPopups
   } = useCombatStore();
   const { triggerToast } = useToast();

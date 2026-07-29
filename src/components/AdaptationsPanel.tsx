@@ -4,11 +4,10 @@ import { Player } from '../types';
 import { ADAPTATIONS_DATABASE } from '../core/entities/adaptations';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
-export const AdaptationsPanel: React.FC<Props> = ({ player }) => {
+export const AdaptationsPanel: React.FC = () => {
+  const { player } = usePlayerStore();
   const { t } = useTranslation();
 
   return (

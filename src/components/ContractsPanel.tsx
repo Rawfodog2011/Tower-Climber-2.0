@@ -5,12 +5,10 @@ import { Briefcase, CheckCircle2, CircleDashed, TerminalSquare, AlertTriangle } 
 import { useTranslation } from '../core/engine/translation';
 import { AudioManager } from '../core/engine/audio';
 
-interface Props {
-  player: Player;
-  setPlayer: (p: Player) => void;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
 
-export const ContractsPanel: React.FC<Props> = ({ player, setPlayer }) => {
+export const ContractsPanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const { t } = useTranslation();
 

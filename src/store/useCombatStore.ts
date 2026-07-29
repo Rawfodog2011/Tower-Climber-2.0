@@ -9,11 +9,11 @@ interface CombatStore {
   isProcessingQueue: boolean;
   setIsProcessingQueue: (processing: boolean) => void;
   
-  logicalCombatState: CombatState | null;
-  setLogicalCombatState: (state: CombatState | null) => void;
+  combatState: CombatState | null;
+  setCombatState: (state: CombatState | null) => void;
 
-  visualCombatState: CombatState | null;
-  setVisualCombatState: (state: CombatState | ((prev: CombatState | null) => CombatState | null)) => void;
+  
+  
 
   combatLogFilter: 'all' | 'important';
   setCombatLogFilter: (filter: 'all' | 'important') => void;
@@ -44,13 +44,8 @@ export const useCombatStore = create<CombatStore>((set) => ({
   isProcessingQueue: false,
   setIsProcessingQueue: (isProcessingQueue) => set({ isProcessingQueue }),
   
-  logicalCombatState: null,
-  setLogicalCombatState: (logicalCombatState) => set({ logicalCombatState }),
-
-  visualCombatState: null,
-  setVisualCombatState: (stateUpdate) => set((state) => ({
-    visualCombatState: typeof stateUpdate === 'function' ? stateUpdate(state.visualCombatState) : stateUpdate
-  })),
+  combatState: null,
+  setCombatState: (combatState) => set({ combatState }),
 
   combatLogFilter: 'all',
   setCombatLogFilter: (combatLogFilter) => set({ combatLogFilter }),

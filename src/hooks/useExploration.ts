@@ -25,7 +25,7 @@ export const useExploration = () => {
     lastEventId, setLastEventId, activePuzzle, setActivePuzzle,
     pendingDiveParams, setPendingDiveParams, justCompletedAll, setJustCompletedAll
   } = useExplorationStore();
-  const { logicalCombatState, visualCombatState, setLogicalCombatState, setVisualCombatState, combatEndMessage, setCombatEndMessage } = useCombatStore();
+  const { combatState, setCombatState, combatEndMessage, setCombatEndMessage } = useCombatStore();
   const { triggerToast } = useToast();
 
   const pStatsMemo = useMemo(() => calculatePlayerStats(player), [player]);
@@ -43,12 +43,12 @@ export const useExploration = () => {
     } else {
       const monster = generateMonsterForFloor(floor);
       const initialState = startCombat(player, monster, floor);
-      setLogicalCombatState(initialState);
-      setVisualCombatState(initialState);
+      setCombatState(initialState);
+      (initialState);
       setCombatEndMessage(null);
       setScene('combat');
     }
-  }, [player.isFarmActive, lastEventId, setActiveEvent, setEventLog, setScene, setLastEventId, setLogicalCombatState, setVisualCombatState, setCombatEndMessage]);
+  }, [player.isFarmActive, lastEventId, setActiveEvent, setEventLog, setScene, setLastEventId, setCombatState, setCombatEndMessage]);
 
   const handleStartDive = useCallback((floor: number, forceCombat: boolean = false) => {
     const pending = getPendingTutorials(player);
@@ -240,20 +240,18 @@ export const useExploration = () => {
 
   const handleReturnToHub = useCallback(() => {
     const originId = player.originId || 'ciborgue_foragido';
-    if (visualCombatState?.monster.id === 'mainframe_prime' && combatEndMessage?.isVictory && originId !== 'nucleo_matriz_origin') {
+    if (combatState?.monster.id === 'mainframe_prime' && combatEndMessage?.isVictory && originId !== 'nucleo_matriz_origin') {
       const res = markTimelineCompleted(originId);
       setJustCompletedAll(res.justCompletedAll);
       setScene('timeline_closure');
-      setLogicalCombatState(null);
-      setVisualCombatState(null);
+      setCombatState(null);
       setCombatEndMessage(null);
       return;
     }
     setScene('hub');
-    setLogicalCombatState(null);
-      setVisualCombatState(null);
+    setCombatState(null);
     setCombatEndMessage(null);
-  }, [player.originId, visualCombatState?.monster?.id, combatEndMessage?.isVictory, setJustCompletedAll, setScene, setLogicalCombatState, setVisualCombatState, setCombatEndMessage]);
+  }, [player.originId, combatState?.monster?.id, combatEndMessage?.isVictory, setJustCompletedAll, setScene, setCombatState, setCombatEndMessage]);
 
   return {
     proceedWithDive,

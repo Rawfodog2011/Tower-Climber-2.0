@@ -3,31 +3,14 @@ import { Cpu } from 'lucide-react';
 import { Player, Item } from '../types';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  handleSocketModule: (
-    moduleItem: Item,
-    invIndex: number,
-    equipment: { item: Item; source: string; index: number },
-    socketIndex: number
-  ) => Item | undefined;
-  handleUnsocketModule: (
-    socketIndex: number,
-    equipment: { item: Item; source: string; index: number }
-  ) => Item | undefined;
-  handleMergeChips: (baseItem: Item) => void;
-  getRarityStyle: (rarity: string) => string;
-  renderStatModifiers?: (item: Item) => React.ReactNode;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useCrafting } from '../hooks/useCrafting';
+import { getRarityStyle } from './uiUtils';
 
-export const WeldingBenchPanel: React.FC<Props> = ({
-  player,
-  handleSocketModule,
-  handleUnsocketModule,
-  handleMergeChips,
-  getRarityStyle,
-  renderStatModifiers: propRenderStatModifiers,
-}) => {
+export const WeldingBenchPanel: React.FC = () => {
+  const { player } = usePlayerStore();
+  const { handleSocketModule, handleUnsocketModule, handleMergeChips } = useCrafting();
+
   const { t } = useTranslation();
 
   const [soldagemSubTab, setSoldagemSubTab] = useState<'socket' | 'merge'>('socket');
@@ -39,7 +22,7 @@ export const WeldingBenchPanel: React.FC<Props> = ({
   const [selectedSocketIndex, setSelectedSocketIndex] = useState<number | null>(null);
 
   // Internal fallback if prop is not supplied
-  const renderStatModifiers = propRenderStatModifiers || ((item: Item) => {
+  const renderStatModifiers = ((item: Item) => {
     if (!item.statModifiers) return null;
     const mods = [];
     if (item.statModifiers.atk) mods.push(<span key="atk" className="text-red-400">+{item.statModifiers.atk} ATK</span>);

@@ -11,7 +11,6 @@ import { useExplorationStore } from '../store/useExplorationStore';
 import { useCombatStore } from '../store/useCombatStore';
 import { useExploration } from '../hooks/useExploration';
 import { useCombatLogic } from '../hooks/useCombatLogic';
-import { useCombatQueueRunner } from '../hooks/useCombatQueueRunner';
 import { calculatePlayerStats } from '../core/entities/player';
 import { useMemo, useRef } from 'react';
 
@@ -24,13 +23,13 @@ export const CombatScene: React.FC = () => {
     selectedFloor, setSelectedFloor 
   } = useExplorationStore();
   const {
-    visualCombatState: combatState, combatEndMessage, combatSpeed, setCombatSpeed,
+    combatState, combatEndMessage, combatSpeed, setCombatSpeed,
     combatLogFilter, setCombatLogFilter, dmgPopups, attackerAnimating, isProcessingQueue: isAnimating
   } = useCombatStore();
 
   const { handleStartDive, handleReturnToHub } = useExploration();
   const { handleCombatAction } = useCombatLogic();
-  useCombatQueueRunner();
+  
 
   const playerCombatSkills = useMemo(() => player.learnedSkills, [player.learnedSkills]);
   const pStatsMemo = useMemo(() => calculatePlayerStats(player), [player]);

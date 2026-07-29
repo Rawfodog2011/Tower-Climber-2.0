@@ -5,37 +5,18 @@ import { CRAFTING_COSTS, MATERIAL_NAMES, GOLD_VALUES } from '../core/engine/craf
 import { useTranslation } from '../core/engine/translation';
 import { Wrench } from 'lucide-react';
 
-interface Props {
-  player: Player;
-  setPlayer: React.Dispatch<React.SetStateAction<Player>>;
-  handleCraft: (rarity: Rarity) => void;
-  handleConvertMaterials: (direction: 'common_to_rare' | 'rare_to_epic', quantity?: number) => void;
-  handleDismantle: (index: number) => void;
-  handleSell: (index: number) => void;
-  handleDismantleBatch: (items: Item[]) => void;
-  handleSellBatch: (items: Item[]) => void;
-  inventoryMessage: { type: 'error' | 'success'; text: string } | null;
-  getRarityStyle: (rarity: string) => string;
-  getRarityGradient: (rarity: string) => string;
-  getItemIcon: (type: string, className?: string) => React.ReactNode;
-  renderManufacturerBadge: (item: Item) => React.ReactNode;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useGameUIStore } from '../store/useGameUIStore';
+import { useInventory } from '../hooks/useInventory';
+import { useCrafting } from '../hooks/useCrafting';
+import { getRarityStyle, getRarityGradient, getItemIcon, renderManufacturerBadge } from './uiUtils';
 
-export const ForgePanel: React.FC<Props> = ({
-  player,
-  setPlayer,
-  handleCraft,
-  handleConvertMaterials,
-  handleDismantle,
-  handleSell,
-  handleDismantleBatch,
-  handleSellBatch,
-  inventoryMessage,
-  getRarityStyle,
-  getRarityGradient,
-  getItemIcon,
-  renderManufacturerBadge,
-}) => {
+export const ForgePanel: React.FC = () => {
+  const { player, setPlayer } = usePlayerStore();
+  const { inventoryMessage } = useGameUIStore();
+  const { handleDismantle, handleSell, handleDismantleBatch, handleSellBatch } = useInventory();
+  const { handleCraft, handleConvertMaterials } = useCrafting();
+
   const { t } = useTranslation();
 
   // State moved inside the panel

@@ -8,25 +8,21 @@ import { StatusPanel } from './StatusPanel';
 import { useTranslation } from '../../core/engine/translation';
 import { useAudio } from '../../core/engine/useAudio';
 
-interface Props {
-  player: Player;
-  stats: { hp: number, mp: number, atk: number, def: number, spd: number };
-  CLASSES: Record<string, ClassDefinition>;
-  inventoryMessage: { type: 'error'|'success', text: string } | null;
-  handleEquip: (item: Item) => void;
-  handleUnequip: (slotId: keyof Player['equipment']) => void;
-  handleAutoEquip: () => void;
-  canClassEquipItem: (classId: string, item: Item) => boolean;
-  getItemIcon: (type: string, className?: string) => React.ReactNode;
-  getRarityStyle: (rarity: string) => string;
-  getRarityGradient: (rarity: string) => string;
-  renderManufacturerBadge: (item: Item) => React.ReactNode;
-}
+import { usePlayerStore } from '../../store/usePlayerStore';
+import { useGameUIStore } from '../../store/useGameUIStore';
+import { useInventory } from '../../hooks/useInventory';
+import { calculatePlayerStats } from '../../core/entities/player';
+import { CLASSES } from '../../core/entities/classes';
+import { canClassEquipItem } from '../../core/entities/items';
+import { getItemIcon, getRarityStyle, getRarityGradient, renderManufacturerBadge } from '../uiUtils';
 
-export const EquipmentTerminal: React.FC<Props> = ({
-  player, stats, CLASSES, inventoryMessage, handleEquip, handleUnequip, handleAutoEquip,
-  canClassEquipItem, getItemIcon, getRarityStyle, getRarityGradient, renderManufacturerBadge
-}) => {
+export const EquipmentTerminal: React.FC = () => {
+  const { player } = usePlayerStore();
+  const { inventoryMessage } = useGameUIStore();
+  const { handleEquip, handleUnequip, handleAutoEquip } = useInventory();
+  
+  const stats = React.useMemo(() => calculatePlayerStats(player), [player]);
+
   const [hoveredItem, setHoveredItem] = useState<Item | null>(null);
   const { t } = useTranslation();
   const { playSfx } = useAudio();

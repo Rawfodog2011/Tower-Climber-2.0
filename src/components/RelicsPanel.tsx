@@ -3,17 +3,14 @@ import { Player } from '../types';
 import { RELICS_DATABASE, getRelicUpgradeCost } from '../core/entities/relics';
 import { useTranslation } from '../core/engine/translation';
 
-interface Props {
-  player: Player;
-  handleUpgradeRelic: (relicId: string) => void;
-  inventoryMessage: { text: string; type: 'error' | 'success' } | null;
-}
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useGameUIStore } from '../store/useGameUIStore';
+import { useCrafting } from '../hooks/useCrafting';
 
-export const RelicsPanel: React.FC<Props> = ({
-  player,
-  handleUpgradeRelic,
-  inventoryMessage,
-}) => {
+export const RelicsPanel: React.FC = () => {
+  const { player } = usePlayerStore();
+  const { inventoryMessage } = useGameUIStore();
+  const { handleUpgradeRelic } = useCrafting();
   const { t } = useTranslation();
 
   return (
