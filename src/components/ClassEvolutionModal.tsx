@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal, Shield, Cpu, Zap, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from '../core/engine/translation';
 import { TTSButton } from './TTSButton';
+import { useAudio } from '../core/engine/useAudio';
 
 interface Props {
   classId: string;
@@ -14,6 +16,12 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
   const [typedText, setTypedText] = useState('');
   const [countdown, setCountdown] = useState(12);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
+
+  const handleClose = () => {
+    playSfx('ui.panel_close');
+    onClose();
+  };
 
   // Progressive typing effect
   useEffect(() => {
@@ -35,7 +43,7 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
   // Auto-close countdown
   useEffect(() => {
     if (countdown <= 0) {
-      onClose();
+      handleClose();
       return;
     }
     const timer = setTimeout(() => {
@@ -43,11 +51,25 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdown, onClose]);
+  }, [countdown, handleClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-mono">
-      <style>{`
+    <AnimatePresence mode="wait">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-mono"
+      >
+        {/* Full Screen Flash Celebration */}
+        <motion.div 
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 0, scale: 1.5 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="absolute inset-0 bg-emerald-300 pointer-events-none z-50 mix-blend-overlay"
+        />
+
+        <style>{`
         @keyframes crt-flicker {
           0% { opacity: 0.96; }
           50% { opacity: 1; }
@@ -72,7 +94,13 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
       `}</style>
 
       {/* CRT Monitor container */}
-      <div className="relative w-full max-w-2xl border-2 border-emerald-500/50 rounded-xl overflow-hidden glitch-border bg-black">
+      <motion.div 
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        className="relative w-full max-w-2xl border-2 border-emerald-500/50 rounded-xl overflow-hidden glitch-border bg-black"
+      >
         {/* CRT Overlay elements */}
         <div className="absolute inset-0 crt-bg pointer-events-none z-0"></div>
         <div className="absolute inset-0 crt-scanlines pointer-events-none z-10"></div>
@@ -136,14 +164,15 @@ export const ClassEvolutionModal: React.FC<Props> = ({ classId, className, narra
               {t("Bypass automático em")} <span className="text-emerald-400 font-bold">{countdown}s</span> {t("ou pressione continuar")}
             </span>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-full md:w-auto px-6 py-2 bg-emerald-950/50 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-bold uppercase tracking-widest rounded transition-all cursor-pointer text-xs hover:shadow-[0_0_15px_rgba(52,211,153,0.4)] text-center"
             >
               {t("[ BYPASS // CONTINUAR ]")}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Item, Player } from '../../types';
 
 interface Props {
@@ -47,14 +48,16 @@ export const EquipmentSlot: React.FC<Props> = ({
 
   return (
     <div 
-      className="relative flex flex-col items-center group z-20"
+      className="relative flex flex-col items-center z-20"
       onMouseEnter={() => onHover(item || undefined)}
       onMouseLeave={() => onHover(undefined)}
     >
       <span className="text-[10px] uppercase tracking-widest text-cyan-500/70 font-mono mb-1.5">{label}</span>
-      <div 
+      <motion.div 
+        whileHover={{ scale: 1.05, filter: 'brightness(1.2)' }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => onClick(slotId)}
-        className={`relative ${sizeClass} cursor-pointer transition-all duration-200 group-hover:scale-[1.05] group-hover:brightness-125
+        className={`relative ${sizeClass} cursor-pointer transition-colors duration-200
                     ${item ? getRarityStyle(item.rarity) : 'bg-slate-900/40 border border-cyan-900/40'} 
                     flex items-center justify-center shadow-lg`}
         style={{ clipPath }}
@@ -70,7 +73,7 @@ export const EquipmentSlot: React.FC<Props> = ({
              {getItemIcon(slotId, "w-6 h-6 text-cyan-900/60")}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -19,7 +19,7 @@ export function useAudio() {
     initialized: audioState.initialized,
 
     init: () => AudioManager.init(),
-    playSfx: (id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number }) => AudioManager.playSfx(id, options),
+    playSfx: (id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number; rarity?: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' }) => AudioManager.playSfx(id, options),
     playMusic: (trackId: string, options?: { fadeInSeconds?: number }) => AudioManager.playMusic(trackId, options),
     stopMusic: (fadeOutSeconds?: number) => AudioManager.stopMusic(fadeOutSeconds),
     setSfxVolume: (value: number) => AudioManager.setSfxVolume(value),

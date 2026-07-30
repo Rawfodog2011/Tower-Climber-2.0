@@ -5,6 +5,7 @@ import { ShoppingCart, RefreshCw, Box, Zap, Shield } from 'lucide-react';
 import { RELICS_DATABASE } from '../core/entities/relics';
 import { MATERIAL_NAMES } from '../core/engine/crafting';
 import { useTranslation } from '../core/engine/translation';
+import { useAudio } from '../core/engine/useAudio';
 
 import { usePlayerStore } from '../store/usePlayerStore';
 
@@ -12,6 +13,7 @@ export const BlackMarketPanel: React.FC = () => {
   const { player, setPlayer } = usePlayerStore();
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const { t } = useTranslation();
+  const { playSfx } = useAudio();
 
   // Initialize market if not present
   useEffect(() => {
@@ -26,9 +28,11 @@ export const BlackMarketPanel: React.FC = () => {
   const handleBuy = (itemId: string) => {
     const res = buyMarketItem(player, itemId);
     if (res.success) {
+      playSfx('ui.buy_item');
       setPlayer(res.updatedPlayer);
       setMessage({ text: t(res.message), type: 'success' });
     } else {
+      playSfx('ui.error');
       setMessage({ text: t(res.message), type: 'error' });
     }
     setTimeout(() => setMessage(null), 3000);
@@ -37,9 +41,11 @@ export const BlackMarketPanel: React.FC = () => {
   const handleReroll = () => {
     const res = rerollMarket(player);
     if (res.success) {
+      playSfx('ui.transaction');
       setPlayer(res.updatedPlayer);
       setMessage({ text: t(res.message), type: 'success' });
     } else {
+      playSfx('ui.error');
       setMessage({ text: t(res.message), type: 'error' });
     }
     setTimeout(() => setMessage(null), 3000);

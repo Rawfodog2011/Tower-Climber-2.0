@@ -7,12 +7,12 @@ class AudioManagerClass {
   private musicVolume = 0.5;
   private muted = false;
 
-  private sfxGain: any = null; // Tone.Gain
-  private musicGain: any = null; // Tone.Gain
+  private sfxGain: Tone.Gain<"gain"> | null = null;
+  private musicGain: Tone.Gain<"gain"> | null = null;
 
-  private activeTrack: { id: string; gainNode: any; dispose: () => void; isMainframePrime?: boolean } | null = null;
-  private transitionTrack: { id: string; gainNode: any; dispose: () => void } | null = null;
-  private pendingTrack: { trackId: string; options?: any } | null = null;
+  private activeTrack: { id: string; gainNode: Tone.Gain<"gain">; dispose: () => void; isMainframePrime?: boolean } | null = null;
+  private transitionTrack: { id: string; gainNode: Tone.Gain<"gain">; dispose: () => void } | null = null;
+  private pendingTrack: { trackId: string; options?: { isMainframePrime?: boolean } } | null = null;
 
   private listeners = new Set<(state: { sfxVolume: number; musicVolume: number; muted: boolean; initialized: boolean }) => void>();
 
@@ -67,7 +67,7 @@ class AudioManagerClass {
     }
   }
 
-  playSfx(id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number; rarity?: any }): void {
+  playSfx(id: string, options?: { volume?: number; pitch?: number; damageMultiplier?: number; rarity?: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' }): void {
     if (!this.initialized || this.muted) {
       return;
     }
@@ -311,19 +311,64 @@ class AudioManagerClass {
           filter.dispose();
         }, 300);
       } else if (id === 'combat.level_up') {
-        const synth = new Tone.Synth({
+        // FM Synth sweep + bright chord
+        const fmSynth = new Tone.FMSynth({
+          harmonicity: 1.5,
+          modulationIndex: 3.5,
           oscillator: { type: 'sine' },
-          envelope: { attack: 0.02, decay: 0.2, sustain: 0.3, release: 0.5 }
+          modulation: { type: 'square' },
+          envelope: { attack: 0.05, decay: 0.3, sustain: 0.2, release: 1.0 }
         }).connect(this.sfxGain);
-        synth.volume.setValueAtTime(customVol, now);
+        fmSynth.volume.setValueAtTime(customVol + 2, now);
         
-        const base = 261.63; // C4
-        synth.triggerAttackRelease(base, 0.1, now);
-        synth.triggerAttackRelease(base * 1.5, 0.1, now + 0.12);
-        synth.triggerAttackRelease(base * 2.0, 0.1, now + 0.24);
-        synth.triggerAttackRelease(base * 2.5, 0.4, now + 0.36);
-        
-        setTimeout(() => synth.dispose(), 1500);
+        const delay = new Tone.FeedbackDelay(0.15, 0.4).connect(this.sfxGain);
+        const poly = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.1, decay: 0.5, sustain: 0.3, release: 1.5 }
+        }).connect(delay);
+        poly.volume.setValueAtTime(customVol - 4, now);
+
+        fmSynth.triggerAttackRelease(440, 0.5, now);
+        fmSynth.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+
+        const chord = [440, 554.37, 659.25, 880]; // A Major
+        poly.triggerAttackRelease(chord, 1.0, now + 0.1);
+
+        setTimeout(() => {
+          fmSynth.dispose();
+          poly.dispose();
+          delay.dispose();
+        }, 2500);
+      } else if (id === 'combat.class_evolution') {
+        const verb = new Tone.Reverb(2.5).connect(this.sfxGain);
+        verb.generate().then(() => {
+          const poly = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sawtooth' },
+            envelope: { attack: 0.5, decay: 1.0, sustain: 0.5, release: 2.0 }
+          }).connect(verb);
+          poly.volume.setValueAtTime(customVol + 2, Tone.now());
+
+          const chord1 = [261.63, 329.63, 392.00, 523.25]; // C Major
+          const chord2 = [349.23, 440.00, 523.25, 698.46]; // F Major
+          const chord3 = [392.00, 493.88, 587.33, 783.99]; // G Major
+          
+          poly.triggerAttackRelease(chord1, 1.0, Tone.now());
+          poly.triggerAttackRelease(chord2, 1.0, Tone.now() + 1.0);
+          poly.triggerAttackRelease(chord3, 2.0, Tone.now() + 2.0);
+
+          const noise = new Tone.NoiseSynth({
+            noise: { type: 'white' },
+            envelope: { attack: 2.0, decay: 2.0, sustain: 0, release: 1.0 }
+          }).connect(verb);
+          noise.volume.setValueAtTime(customVol - 8, Tone.now());
+          noise.triggerAttackRelease(2.0, Tone.now());
+
+          setTimeout(() => {
+            poly.dispose();
+            noise.dispose();
+            verb.dispose();
+          }, 6000);
+        });
       } else if (id === 'combat.victory') {
         const poly = new Tone.PolySynth(Tone.Synth, {
           oscillator: { type: 'sine' },
@@ -452,39 +497,121 @@ class AudioManagerClass {
           synth.dispose();
           delay.dispose();
         }, 800);
+      } else if (id === 'combat.boss_defeat') {
+        const verb = new Tone.Reverb(3.0).connect(this.sfxGain);
+        verb.generate().then(() => {
+          const fmSynth = new Tone.FMSynth({
+            harmonicity: 0.5,
+            modulationIndex: 10,
+            oscillator: { type: 'sine' },
+            modulation: { type: 'square' },
+            envelope: { attack: 0.1, decay: 2.0, sustain: 0.2, release: 2.0 }
+          }).connect(verb);
+          fmSynth.volume.setValueAtTime(customVol + 4, Tone.now());
+          
+          fmSynth.triggerAttackRelease(50, 2.0, Tone.now());
+          fmSynth.frequency.exponentialRampToValueAtTime(10, Tone.now() + 2.0);
+
+          const noise = new Tone.NoiseSynth({
+            noise: { type: 'pink' },
+            envelope: { attack: 0.05, decay: 2.5, sustain: 0, release: 1.0 }
+          }).connect(verb);
+          noise.volume.setValueAtTime(customVol - 2, Tone.now());
+          noise.triggerAttackRelease(2.5, Tone.now());
+
+          setTimeout(() => {
+            fmSynth.dispose();
+            noise.dispose();
+            verb.dispose();
+          }, 5000);
+        });
       } else if (id === 'combat.loot_legendary') {
-        const delay = new Tone.FeedbackDelay(0.12, 0.25).connect(this.sfxGain);
+        const delay = new Tone.FeedbackDelay(0.2, 0.4).connect(this.sfxGain);
         const poly = new Tone.PolySynth(Tone.Synth, {
-          oscillator: { type: 'triangle' },
-          envelope: { attack: 0.01, decay: 0.25, sustain: 0.3, release: 0.3 }
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.05, decay: 0.5, sustain: 0.4, release: 1.2 }
         }).connect(delay);
-        poly.volume.setValueAtTime(customVol - 2, now);
+        poly.volume.setValueAtTime(customVol, now);
         
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        poly.triggerAttack(notes, now);
-        poly.triggerRelease(notes, now + 0.4);
+        const chord = [523.25, 659.25, 783.99, 1046.50]; // Cmaj7
+        poly.triggerAttackRelease(chord, 1.0, now);
         
+        // Add a bright sparkle
+        const sparkle = new Tone.Synth({
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 }
+        }).connect(delay);
+        sparkle.volume.setValueAtTime(customVol - 4, now);
+        sparkle.triggerAttackRelease(2093.00, 0.1, now + 0.1);
+        sparkle.triggerAttackRelease(2637.02, 0.1, now + 0.2);
+        sparkle.triggerAttackRelease(3135.96, 0.2, now + 0.3);
+
         setTimeout(() => {
           poly.dispose();
+          sparkle.dispose();
           delay.dispose();
-        }, 1200);
+        }, 3000);
       } else if (id === 'combat.loot_mythic') {
-        const delay = new Tone.FeedbackDelay(0.15, 0.45).connect(this.sfxGain);
+        const verb = new Tone.Reverb(2.0).connect(this.sfxGain);
+        verb.generate().then(() => {
+          const delay = new Tone.FeedbackDelay(0.25, 0.5).connect(verb);
+          const poly = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sawtooth' },
+            envelope: { attack: 0.1, decay: 0.8, sustain: 0.5, release: 2.0 }
+          }).connect(delay);
+          poly.volume.setValueAtTime(customVol + 2, Tone.now());
+          
+          const chord = [523.25, 622.25, 783.99, 1108.73]; // C minor/maj7 vibe
+          poly.triggerAttackRelease(chord, 1.5, Tone.now());
+          
+          const synth = new Tone.Synth({
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.05, decay: 1.0, sustain: 0.2, release: 1.0 }
+          }).connect(verb);
+          synth.volume.setValueAtTime(customVol + 4, Tone.now());
+          
+          synth.triggerAttackRelease(523.25, 0.5, Tone.now());
+          synth.frequency.setValueAtTime(523.25, Tone.now());
+          synth.frequency.exponentialRampToValueAtTime(4186.01, Tone.now() + 1.0);
+          
+          setTimeout(() => {
+            poly.dispose();
+            synth.dispose();
+            delay.dispose();
+            verb.dispose();
+          }, 4000);
+        });
+      } else if (id === 'ui.equip_item') {
+        const filter = new Tone.Filter({ type: 'highpass', frequency: 800 }).connect(this.sfxGain);
         const synth = new Tone.Synth({
-          oscillator: { type: 'sine' },
-          envelope: { attack: 0.001, decay: 0.3, sustain: 0.2, release: 0.5 }
-        }).connect(delay);
-        synth.volume.setValueAtTime(customVol + 1, now);
-        
-        synth.triggerAttack(523.25, now);
-        synth.frequency.setValueAtTime(523.25, now);
-        synth.frequency.exponentialRampToValueAtTime(2093.00, now + 0.25);
-        synth.triggerRelease(now + 0.3);
-        
+          oscillator: { type: 'square' },
+          envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.05 }
+        }).connect(filter);
+        synth.volume.setValueAtTime(customVol - 6, now);
+        synth.triggerAttackRelease(1200, 0.05, now);
+        synth.triggerAttackRelease(1600, 0.05, now + 0.06);
         setTimeout(() => {
           synth.dispose();
-          delay.dispose();
-        }, 1500);
+          filter.dispose();
+        }, 300);
+      } else if (id === 'ui.buy_item') {
+        const synth = new Tone.Synth({
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.05 }
+        }).connect(this.sfxGain);
+        synth.volume.setValueAtTime(customVol, now);
+        synth.triggerAttackRelease(880, 0.05, now);
+        synth.triggerAttackRelease(1108.73, 0.1, now + 0.08); // C#6
+        setTimeout(() => synth.dispose(), 400);
+      } else if (id === 'ui.transaction') {
+        const synth = new Tone.Synth({
+          oscillator: { type: 'square' },
+          envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.05 }
+        }).connect(this.sfxGain);
+        synth.volume.setValueAtTime(customVol - 8, now);
+        synth.triggerAttackRelease(600, 0.05, now);
+        synth.triggerAttackRelease(800, 0.05, now + 0.06);
+        setTimeout(() => synth.dispose(), 300);
       } else if (id === 'event.puzzle_correct') {
         const synth = new Tone.Synth({
           oscillator: { type: 'sine' },
@@ -691,10 +818,10 @@ class AudioManagerClass {
     }
   }
 
-  private buildAmbientTrack(trackId: string, options?: { isMainframePrime?: boolean }): { id: string; gainNode: any; dispose: () => void } {
+  private buildAmbientTrack(trackId: string, options?: { isMainframePrime?: boolean }): { id: string; gainNode: Tone.Gain<"gain">; dispose: () => void } {
     const now = Tone.now();
-    const gainNode = new Tone.Gain(0).connect(this.musicGain);
-    const disposables: any[] = [];
+    const gainNode = new Tone.Gain(0).connect(this.musicGain!);
+    const disposables: Array<{ dispose: () => any; stop?: () => any }> = [];
 
     let bpm = 90;
 

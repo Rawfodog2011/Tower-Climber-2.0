@@ -6,22 +6,17 @@ import { getXpRequiredForNextLevel } from '../core/math/progression';
 import { SKILLS_DATABASE, canClassUseSkill } from '../core/entities/skills';
 import { NEURAL_MATRIX_DATABASE } from '../core/entities/neuralMatrix';
 import { ADAPTATIONS_DATABASE } from '../core/entities/adaptations';
-import { Activity, Shield, Zap, Info, X, Bot, Ghost, UserRound, Crosshair, Fingerprint, Eye, Hexagon, Cpu } from 'lucide-react';
+import { Activity, Shield, Zap, Info, X } from 'lucide-react';
 import { ORIGINS } from '../core/entities/origins';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
+import { AssetDictionary } from '../core/assets';
 
 const getAvatarIcon = (id?: string) => {
-  switch (id) {
-    case 'bot': return <Bot className="w-8 h-8 text-cyan-400" />;
-    case 'ghost': return <Ghost className="w-8 h-8 text-cyan-400" />;
-    case 'crosshair': return <Crosshair className="w-8 h-8 text-cyan-400" />;
-    case 'fingerprint': return <Fingerprint className="w-8 h-8 text-cyan-400" />;
-    case 'eye': return <Eye className="w-8 h-8 text-cyan-400" />;
-    case 'hexagon': return <Hexagon className="w-8 h-8 text-cyan-400" />;
-    case 'cpu': return <Cpu className="w-8 h-8 text-cyan-400" />;
-    default: return <UserRound className="w-8 h-8 text-cyan-400" />;
-  }
+  const Icon = AssetDictionary.portraits[id as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default;
+  return <div className="w-16 h-16 rounded-md overflow-hidden bg-slate-900 border border-slate-700 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+    <Icon />
+  </div>;
 };
 
 import { usePlayerStore } from '../store/usePlayerStore';

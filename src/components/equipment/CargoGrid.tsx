@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Item, Player } from '../../types';
 import { Sparkles, ArrowUp } from 'lucide-react';
 import { useTranslation } from '../../core/engine/translation';
@@ -112,18 +113,20 @@ export const CargoGrid: React.FC<Props> = ({
           )}
           
           {handleAutoEquip && (
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleAutoEquip}
-              className={`px-3 py-1 text-[10px] font-mono tracking-widest uppercase transition-all duration-300 rounded border flex items-center gap-1.5 ${
+              className={`px-3 py-1 text-[10px] font-mono tracking-widest uppercase transition-colors duration-300 rounded border flex items-center gap-1.5 ${
                 hasUpgrade 
-                  ? 'bg-emerald-950/50 hover:bg-emerald-900/70 border-emerald-500 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] hover:shadow-[0_0_22px_rgba(16,185,129,0.7)] animate-[pulse_2.2s_infinite]'
-                  : 'bg-cyan-950/50 hover:bg-cyan-900 border-cyan-800 text-cyan-300'
+                  ? 'bg-emerald-950/50 border-emerald-500 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-[pulse_2.2s_infinite]'
+                  : 'bg-cyan-950/50 border-cyan-800 text-cyan-300'
               }`}
             >
               {hasUpgrade && <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" />}
               <span>{t("Auto-Equipar")}</span>
               {hasUpgrade && <ArrowUp className="w-3 h-3 text-emerald-400 animate-bounce" />}
-            </button>
+            </motion.button>
           )}
           <span className="font-mono text-cyan-600 text-[10px] tracking-widest">
             {t("CAPACIDADE")}: {inventory.length} / {TOTAL_SLOTS}
@@ -154,20 +157,33 @@ export const CargoGrid: React.FC<Props> = ({
             const isEquipable = canEquip(item);
 
             return (
-              <div 
+              <motion.div 
                 key={idx}
+                whileHover={isEquipable ? { scale: 1.15, zIndex: 30, filter: 'brightness(1.3)' } : { filter: 'grayscale(0%)', opacity: 1 }}
+                whileTap={isEquipable ? { scale: 0.9 } : {}}
                 onMouseEnter={() => onHover(item)}
                 onMouseLeave={() => onHover(undefined)}
                 onClick={() => onClick(item)}
-                className={`relative aspect-square rounded-sm border flex items-center justify-center transition-all duration-150 shadow-md ${
+                className={`relative aspect-square rounded-sm border flex items-center justify-center transition-colors duration-150 shadow-md ${
                   isEquipable 
-                    ? `cursor-pointer hover:scale-105 hover:brightness-125 hover:z-20 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] ${getRarityStyle(item.rarity)}` 
-                    : 'opacity-40 cursor-not-allowed border-slate-800 bg-slate-900 grayscale hover:grayscale-0 hover:opacity-100'
+                    ? `cursor-pointer ${getRarityStyle(item.rarity)}` 
+                    : 'opacity-40 cursor-not-allowed border-slate-800 bg-slate-900 grayscale'
                 }`}
               >
                 <div className={`w-full h-full absolute inset-0 opacity-20 pointer-events-none ${getRarityGradient(item.rarity)}`} />
                 {getItemIcon(item.type, "w-6 h-6 text-slate-200 drop-shadow-lg relative z-10")}
                 
+                {item.rarity === 'legendary' && (
+                  <div className="absolute top-0.5 right-0.5 text-amber-300 z-20 animate-pulse pointer-events-none">
+                    <Sparkles className="w-3 h-3 drop-shadow-[0_0_6px_rgba(245,158,11,1)]" />
+                  </div>
+                )}
+                {item.rarity === 'mythic' && (
+                  <div className="absolute top-0.5 right-0.5 text-rose-300 z-20 animate-bounce pointer-events-none">
+                    <Sparkles className="w-3.5 h-3.5 drop-shadow-[0_0_10px_rgba(244,63,94,1)] text-rose-400" />
+                  </div>
+                )}
+
                 {item.level && (
                   <span className="absolute bottom-0.5 right-1 text-[8px] font-mono font-bold text-white z-10">
                     {t("L")}{item.level}
@@ -175,7 +191,7 @@ export const CargoGrid: React.FC<Props> = ({
                 )}
                 {/* Tech corner accent */}
                 <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-cyan-500/50 opacity-50 pointer-events-none" />
-              </div>
+              </motion.div>
             );
           })}
         </div>

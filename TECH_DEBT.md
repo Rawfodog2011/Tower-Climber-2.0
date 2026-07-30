@@ -31,14 +31,13 @@ Estes são os principais calcanhares de Aquiles da base de código atual que req
 
 ### 🛑 Dívidas Pagas Recentemente (Histórico de Sucesso)
 *   **[PAGO] TD-001: God Component (App.tsx):** O App.tsx foi desmembrado com sucesso na Sprint de Desacoplamento. Todos os Hooks e Scenes agora utilizam Zustand independentemente. O prop drilling foi eliminado da arquitetura principal.
-
+*   **[PAGO] TD-002: Background Timer em Web Worker:** O loop de combate e timers do Auto-Farm foram migrados para um Web Worker e utilizam timestamps reais (`Date.now()`), garantindo sincronização contínua mesmo quando a aba perde o foco.
+*   **[PAGO] TD-004: Damage Popups em Canvas:** A renderização de números de dano foi migrada de elementos React DOM `<div>` para um Canvas HTML5 dedicado (`DamagePopupsCanvas`), eliminando overhead de re-render no late-game e durante Auto-Battle/Auto-Farm.
+*   **[PAGO] TD-005: Dicionários de Dados:** Assets visuais hardcoded e ícones genéricos foram migrados para um sistema centralizado e data-driven (`AssetDictionary` em `core/assets.tsx`), utilizando SVGs otimizados procedurais baseados na paleta cyberpunk do projeto.
 
 | ID | Módulo | Contexto e Problema | Impacto e Risco | Solução Proposta | Prioridade |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TD-001** | Orquestração UI (`App.tsx`) | O arquivo `App.tsx` atua como um *God Component*, contendo lógicas mistas de roteamento, *refs* de timers do combate e gerenciamento pesado de efeitos globais (`useGameEffects`). | Manutenção dolorosa, conflitos frequentes de *merge*, re-renderizações desnecessárias do App inteiro. | Extrair a lógica de roteamento para um gerenciador de cenas dedicado. Mover efeitos do loop principal para dentro de Stores ou Web Workers. | **ALTA** |
-| **TD-002** | Engine de Combate | O loop de combate (Pulso) e os *timers* estão operando dentro da thread principal do React (em `useCombatLogic`). | Se a aba do navegador perder o foco (background), os *timers* de combate e Auto-Farm param ou dessincronizam fortemente. | Mover a lógica de tempo e cálculo de combate estritamente para um *Web Worker* (desacoplando do ciclo de vida do React). | **CRÍTICA** |
-| **TD-004** | Damage Popups | A lógica de partículas de dano gera um elemento novo na árvore React (DOM) a cada *hit*. Em builds focadas em *Speed* ou *DoT* (Damage over Time), a UI engasga. | Queda massiva de FPS no *late-game* (Andares 30+). | Migrar os efeitos efêmeros de combate (números subindo) para um elemento genérico usando HTML Canvas em vez de dezenas de `<div>` injetadas no React. | **MÉDIA** |
-| **TD-005** | Dicionários de Dados | *Hardcoding* residual. Existem alguns ícones, descrições ou lógicas de drop embutidos nos componentes visuais (ex: cores de itens mágicos escritas no JSX). | Dificuldade em balancear a economia e inconsistência visual. | Mover todas as definições visuais absolutas para metadados em `core/entities/`. Os componentes só devem aplicar estilos mapeados. | **BAIXA** |
+| **TD-006** | Testes | Falta de cobertura end-to-end. | Risco de quebras silenciosas. | Configurar Playwright. | **BAIXA** |
 
 ---
 

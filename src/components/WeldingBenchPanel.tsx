@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Cpu } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Player, Item } from '../types';
 import { useTranslation } from '../core/engine/translation';
 
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useCrafting } from '../hooks/useCrafting';
 import { getRarityStyle } from './uiUtils';
+import { ItemRevealModal } from './equipment/ItemRevealModal';
 
 export const WeldingBenchPanel: React.FC = () => {
   const { player } = usePlayerStore();
@@ -20,6 +22,7 @@ export const WeldingBenchPanel: React.FC = () => {
     index: number;
   } | null>(null);
   const [selectedSocketIndex, setSelectedSocketIndex] = useState<number | null>(null);
+  const [revealedItem, setRevealedItem] = useState<Item | null>(null);
 
   // Internal fallback if prop is not supplied
   const renderStatModifiers = ((item: Item) => {
@@ -249,20 +252,31 @@ export const WeldingBenchPanel: React.FC = () => {
                       {renderStatModifiers(g.item)}
                     </div>
                     
-                    <button
+                    <motion.button
                       id={`btn-merge-module-${idx}`}
-                      onClick={() => handleMergeChips(g.item)}
+                      whileHover={canMerge && player.gold >= mergeCost ? { scale: 1.02 } : {}}
+                      whileTap={canMerge && player.gold >= mergeCost ? { scale: 0.95 } : {}}
+                      onClick={() => {
+                        const upgraded = handleMergeChips(g.item);
+                        if (upgraded) {
+                          setRevealedItem(upgraded);
+                        }
+                      }}
                       disabled={!canMerge || player.gold < mergeCost}
                       className={`mt-3 text-[10px] uppercase font-bold tracking-widest py-1.5 rounded w-full transition-colors flex justify-center items-center gap-1 ${canMerge && player.gold >= mergeCost ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
                     >
                       {t("Fundir")} ({mergeCost}G)
-                    </button>
+                    </motion.button>
                   </div>
                 );
               });
             })()}
           </div>
         </div>
+      )}
+      
+      {revealedItem && (
+        <ItemRevealModal item={revealedItem} onClose={() => setRevealedItem(null)} title={t("Fusão Concluída")} />
       )}
     </div>
   );

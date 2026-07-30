@@ -33,32 +33,56 @@ export const ItemInspectionPanel: React.FC<Props> = ({
   }
 
   const isCompatible = canClassEquipItem(player.currentClassId, item);
+  const isLegendary = item.rarity === 'legendary';
+  const isMythic = item.rarity === 'mythic';
   
   return (
-    <div className="w-full h-[520px] border border-cyan-900/40 bg-slate-900/80 flex flex-col relative overflow-hidden">
+    <div className={`w-full h-[520px] border bg-slate-900/80 flex flex-col relative overflow-hidden ${
+      isMythic ? 'border-rose-500/60 shadow-[0_0_30px_rgba(244,63,94,0.3)]' :
+      isLegendary ? 'border-amber-500/60 shadow-[0_0_25px_rgba(245,158,11,0.25)]' :
+      'border-cyan-900/40'
+    }`}>
       {/* Decorative corners */}
-      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-500" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-500" />
-      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-500" />
-      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-500" />
+      <div className={`absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 ${isMythic ? 'border-rose-400' : isLegendary ? 'border-amber-400' : 'border-cyan-500'}`} />
+      <div className={`absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 ${isMythic ? 'border-rose-400' : isLegendary ? 'border-amber-400' : 'border-cyan-500'}`} />
+      <div className={`absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 ${isMythic ? 'border-rose-400' : isLegendary ? 'border-amber-400' : 'border-cyan-500'}`} />
+      <div className={`absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 ${isMythic ? 'border-rose-400' : isLegendary ? 'border-amber-400' : 'border-cyan-500'}`} />
 
       {/* Header Image/Icon Area */}
-      <div className="h-40 flex items-center justify-center relative bg-gradient-to-b from-slate-800/50 to-transparent border-b border-slate-800">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.8)_0%,transparent_70%)]" />
-        {getItemIcon(item.type, "w-20 h-20 text-cyan-100 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] relative z-10")}
+      <div className={`h-40 flex items-center justify-center relative border-b border-slate-800 ${
+        isMythic ? 'bg-gradient-to-b from-rose-950/40 via-purple-950/30 to-transparent border-rose-500/40' :
+        isLegendary ? 'bg-gradient-to-b from-amber-950/40 via-amber-900/20 to-transparent border-amber-500/40' :
+        'bg-gradient-to-b from-slate-800/50 to-transparent'
+      }`}>
+        <div className={`absolute inset-0 opacity-20 ${
+          isMythic ? 'bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.9)_0%,transparent_70%)] animate-pulse' :
+          isLegendary ? 'bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.8)_0%,transparent_70%)] animate-pulse' :
+          'bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.8)_0%,transparent_70%)]'
+        }`} />
+        {getItemIcon(item.type, `w-20 h-20 ${
+          isMythic ? 'text-rose-300 drop-shadow-[0_0_25px_rgba(244,63,94,0.9)] animate-pulse' :
+          isLegendary ? 'text-amber-200 drop-shadow-[0_0_20px_rgba(245,158,11,0.8)] animate-pulse' :
+          'text-cyan-100 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]'
+        } relative z-10`)}
       </div>
 
       <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
         {/* Title & Rarity */}
         <div>
-          <h3 className="font-bold text-lg text-slate-100 tracking-wider uppercase font-mono">{t(item.name)}</h3>
+          <h3 className={`font-bold text-lg tracking-wider uppercase font-mono ${
+            isMythic ? 'text-rose-200 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]' :
+            isLegendary ? 'text-amber-200 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]' :
+            'text-slate-100'
+          }`}>{t(item.name)}</h3>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-[10px] font-mono px-2 py-0.5 uppercase tracking-widest border rounded-sm ${
               item.rarity === 'common' ? 'text-slate-400 border-slate-600 bg-slate-900/50' :
               item.rarity === 'rare' ? 'text-cyan-400 border-cyan-600 bg-cyan-950/50 shadow-[0_0_8px_rgba(34,211,238,0.2)]' :
-              'text-purple-400 border-purple-500 bg-purple-950/50 shadow-[0_0_10px_rgba(192,132,252,0.3)] animate-pulse'
+              item.rarity === 'epic' ? 'text-purple-400 border-purple-500 bg-purple-950/50 shadow-[0_0_10px_rgba(192,132,252,0.3)] animate-pulse' :
+              item.rarity === 'legendary' ? 'text-amber-300 border-amber-400 bg-amber-950/80 shadow-[0_0_18px_rgba(245,158,11,0.7)] font-bold animate-pulse' :
+              'text-rose-200 border-rose-400 bg-rose-950/90 shadow-[0_0_25px_rgba(244,63,94,0.9)] font-extrabold animate-pulse ring-1 ring-rose-400'
             }`}>
-              {item.rarity === 'common' ? t('Padrão') : item.rarity === 'rare' ? t('Avançado') : t('Protótipo')}
+              {item.rarity === 'common' ? t('Padrão') : item.rarity === 'rare' ? t('Avançado') : item.rarity === 'epic' ? t('Protótipo') : item.rarity === 'legendary' ? t('Lendário') : t('Mítico')}
             </span>
             {renderManufacturerBadge(item)}
             {item.level && (

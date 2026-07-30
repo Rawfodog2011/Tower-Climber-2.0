@@ -1,9 +1,8 @@
 import { useCallback, useMemo } from 'react';
-import { Player } from '../types';
 import { random } from '../core/engine/rng';
 import { getRandomEvent, EventOption } from '../core/entities/events';
 import { generateMonsterForFloor } from '../core/entities/monsters';
-import { startCombat, CombatState } from '../core/engine/combat';
+import { startCombat } from '../core/engine/combat';
 import { getSectorForFloor } from '../core/math/worldScaling';
 import { getPendingTutorials, getTutorialName } from '../core/engine/tutorial';
 import { getRandomItemByRarityAndClass } from '../core/entities/items';
@@ -21,9 +20,9 @@ export const useExploration = () => {
   const { player, setPlayer } = usePlayerStore();
   const { setScene, setHubTab, setIntroSector, setIntroStep } = useGameUIStore();
   const {
-    selectedFloor, activeEvent, setActiveEvent, eventLog, setEventLog,
+    selectedFloor, activeEvent, setActiveEvent, setEventLog,
     lastEventId, setLastEventId, activePuzzle, setActivePuzzle,
-    pendingDiveParams, setPendingDiveParams, justCompletedAll, setJustCompletedAll
+    setPendingDiveParams, setJustCompletedAll
   } = useExplorationStore();
   const { combatState, setCombatState, combatEndMessage, setCombatEndMessage } = useCombatStore();
   const { triggerToast } = useToastStore();

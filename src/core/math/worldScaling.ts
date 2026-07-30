@@ -118,15 +118,12 @@ export function getMonsterScalingForFloor(floor: number) {
     };
   }
 
+  const floorRatio = floor / 70;
   return {
-    // Monstro com HP reduzido para permitir vitórias fáceis no começo
-    hp: Math.max(20, Math.floor(pStats.hp * 0.90 + floor * 8)),
-    // Dano do inimigo reduzido para não pressionar demais
-    atk: Math.floor(pStats.def * 0.85 + 5 + floor * 1.5),
-    // Defesa ligeiramente reduzida
-    def: Math.max(1, Math.floor(pStats.def * 0.25 + floor * 0.5)),
-    // Velocidade
-    spd: Math.max(5, Math.floor(pStats.spd * 0.80)),
+    hp: Math.max(20, Math.floor(pStats.hp * (0.85 + 0.55 * floorRatio) + floor * 14)),
+    atk: Math.floor(pStats.def * (0.80 + 0.60 * floorRatio) + 5 + floor * 3.5),
+    def: Math.max(1, Math.floor(pStats.def * (0.20 + 0.28 * floorRatio) + floor * 0.9)),
+    spd: Math.max(5, Math.floor(pStats.spd * (0.80 + 0.15 * floorRatio))),
     xpReward,
     goldReward,
   };
@@ -154,8 +151,11 @@ export function getRarityProbabilitiesForFloor(floor: number): Record<Rarity, nu
   const commonWeight = 100; // Constante
   const rareWeight = 10 + (floor * 1.5); // Cresce moderadamente
   const epicWeight = 1 + (floor * 0.3); // Cresce lentamente
-  const legendaryWeight = floor > 15 ? Math.max(0, (floor - 15) * 0.1) : 0;
-  const mythicWeight = floor > 30 ? Math.max(0, (floor - 30) * 0.05) : 0;
+  
+  // Legendary é raro, desbloqueia no andar 20 e escala exponencialmente com a profundidade
+  const legendaryWeight = floor > 20 ? Math.pow(floor - 20, 1.25) * 0.025 : 0;
+  // Mythic é extremamente raro, desbloqueia no andar 45 e escala lentamente com a profundidade
+  const mythicWeight = floor > 45 ? Math.pow(floor - 45, 1.35) * 0.008 : 0;
 
   const totalWeight = commonWeight + rareWeight + epicWeight + legendaryWeight + mythicWeight;
 
@@ -173,20 +173,20 @@ export function getRarityProbabilitiesForFloor(floor: number): Record<Rarity, nu
  */
 export function rollLootRarity(floor: number, isBoss: boolean = false): Rarity {
   if (isBoss) {
-    if (floor > 30) {
+    if (floor > 50) {
       const roll = random();
-      if (roll < 0.10) return 'mythic';
-      if (roll < 0.35) return 'legendary';
-      if (roll < 0.75) return 'epic';
+      if (roll < 0.05) return 'mythic';
+      if (roll < 0.25) return 'legendary';
+      if (roll < 0.70) return 'epic';
       return 'rare';
-    } else if (floor > 15) {
+    } else if (floor > 25) {
       const roll = random();
-      if (roll < 0.15) return 'legendary';
-      if (roll < 0.60) return 'epic';
+      if (roll < 0.10) return 'legendary';
+      if (roll < 0.55) return 'epic';
       return 'rare';
     }
-    // Chefes só dropam Rare ou Epic em andares iniciais
-    return random() < 0.3 ? 'epic' : 'rare';
+    // Chefes nos andares iniciais só dropam Rare ou Epic
+    return random() < 0.35 ? 'epic' : 'rare';
   }
 
   const probs = getRarityProbabilitiesForFloor(floor);

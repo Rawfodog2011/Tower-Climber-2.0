@@ -13,6 +13,7 @@ export interface MatrixNode {
   mechanicModifiers?: string[]; // E.g., ['sobrecarga_materia', 'overclock_termodinamico']
   skillId?: string;
   clusterId?: string;
+  pentagonId?: string;
   themeColor?: string;
   iconSvgPath?: string;
   connections: string[]; // IDs of connected nodes

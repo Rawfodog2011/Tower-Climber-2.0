@@ -4,12 +4,14 @@ import { CLASSES } from '../core/entities/classes';
 import { CRAFTING_COSTS, MATERIAL_NAMES, GOLD_VALUES } from '../core/engine/crafting';
 import { useTranslation } from '../core/engine/translation';
 import { Wrench } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useGameUIStore } from '../store/useGameUIStore';
 import { useInventory } from '../hooks/useInventory';
 import { useCrafting } from '../hooks/useCrafting';
 import { getRarityStyle, getRarityGradient, getItemIcon, renderManufacturerBadge } from './uiUtils';
+import { ItemRevealModal } from './equipment/ItemRevealModal';
 
 export const ForgePanel: React.FC = () => {
   const { player, setPlayer } = usePlayerStore();
@@ -25,6 +27,7 @@ export const ForgePanel: React.FC = () => {
   const [batchFilterRarities, setBatchFilterRarities] = useState<string[]>(['common', 'rare', 'epic', 'legendary', 'mythic']);
   const [batchFilterClasses, setBatchFilterClasses] = useState<string[]>(['any', 'ciborgue_foragido', 'nomade_silicio', 'quimico_sintetico', 'mercenario_elite']);
   const [batchFilterTypes, setBatchFilterTypes] = useState<string[]>(['weapon', 'armor', 'helmet', 'pants', 'boots', 'bracers', 'accessory', 'circuit_module', 'consumable']);
+  const [revealedItem, setRevealedItem] = useState<Item | null>(null);
 
   // Memoized filtered inventory for forge operations
   const forgeFilteredInventory = useMemo(() => {
@@ -80,11 +83,18 @@ export const ForgePanel: React.FC = () => {
 
               return (
  
-                <button
+                <motion.button
                   key={rarity}
-                  onClick={() => handleCraft(rarity)}
+                  whileHover={canCraft ? { scale: 1.02, filter: 'brightness(1.1)' } : {}}
+                  whileTap={canCraft ? { scale: 0.95 } : {}}
+                  onClick={() => {
+                    const res = handleCraft(rarity);
+                    if (res && res.success && res.craftedItem) {
+                      setRevealedItem(res.craftedItem);
+                    }
+                  }}
                   disabled={!canCraft}
-                  className={`flex flex-col items-center justify-center p-3 rounded border transition-all relative overflow-hidden ${rarityStyle} ${canCraft ? 'cursor-pointer active:scale-95 hover:brightness-125' : 'opacity-50 cursor-not-allowed'}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded border transition-all relative overflow-hidden ${rarityStyle} ${canCraft ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                 >
                   <span className="font-bold uppercase tracking-widest text-[10px] mb-2 relative z-10 text-center">
                     {t("FORJAR")} {
@@ -98,7 +108,7 @@ export const ForgePanel: React.FC = () => {
                     <div>- {cost.materials} {MATERIAL_NAMES[matType]}</div>
                     <div>- {cost.gold} CRD</div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -584,6 +594,10 @@ export const ForgePanel: React.FC = () => {
           })()}
         </div>
       </div>
+      
+      {revealedItem && (
+        <ItemRevealModal item={revealedItem} onClose={() => setRevealedItem(null)} />
+      )}
     </>
   );
 };

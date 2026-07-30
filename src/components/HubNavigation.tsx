@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Shield, Activity, Flame, Cpu, Settings, Fingerprint, Zap, Trophy, ChevronLeft, ChevronRight, User, Crosshair, ShoppingCart, Briefcase, BookOpen, Lock, BrainCircuit, Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Player } from '../types';
 import { useTranslation } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
@@ -69,12 +70,17 @@ export const HubNavigation: React.FC<HubNavigationProps> = ({ onOpenSettings }) 
 
   return (
     <div className="relative flex items-center w-full system-panel p-2 mb-2 lg:mb-4 border border-slate-800/50">
-      <button 
-        onClick={() => scroll('left')}
-        className="p-1.5 text-slate-400 hover:text-cyan-400 bg-slate-900/80 rounded border border-slate-700 hover:border-cyan-500/50 transition-colors z-10 mx-1 shrink-0 active:scale-95"
+      <motion.button 
+        whileHover={{ scale: 1.1, color: '#22d3ee' }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => {
+          scroll('left');
+          playSfx('ui.click');
+        }}
+        className="p-1.5 text-slate-400 bg-slate-900/80 rounded border border-slate-700 transition-colors z-10 mx-1 shrink-0"
       >
         <ChevronLeft className="w-5 h-5" />
-      </button>
+      </motion.button>
       
       <div 
         ref={scrollContainerRef}
@@ -143,37 +149,49 @@ export const HubNavigation: React.FC<HubNavigationProps> = ({ onOpenSettings }) 
           }
 
           return (
-            <button 
+            <motion.button 
               key={tab.id}
+              whileHover={{ scale: 1.05, filter: 'brightness(1.2)' }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setHubTab(tab.id as import('../store/useGameUIStore').HubTab);
                 playSfx('ui.tab_switch');
               }} 
               onMouseEnter={() => playSfx('ui.hover')}
-              className={`whitespace-nowrap px-4 py-2.5 rounded border text-xs font-bold uppercase tracking-wider transition-all duration-200 ${getColorClasses(tab.id, tab.color)}`}
+              className={`whitespace-nowrap px-4 py-2.5 rounded border text-xs font-bold uppercase tracking-wider transition-colors duration-200 ${getColorClasses(tab.id, tab.color)}`}
             >
               <Icon className="w-4 h-4 inline-block mr-2" /> 
               {tab.label}
-            </button>
+            </motion.button>
           );
         })}
       </div>
 
-      <button 
-        onClick={() => scroll('right')}
-        className="p-1.5 text-slate-400 hover:text-cyan-400 bg-slate-900/80 rounded border border-slate-700 hover:border-cyan-500/50 transition-colors z-10 mx-1 shrink-0 active:scale-95"
+      <motion.button 
+        whileHover={{ scale: 1.1, color: '#22d3ee' }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => {
+          scroll('right');
+          playSfx('ui.click');
+        }}
+        className="p-1.5 text-slate-400 bg-slate-900/80 rounded border border-slate-700 transition-colors z-10 mx-1 shrink-0"
       >
         <ChevronRight className="w-5 h-5" />
-      </button>
+      </motion.button>
       
       {onOpenSettings && (
-        <button
-          onClick={onOpenSettings}
-          className="ml-2 p-2 text-slate-400 hover:text-cyan-400 bg-slate-900/80 rounded border border-slate-700 hover:border-cyan-500/50 transition-colors shrink-0 active:scale-95 flex items-center justify-center"
+        <motion.button
+          whileHover={{ scale: 1.1, color: '#22d3ee' }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => {
+            onOpenSettings();
+            playSfx('ui.click');
+          }}
+          className="ml-2 p-2 text-slate-400 bg-slate-900/80 rounded border border-slate-700 transition-colors shrink-0 flex items-center justify-center"
           title={t("Configurações e Salvamento")}
         >
           <Settings className="w-5 h-5" />
-        </button>
+        </motion.button>
       )}
     </div>
   );

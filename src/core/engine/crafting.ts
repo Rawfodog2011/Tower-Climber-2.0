@@ -57,7 +57,7 @@ export function dismantleItem(player: Player, inventoryIndex: number): { success
   };
 }
 
-export function craftItem(player: Player, rarity: Rarity): { success: boolean, message: string, updatedPlayer: Player } {
+export function craftItem(player: Player, rarity: Rarity): { success: boolean, message: string, updatedPlayer: Player, craftedItem?: Item } {
   const cost = CRAFTING_COSTS[rarity];
   const matType = cost.materialType;
   
@@ -83,7 +83,8 @@ export function craftItem(player: Player, rarity: Rarity): { success: boolean, m
   return {
     success: true,
     message: `Forja concluída: ${newItem.name}!`,
-    updatedPlayer
+    updatedPlayer,
+    craftedItem: newItem
   };
 }
 

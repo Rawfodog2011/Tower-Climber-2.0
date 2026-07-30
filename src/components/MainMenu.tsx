@@ -131,7 +131,7 @@ export const MainMenu: React.FC = () => {
     setMuted 
   } = useAudio();
 
-  const handleInteraction = async (callback: () => void, sfxId?: string, sfxOptions?: any) => {
+  const handleInteraction = async (callback: () => void, sfxId?: string, sfxOptions?: { volume?: number; pitch?: number; damageMultiplier?: number; rarity?: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic' }) => {
     await initAudio();
     if (sfxId) {
       playSfx(sfxId, sfxOptions);

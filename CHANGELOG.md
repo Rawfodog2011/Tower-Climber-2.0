@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+- **Expansão da Matriz Neural**: A matriz foi expandida adicionando 5 novos pentágonos externos (sinergias profunadas entre caminhos) para suporte de habilidades endgame.
+- **Fechamento Visual**: Atualizados metadados, title (Tower Climber RPG) e favicon cyberpunk no `index.html`.
+- **Pipeline de Teste Completo**: Integrado teste `vitest run` direto no `package.json` (`npm test`) para validação rigorosa de build e lint em conjunto.
 - **Combat Action Queue**: O motor de combate foi reescrito para gerar uma lista de `CombatQueueAction`. A UI agora as consome progressivamente.
 
 # 📝 Changelog e Histórico de Versões: Tower Climber

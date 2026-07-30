@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { EventOption } from '../core/entities/events';
-
+import { usePlayerStore } from '../store/usePlayerStore';
 
 
 
@@ -10,6 +10,35 @@ import { useExploration } from '../hooks/useExploration';
 export const EventScene: React.FC = () => {
   const { activeEvent, eventLog, selectedFloor, setSelectedFloor } = useExplorationStore();
   const { handleEventOption, handleStartDive, handleReturnToHub } = useExploration();
+  const [flavorText, setFlavorText] = useState<string | null>(null);
+  const { player } = usePlayerStore();
+
+  useEffect(() => {
+    if (activeEvent && !eventLog) {
+      setFlavorText(null);
+      fetch('/api/flavor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          playerId: player.name || 'player_default',
+          eventId: activeEvent.id,
+          eventTitle: activeEvent.title,
+          eventDescription: activeEvent.description
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.text) {
+            setFlavorText(data.text);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch flavor text", err);
+        });
+    }
+  }, [activeEvent, eventLog, player.name]);
 
   if (!activeEvent) return null;
 
@@ -24,9 +53,16 @@ export const EventScene: React.FC = () => {
               <div className="p-8 space-y-8 flex-1">
                 {!eventLog ? (
                   <>
-                    <p className="text-cyan-100 text-lg leading-relaxed text-center font-serif italic mb-8">
-                      "{activeEvent.description}"
-                    </p>
+                    <div className="mb-8">
+                      <p className="text-cyan-100 text-lg leading-relaxed text-center font-serif italic">
+                        "{activeEvent.description}"
+                      </p>
+                      {flavorText && (
+                        <p className="text-slate-400 text-sm mt-4 leading-relaxed text-center font-serif opacity-80 animate-pulse">
+                          {flavorText}
+                        </p>
+                      )}
+                    </div>
                     <div className="space-y-4">
                       {activeEvent.options.map((opt: EventOption, idx: number) => (
                         <button

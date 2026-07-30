@@ -6,17 +6,9 @@ import { useTranslation } from '../core/engine/translation';
 import { CoreArchiveEntry } from './CoreArchiveEntry';
 import { TTSButton } from './TTSButton';
 import { SystemVoiceSelector } from './SystemVoiceSelector';
+import { AssetDictionary } from '../core/assets';
 
-const AVATARS = [
-  { id: 'user', icon: UserRound },
-  { id: 'bot', icon: Bot },
-  { id: 'ghost', icon: Ghost },
-  { id: 'crosshair', icon: Crosshair },
-  { id: 'fingerprint', icon: Fingerprint },
-  { id: 'eye', icon: Eye },
-  { id: 'hexagon', icon: Hexagon },
-  { id: 'cpu', icon: Cpu }
-];
+const AVATAR_IDS = ['mercenario', 'hacker', 'nomade', 'aristocrata', 'fantasma', 'default'];
 
 const CYBERPUNK_NAMES = [
   "Z3R0", "J4CK", "K43L", "N0VA", "C1PH3R", "GH0ST", "R34P3R", "V01D", "N3XU5", "K4RM4", 
@@ -37,7 +29,7 @@ export function CharacterCreation() {
   };
   const [step, setStep] = useState<1 | 2>(1);
   const [playerName, setPlayerName] = useState<string>('');
-  const [selectedAvatar, setSelectedAvatar] = useState<string>('user');
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('default');
   const [selectedId, setSelectedId] = useState<string>('ciborgue_foragido');
   const [codex] = useState(() => loadTimelineCodex());
   const selectedOrigin = ORIGINS[selectedId];
@@ -125,21 +117,23 @@ export function CharacterCreation() {
                 <label className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest">
                   {t("Assinatura Visual (Avatar)")}
                 </label>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-                  {AVATARS.map((avatar) => {
-                    const isSelected = selectedAvatar === avatar.id;
-                    const IconComp = avatar.icon;
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                  {AVATAR_IDS.map((avatarId) => {
+                    const isSelected = selectedAvatar === avatarId;
+                    const IconComp = AssetDictionary.portraits[avatarId as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default;
                     return (
                       <button
-                        key={avatar.id}
-                        onClick={() => setSelectedAvatar(avatar.id)}
-                        className={`aspect-square rounded flex items-center justify-center transition-all ${
+                        key={avatarId}
+                        onClick={() => setSelectedAvatar(avatarId)}
+                        className={`aspect-square rounded flex items-center justify-center transition-all overflow-hidden ${
                           isSelected 
                             ? 'bg-cyan-950/80 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] scale-110' 
                             : 'bg-slate-900 border border-slate-800 text-slate-500 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-300'
                         }`}
                       >
-                        <IconComp className="w-6 h-6" />
+                        <div className="w-full h-full scale-125 object-cover">
+                          <IconComp />
+                        </div>
                       </button>
                     );
                   })}
@@ -242,7 +236,12 @@ export function CharacterCreation() {
                             )}
                           </div>
                           <p className={`text-xs font-mono mt-0.5 ${isSecret ? 'text-red-400/60' : 'text-slate-400'}`}>{t(origin.roleName)}</p>
-                          <p className="text-xs text-slate-400/80 mt-2 line-clamp-1">{t(origin.description)}</p>
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            <p className="text-xs text-slate-400/80 line-clamp-2">{t(origin.description)}</p>
+                            <div className={`text-[10px] inline-flex items-center font-bold ${isSecret ? 'text-red-500/70' : 'text-cyan-500/70'}`}>
+                               [{origin.skillId ? t('ATIVO') : t('PASSIVO')}] {t(origin.traitName)}
+                            </div>
+                          </div>
                         </div>
                       </button>
                     );

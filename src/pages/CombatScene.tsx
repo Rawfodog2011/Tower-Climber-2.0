@@ -14,6 +14,8 @@ import { useCombatLogic } from '../hooks/useCombatLogic';
 import { calculatePlayerStats } from '../core/entities/player';
 import { getXpRequiredForNextLevel } from '../core/math/progression';
 import { useMemo, useRef } from 'react';
+import { DamagePopupsCanvas } from '../components/combat/DamagePopupsCanvas';
+import { AssetDictionary } from '../core/assets';
 
 export const CombatScene: React.FC = () => {
   const { player } = usePlayerStore();
@@ -311,22 +313,22 @@ export const CombatScene: React.FC = () => {
                   {/* Efeito de Flash (Enfurecido ou Anomalia) */}
                   <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${combatState.isBossEnraged ? 'bg-red-500/10' : 'opacity-0'}`}></div>
 
+                  {/* Canvas de Damage Popups Flutuantes */}
+                  <DamagePopupsCanvas dmgPopups={dmgPopups} />
+
                   <div className="absolute inset-0 flex items-center justify-between px-8 md:px-24">
                     
                     {/* Jogador Sprite (Placeholder Hero) */}
                     <div className="relative">
-                      {dmgPopups.filter(p => p.target === 'player').map(p => (
-                        <div key={p.id} className={`absolute -top-12 left-1/2 transform -translate-x-1/2 font-black font-mono text-2xl ${p.type === 'damage' ? 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]' : p.type === 'heal' ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]' : p.type === 'miss' ? 'text-slate-400' : 'text-yellow-400 text-3xl drop-shadow-[0_0_15px_rgba(250,204,21,1)] animate-crit-bounce'} z-50 pointer-events-none`}>
-                          {p.type === 'heal' ? '+' : p.type === 'damage' || p.type === 'crit' ? '-' : ''}{p.amount}
-                        </div>
-                      ))}
-                      
-                      <div className={`w-24 h-24 bg-cyan-900/50 rounded-full border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.player ? 'animate-attack-right' : ''}`} style={attackerAnimating.player || dmgPopups.some(p => p.target === 'player') ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}>
-                        {player.avatar ? (
-                          <img src={player.avatar} alt="Hero" className="w-20 h-20 rounded-full object-cover" />
-                        ) : (
-                          <Terminal className="w-12 h-12 text-cyan-400" />
-                        )}
+                      <div className={`w-24 h-24 bg-cyan-900/50 rounded-full border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center overflow-hidden ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.player ? 'animate-attack-right' : ''}`} style={attackerAnimating.player || dmgPopups.some(p => p.target === 'player') ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}>
+                        {(() => {
+                          const AvatarIcon = player.avatar ? (AssetDictionary.portraits[player.avatar as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default) : AssetDictionary.portraits.default;
+                          return (
+                            <div className="w-full h-full scale-125">
+                              <AvatarIcon />
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -344,12 +346,6 @@ export const CombatScene: React.FC = () => {
 
                     {/* Monstro Sprite */}
                     <div className="relative">
-                      {dmgPopups.filter(p => p.target === 'monster').map(p => (
-                        <div key={p.id} className={`absolute -top-12 left-1/2 transform -translate-x-1/2 font-black font-mono text-2xl ${p.type === 'damage' ? 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]' : p.type === 'heal' ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]' : p.type === 'miss' ? 'text-slate-400' : 'text-yellow-400 text-3xl drop-shadow-[0_0_15px_rgba(250,204,21,1)] animate-crit-bounce'} z-50 pointer-events-none`}>
-                          {p.type === 'heal' ? '+' : p.type === 'damage' || p.type === 'crit' ? '-' : ''}{p.amount}
-                        </div>
-                      ))}
-                      
                       <button 
                         onClick={() => setShowMonsterInfo(true)}
                         className="absolute -right-8 top-4 text-cyan-500/50 hover:text-cyan-400 bg-slate-900/80 p-1.5 rounded-full border border-cyan-900/50 hover:border-cyan-500 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all z-20"

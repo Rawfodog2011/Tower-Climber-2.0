@@ -7,8 +7,7 @@ import { SKILLS_DATABASE, canClassUseSkill } from '../core/entities/skills';
 import { NEURAL_MATRIX_DATABASE } from '../core/entities/neuralMatrix';
 import { saveGame, loadGame } from "../core/engine/saveGame";
 import { getSectorForFloor } from '../core/math/worldScaling';
-import { getAvailableEvolutions, getClassEvolutionNarrative } from '../core/entities/classes';
-import { unlockMemory } from '../core/engine/memoryArchive';
+import { getAvailableEvolutions } from '../core/entities/classes';
 import { getAutoBattleAction } from '../core/engine/autobattle';
 import { random } from '../core/engine/rng';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -16,31 +15,26 @@ import { useClassEvolution } from './useClassEvolution';
 import { useGameUIStore } from '../store/useGameUIStore';
 import { useExplorationStore } from '../store/useExplorationStore';
 import { useCombatStore } from '../store/useCombatStore';
-import { useToastStore } from '../store/useToastStore';
 import { useExploration } from './useExploration';
 import { useCombatLogic } from './useCombatLogic';
 
+import { backgroundTimer } from '../core/engine/backgroundTimer';
+
 export const useGameEffects = () => {
-  const { player, setPlayer } = usePlayerStore();
+  const { player } = usePlayerStore();
   const { autoEvolveClass } = useClassEvolution();
   const {
-    scene, setActiveMemoryKey, setActiveEvolutionNarrative,
+    scene,
     inventoryMessage, introStep, setSavedPlayerPreview, setIntroStep
   } = useGameUIStore();
   const { selectedFloor } = useExplorationStore();
   const {
-    combatState: combatState, combatEndMessage, combatSpeed,
-    setEnrageFlash, setAttackerAnimating, setDmgPopups
+    combatState, combatEndMessage, combatSpeed
   } = useCombatStore();
-  const { triggerToast } = useToastStore();
 
   const { handleStartDive, handleReturnToHub } = useExploration();
   const { handleCombatAction } = useCombatLogic();
 
-  const prevPlayerHpRef = useRef<number | null>(null);
-  const prevMonsterHpRef = useRef<number | null>(null);
-  const prevLogLengthRef = useRef<number>(0);
-  const popupIdRef = useRef(0);
   const playerRef = useRef(player);
   const sceneRef = useRef(scene);
   
@@ -72,35 +66,66 @@ export const useGameEffects = () => {
     }
   }, [player, scene]);
 
+  const lastActionTimeRef = useRef<number>(Date.now());
+  const farmWaitTimeRef = useRef<number>(1500);
+
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    lastActionTimeRef.current = Date.now();
 
     if (scene === 'combat' && combatState?.isActive && !combatEndMessage) {
       if (player.isAutoBattleActive) {
-        let actionInterval = 300;
-        if (combatSpeed === 'fast') actionInterval = 100;
+        const actionInterval = combatSpeed === 'fast' ? 100 : 300;
         
-        timeout = setTimeout(() => {
-          const action = getAutoBattleAction(player, combatState);
-          handleCombatAction(action);
-        }, actionInterval);
+        backgroundTimer.startTimer('combat_auto_battle', 50, (now) => {
+          if (now - lastActionTimeRef.current >= actionInterval) {
+            lastActionTimeRef.current = now;
+            const currentCombat = useCombatStore.getState().combatState;
+            const currentPlayer = usePlayerStore.getState().player;
+            if (currentCombat && currentCombat.isActive && !useCombatStore.getState().combatEndMessage) {
+              const action = getAutoBattleAction(currentPlayer, currentCombat);
+              handleCombatAction(action);
+            }
+          }
+        });
+      } else {
+        backgroundTimer.stopTimer('combat_auto_battle');
       }
-    } else if (scene === 'hub' && player.isFarmActive) {
-      const waitTime = random() * 1500 + 1000; 
-      timeout = setTimeout(() => {
-        if (sceneRef.current === 'hub' && playerRef.current.isFarmActive) {
-           handleStartDive(selectedFloor, true);
-        }
-      }, waitTime);
-    } else if (scene === 'combat' && combatEndMessage && player.isFarmActive) {
-      timeout = setTimeout(() => {
-        if (sceneRef.current === 'combat' && playerRef.current.isFarmActive && combatEndMessage) {
-           handleStartDive(selectedFloor, true);
-        }
-      }, 1500);
+    } else {
+      backgroundTimer.stopTimer('combat_auto_battle');
     }
 
-    return () => clearTimeout(timeout);
+    if (scene === 'hub' && player.isFarmActive) {
+      farmWaitTimeRef.current = Math.floor(random() * 1500 + 1000);
+      backgroundTimer.startTimer('hub_auto_farm', 100, (now) => {
+        if (now - lastActionTimeRef.current >= farmWaitTimeRef.current) {
+          lastActionTimeRef.current = now;
+          if (sceneRef.current === 'hub' && playerRef.current.isFarmActive) {
+            handleStartDive(selectedFloor, true);
+          }
+        }
+      });
+    } else {
+      backgroundTimer.stopTimer('hub_auto_farm');
+    }
+
+    if (scene === 'combat' && combatEndMessage && player.isFarmActive) {
+      backgroundTimer.startTimer('combat_end_auto_farm', 100, (now) => {
+        if (now - lastActionTimeRef.current >= 1500) {
+          lastActionTimeRef.current = now;
+          if (sceneRef.current === 'combat' && playerRef.current.isFarmActive && combatEndMessage) {
+            handleStartDive(selectedFloor, true);
+          }
+        }
+      });
+    } else {
+      backgroundTimer.stopTimer('combat_end_auto_farm');
+    }
+
+    return () => {
+      backgroundTimer.stopTimer('combat_auto_battle');
+      backgroundTimer.stopTimer('hub_auto_farm');
+      backgroundTimer.stopTimer('combat_end_auto_farm');
+    };
   }, [scene, combatState?.isActive, combatEndMessage, player.isFarmActive, player.isAutoBattleActive, selectedFloor, combatSpeed, handleCombatAction, handleStartDive, handleReturnToHub]);
 
   useEffect(() => {

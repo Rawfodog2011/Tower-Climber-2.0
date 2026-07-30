@@ -4,6 +4,7 @@ import { unlockMemory } from '../core/engine/memoryArchive';
 import { getClassEvolutionNarrative } from '../core/entities/classes';
 import { Player } from '../types';
 import { useToastStore } from '../store/useToastStore';
+import { AudioManager } from '../core/engine/audio';
 
 export function useClassEvolution() {
   const { player, setPlayer } = usePlayerStore();
@@ -11,6 +12,7 @@ export function useClassEvolution() {
   const { triggerToast } = useToastStore();
 
   const handleEvolveClass = (newClassId: string) => {
+    AudioManager.playSfx('combat.class_evolution');
     const originId = player.originId || 'ciborgue_foragido';
     const key = `${originId}:${newClassId}`;
     const firstTime = unlockMemory(key);
@@ -36,6 +38,7 @@ export function useClassEvolution() {
   };
 
   const autoEvolveClass = (newClassId: string) => {
+    AudioManager.playSfx('combat.class_evolution');
     const originId = player.originId || 'ciborgue_foragido';
     const key = `${originId}:${newClassId}`;
     const firstTime = unlockMemory(key);

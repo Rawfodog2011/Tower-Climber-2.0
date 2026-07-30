@@ -46,7 +46,13 @@ export const useCombatLogic = () => {
         }
         if (combatResult.loot?.items && combatResult.loot.items.length > 0) {
           combatResult.loot.items.forEach((item, index) => {
-            triggerToast(`💎 Drop Raro: ${item.name}!`);
+            let msg = `📦 Item Obtido: ${item.name}!`;
+            if (item.rarity === 'rare') msg = `💎 Drop Raro: ${item.name}!`;
+            else if (item.rarity === 'epic') msg = `⚡ DROP ÉPICO: ${item.name}!`;
+            else if (item.rarity === 'legendary') msg = `👑 DROP LENDÁRIO: ${item.name}!`;
+            else if (item.rarity === 'mythic') msg = `🔥 DROP MÍTICO SUPREMO: ${item.name}!`;
+
+            triggerToast(msg);
             setTimeout(() => {
               let lootId = 'combat.loot_common';
               if (item.rarity === 'rare') lootId = 'combat.loot_rare';
@@ -57,7 +63,11 @@ export const useCombatLogic = () => {
             }, index * 250);
           });
         }
-        AudioManager.playSfx('combat.victory');
+        if (combatState.monster.isBoss) {
+          AudioManager.playSfx('combat.boss_defeat');
+        } else {
+          AudioManager.playSfx('combat.victory');
+        }
         setCombatEndMessage({
           title: 'Vitória!',
           subtitle: `Você derrotou o ${combatState.monster.name} e obteve ${combatResult.loot?.xp} XP e ${combatResult.loot?.gold} Ouro.`,

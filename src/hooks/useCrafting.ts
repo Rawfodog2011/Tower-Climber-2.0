@@ -22,14 +22,17 @@ export const useCrafting = () => {
       setInventoryMessage({ text: result.message, type: 'error' });
     }
     setTimeout(() => setInventoryMessage(null), 3000);
+    return result;
   }, [player, setPlayer, setInventoryMessage]);
 
   const handleConvertMaterials = useCallback((direction: 'common_to_rare' | 'rare_to_epic', quantity: number = 1) => {
     const result = convertMaterials(player, direction, quantity);
     if (result.success) {
+      AudioManager.playSfx('ui.buy_item');
       setPlayer(result.updatedPlayer);
       setInventoryMessage({ text: result.message, type: 'success' });
     } else {
+      AudioManager.playSfx('ui.error');
       setInventoryMessage({ text: result.message, type: 'error' });
     }
     setTimeout(() => setInventoryMessage(null), 3500);
@@ -42,6 +45,7 @@ export const useCrafting = () => {
       setPlayer(result.updatedPlayer);
       setInventoryMessage({ text: result.message, type: 'success' });
     } else {
+      AudioManager.playSfx('ui.error');
       setInventoryMessage({ text: result.message, type: 'error' });
     }
     setTimeout(() => setInventoryMessage(null), 3000);
@@ -75,6 +79,7 @@ export const useCrafting = () => {
       
       return nextPlayer;
     });
+    AudioManager.playSfx('ui.equip_item');
     triggerToast(`Módulo instalado com sucesso!`);
     return updatedItem;
   }, [setPlayer, triggerToast]);
@@ -82,16 +87,19 @@ export const useCrafting = () => {
   const handleMergeChips = useCallback((baseItem: import('../types').Item) => {
     const identicals = player.inventory.filter(i => i.id === baseItem.id && i.level === baseItem.level);
     if (identicals.length < 3) {
+      AudioManager.playSfx('ui.error');
       triggerToast("São necessários 3 módulos idênticos do mesmo nível para a fusão.");
       return;
     }
     
     const mergeCost = 50 * (baseItem.level || 1);
     if (player.gold < mergeCost) {
+      AudioManager.playSfx('ui.error');
       triggerToast(`Ouro insuficiente para a fusão (${mergeCost}G necessários).`);
       return;
     }
     
+    let returnedUpgradedItem: import('../types').Item | undefined;
     setPlayer(p => {
       const nextPlayer = { ...p, inventory: [...p.inventory] };
       nextPlayer.gold -= mergeCost;
@@ -124,9 +132,12 @@ export const useCrafting = () => {
       }
       
       nextPlayer.inventory.push(upgradedItem);
+      returnedUpgradedItem = upgradedItem;
       return nextPlayer;
     });
+    AudioManager.playSfx('event.craft_success', { rarity: 'epic' });
     triggerToast(`Fusão concluída! ${baseItem.name} evoluiu para Nv. ${(baseItem.level || 1) + 1}.`);
+    return returnedUpgradedItem;
   }, [player, setPlayer, triggerToast]);
 
   const handleUnsocketModule = useCallback((
@@ -151,6 +162,7 @@ export const useCrafting = () => {
       }
       return nextPlayer;
     });
+    AudioManager.playSfx('ui.panel_close');
     triggerToast(`Módulo removido com sucesso!`);
     return updatedItem;
   }, [setPlayer, triggerToast]);

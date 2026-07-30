@@ -8,6 +8,7 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useGameUIStore } from '../store/useGameUIStore';
 import { useExplorationStore } from '../store/useExplorationStore';
 import { useExploration } from '../hooks/useExploration';
+import { AssetDictionary } from '../core/assets';
 
 export const EnvIntroScene: React.FC = () => {
   const { player, setPlayer } = usePlayerStore();
@@ -17,8 +18,15 @@ export const EnvIntroScene: React.FC = () => {
 
   const { t } = useTranslation();
 
+  const Background = introSector?.hazard ? AssetDictionary.backgrounds[introSector.hazard] || AssetDictionary.backgrounds.none : AssetDictionary.backgrounds.none;
+
   return (
-          <div className="flex flex-col items-center justify-center w-full min-h-[550px] relative overflow-hidden bg-slate-950 p-6 rounded-lg border border-slate-900 shadow-2xl">
+          <div className="flex flex-col items-center justify-center w-full min-h-screen relative overflow-hidden bg-slate-950 p-6">
+            <div className="absolute inset-0 z-0 opacity-40">
+              <Background />
+            </div>
+            
+            <div className="relative z-10 w-full max-w-4xl bg-slate-950/80 backdrop-blur-sm border border-slate-900 shadow-2xl p-6 rounded-lg min-h-[550px] flex flex-col items-center justify-center">
             {introStep === 'danger' ? (
               <div 
                 onClick={() => {
@@ -130,6 +138,7 @@ export const EnvIntroScene: React.FC = () => {
                 </button>
               </div>
             )}
+            </div>
           </div>
   );
 };
