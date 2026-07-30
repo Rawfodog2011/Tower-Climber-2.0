@@ -8,14 +8,14 @@ import { checkAchievements } from '../core/engine/achievements';
 import { processAdaptationTrackers } from '../core/entities/adaptations';
 import { getPendingTutorials, getTutorialName } from '../core/engine/tutorial';
 import { AudioManager } from '../core/engine/audio';
-import { useToast } from './useToast';
+import { useToastStore } from '../store/useToastStore';
 
 export const useCombatLogic = () => {
   const { player, setPlayer } = usePlayerStore();
   const { combatState, setCombatState, setCombatEndMessage, setDmgPopups } = useCombatStore();
   const { selectedFloor } = useExplorationStore();
   const { setScene } = useGameUIStore();
-  const { triggerToast } = useToast();
+  const { triggerToast } = useToastStore();
 
   const handleCombatAction = useCallback((action: CombatAction) => {
     setPlayer(prev => {
@@ -53,7 +53,7 @@ export const useCombatLogic = () => {
               else if (item.rarity === 'epic') lootId = 'combat.loot_epic';
               else if (item.rarity === 'legendary') lootId = 'combat.loot_legendary';
               else if (item.rarity === 'mythic') lootId = 'combat.loot_mythic';
-              AudioManager.playSfx(lootId as any);
+              AudioManager.playSfx(lootId);
             }, index * 250);
           });
         }

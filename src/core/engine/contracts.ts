@@ -46,7 +46,7 @@ export function generateRandomContracts(playerLevel: number): Contract[] {
       title: template.title,
       description: template.desc,
       targetId: template.targetId,
-      sectorId: (template as any).sectorId,
+      sectorId: 'sectorId' in template ? template.sectorId : undefined,
       goal,
       progress: 0,
       completed: false,

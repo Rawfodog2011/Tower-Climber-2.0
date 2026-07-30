@@ -10,7 +10,11 @@ import { useAudio } from '../core/engine/useAudio';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useGameUIStore } from '../store/useGameUIStore';
 
-export const HubNavigation: React.FC = () => {
+interface HubNavigationProps {
+  onOpenSettings?: () => void;
+}
+
+export const HubNavigation: React.FC<HubNavigationProps> = ({ onOpenSettings }) => {
   const { player } = usePlayerStore();
   const { hubTab, setHubTab } = useGameUIStore();
 
@@ -142,7 +146,7 @@ export const HubNavigation: React.FC = () => {
             <button 
               key={tab.id}
               onClick={() => {
-                setHubTab(tab.id as any);
+                setHubTab(tab.id as import('../store/useGameUIStore').HubTab);
                 playSfx('ui.tab_switch');
               }} 
               onMouseEnter={() => playSfx('ui.hover')}
@@ -161,6 +165,16 @@ export const HubNavigation: React.FC = () => {
       >
         <ChevronRight className="w-5 h-5" />
       </button>
+      
+      {onOpenSettings && (
+        <button
+          onClick={onOpenSettings}
+          className="ml-2 p-2 text-slate-400 hover:text-cyan-400 bg-slate-900/80 rounded border border-slate-700 hover:border-cyan-500/50 transition-colors shrink-0 active:scale-95 flex items-center justify-center"
+          title={t("Configurações e Salvamento")}
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

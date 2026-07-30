@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type Scene = 'main_menu' | 'intro' | 'hub' | 'combat' | 'event' | 'puzzle' | 'ending' | 'character_creation' | 'timeline_closure' | 'env_intro' | 'loading';
-export type HubTab = 'expedicao' | 'perfil' | 'geral' | 'habilidades' | 'forja' | 'soldagem' | 'reliquias' | 'adaptacoes' | 'auto' | 'conquistas' | 'mercado' | 'contratos' | 'bestiario' | 'memorias';
+export type HubTab = 'expedicao' | 'perfil' | 'geral' | 'habilidades' | 'forja' | 'soldagem' | 'reliquias' | 'adaptacoes' | 'auto' | 'conquistas' | 'mercado' | 'contratos' | 'bestiario' | 'memorias' | 'prestagio';
 
 interface GameUIStore {
   scene: Scene;

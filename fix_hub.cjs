@@ -1,8 +1,21 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/pages/HubScene.tsx', 'utf8');
 
-code = code.replace(/interface Props \{\n  handleEvolveClass: \(id: string\) => void;\n\}\n\n/, '');
-code = code.replace(/export const HubScene: React\.FC<Props> = \(\{ handleEvolveClass \}\) => \{/, 'export const HubScene: React.FC = () => {');
-code = code.replace(/<PlayerProfilePanel \s*\n\s*player=\{player\}\n\s*CLASSES=\{CLASSES\}\n\s*handleEvolveClass=\{handleEvolveClass\}\n\s*\/>/, '<PlayerProfilePanel />');
+// Add import
+if (!code.includes("import { AchievementsPanel }")) {
+  code = code.replace("import { QuantumPrestigePanel } from '../components/QuantumPrestigePanel';", "import { QuantumPrestigePanel } from '../components/QuantumPrestigePanel';\nimport { AchievementsPanel } from '../components/AchievementsPanel';");
+}
+
+// Replace case
+const oldCase = `{hubTab === 'conquistas' && (
+             <QuantumPrestigePanel />
+          )}`;
+const newCase = `{hubTab === 'conquistas' && (
+             <AchievementsPanel />
+          )}
+          {hubTab === 'prestagio' && (
+             <QuantumPrestigePanel />
+          )}`;
+code = code.replace(oldCase, newCase);
 
 fs.writeFileSync('src/pages/HubScene.tsx', code);

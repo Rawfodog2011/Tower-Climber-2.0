@@ -1,11 +1,6 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/components/ContractsPanel.tsx', 'utf8');
+let code = fs.readFileSync('src/core/engine/contracts.ts', 'utf8');
 
-const replacement = `import { usePlayerStore } from '../store/usePlayerStore';
+code = code.replace(/sectorId: \(template as any\)\.sectorId,/g, "sectorId: 'sectorId' in template ? template.sectorId : undefined,");
 
-export const ContractsPanel: React.FC = () => {
-  const { player, setPlayer } = usePlayerStore();`;
-
-code = code.replace(/interface Props \{[\s\S]*?\}[\s\S]*?export const ContractsPanel: React\.FC<Props> = \(\{[\s\S]*?\}\) => \{/, replacement);
-
-fs.writeFileSync('src/components/ContractsPanel.tsx', code);
+fs.writeFileSync('src/core/engine/contracts.ts', code);

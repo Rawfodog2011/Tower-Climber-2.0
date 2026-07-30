@@ -5,12 +5,12 @@ import { upgradeRelic } from '../core/entities/relics';
 import { AudioManager } from '../core/engine/audio';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useGameUIStore } from '../store/useGameUIStore';
-import { useToast } from '../hooks/useToast';
+import { useToastStore } from '../store/useToastStore';
 
 export const useCrafting = () => {
   const { player, setPlayer } = usePlayerStore();
   const { setInventoryMessage } = useGameUIStore();
-  const { triggerToast } = useToast();
+  const { triggerToast } = useToastStore();
 
   const handleCraft = useCallback((rarity: import('../types').Rarity) => {
     const result = craftItem(player, rarity);

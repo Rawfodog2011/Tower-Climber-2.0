@@ -211,10 +211,10 @@ export const TimelineClosureScreen: React.FC = () => {
                     <span className="text-emerald-200 font-bold">{t(`+2% XP e Ouro permanentes (Total atual: +${rewards.totalBonusPercent}%)`)}</span>
                   </div>
                 </div>
-                {(rewards as any).epilogueHint && (
+                {rewards.epilogueHint && (
                   <div className="bg-slate-950 p-3 border border-emerald-500/15 rounded text-xs text-amber-400/90 italic font-mono mt-2 pl-3 border-l-2 border-l-amber-500/80 whitespace-pre-line">
                     <span className="text-amber-500 block text-[10px] uppercase tracking-widest not-italic font-bold mb-1">{t("// DIRETRIZ FANTASMA RECUPERADA")}</span>
-                    "{t((rewards as any).epilogueHint)}"
+                    "{t(rewards.epilogueHint)}"
                   </div>
                 )}
               </div>

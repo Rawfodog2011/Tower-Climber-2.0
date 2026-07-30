@@ -15,7 +15,7 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useGameUIStore } from '../store/useGameUIStore';
 import { useExplorationStore } from '../store/useExplorationStore';
 import { useCombatStore } from '../store/useCombatStore';
-import { useToast } from '../hooks/useToast';
+import { useToastStore } from '../store/useToastStore';
 
 export const useExploration = () => {
   const { player, setPlayer } = usePlayerStore();
@@ -26,7 +26,7 @@ export const useExploration = () => {
     pendingDiveParams, setPendingDiveParams, justCompletedAll, setJustCompletedAll
   } = useExplorationStore();
   const { combatState, setCombatState, combatEndMessage, setCombatEndMessage } = useCombatStore();
-  const { triggerToast } = useToast();
+  const { triggerToast } = useToastStore();
 
   const pStatsMemo = useMemo(() => calculatePlayerStats(player), [player]);
 

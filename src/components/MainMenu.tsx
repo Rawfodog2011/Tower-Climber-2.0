@@ -4,6 +4,7 @@ import { Terminal, Play, Settings, FileText, RotateCcw, Cpu, Power, Volume2, Vol
 import { useTranslation, Language } from '../core/engine/translation';
 import { useAudio } from '../core/engine/useAudio';
 import { SystemVoiceSelector } from './SystemVoiceSelector';
+import { SaveManager } from './SaveManager';
 
 interface GlitchFooterProps {
   t: (text: string) => string;
@@ -103,11 +104,11 @@ const GlitchFooter: React.FC<GlitchFooterProps> = ({
 
 
 export const MainMenu: React.FC = () => {
-  const { savedPlayerPreview, setScene } = useGameUIStore();
+  const { savedPlayerPreview, setScene, setIsContinueRun } = useGameUIStore();
   const hasSaveFile = !!savedPlayerPreview;
-  
   const onContinue = () => {
-    setScene('hub');
+    setIsContinueRun(true);
+    setScene('intro');
   };
   
   const onNewGame = () => {
@@ -703,6 +704,8 @@ export const MainMenu: React.FC = () => {
                 <div className={`bg-slate-900/50 p-4 rounded border ${glitchProgress >= 1.0 ? 'border-red-900/50' : 'border-slate-800'} transition-colors duration-500`}>
                   <SystemVoiceSelector />
                 </div>
+                
+                <SaveManager glitchProgress={glitchProgress} />
              </div>
 
             <button

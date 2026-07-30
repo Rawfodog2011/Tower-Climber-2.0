@@ -10,7 +10,7 @@ export const AutoBattlePanel: React.FC = () => {
   const { player, setPlayer } = usePlayerStore();
   
   const playerCombatSkills = React.useMemo(() => {
-    return player.learnedSkills.filter(id => !(SKILLS_DATABASE[id] as any)?.isPassive);
+    return player.learnedSkills.filter(id => !SKILLS_DATABASE[id]?.isPassive);
   }, [player.learnedSkills]);
   const { t } = useTranslation();
 
@@ -40,7 +40,7 @@ export const AutoBattlePanel: React.FC = () => {
             <button 
               id="btn-new-directive"
               onClick={() => {
-                const newRule = { id: random().toString(36).substr(2, 9), condition: 'always' as any, action: 'attack' };
+                const newRule: import('../types').AutoBattleRule = { id: random().toString(36).substr(2, 9), condition: 'always', action: 'attack' };
                 setPlayer(p => ({ ...p, autoBattleRules: [...(p.autoBattleRules || []), newRule] }));
               }}
               className="text-[10px] bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-800 px-3 py-1 rounded uppercase tracking-widest transition-colors cursor-pointer"
@@ -66,7 +66,7 @@ export const AutoBattlePanel: React.FC = () => {
                       value={rule.condition}
                       onChange={(e) => {
                         const rules = [...player.autoBattleRules];
-                        rules[idx].condition = e.target.value as any;
+                        rules[idx].condition = e.target.value as import('../types').AutoBattleCondition;
                         setPlayer(p => ({ ...p, autoBattleRules: rules }));
                       }}
                       className="bg-slate-950 text-emerald-300 border border-emerald-900/50 text-xs p-1.5 rounded outline-none w-full md:w-auto"

@@ -1,5 +1,7 @@
 import React from 'react';
 import { HubNavigation } from '../components/HubNavigation';
+import { HubSettingsModal } from '../components/HubSettingsModal';
+import { useState } from 'react';
 import { PlayerProfilePanel } from '../components/PlayerProfilePanel';
 import { ExpeditionPanel } from '../components/ExpeditionPanel';
 import { EquipmentTerminal } from '../components/equipment/EquipmentTerminal';
@@ -14,16 +16,18 @@ import { BlackMarketPanel } from '../components/BlackMarketPanel';
 import { AdaptationsPanel } from '../components/AdaptationsPanel';
 import { AutoBattlePanel } from '../components/AutoBattlePanel';
 import { QuantumPrestigePanel } from '../components/QuantumPrestigePanel';
+import { AchievementsPanel } from '../components/AchievementsPanel';
 
 // Hooks and Stores
 import { useGameUIStore } from '../store/useGameUIStore';
 
 export const HubScene: React.FC = () => {
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const { hubTab, setHubTab } = useGameUIStore();
 
     return (
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto p-4 md:p-8">
-      <HubNavigation />
+      <HubNavigation onOpenSettings={() => setIsSettingsOpen(true)} />
       
       <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start w-full">
         {/* Tab Contents */}
@@ -68,10 +72,14 @@ export const HubScene: React.FC = () => {
              <AutoBattlePanel />
           )}
           {hubTab === 'conquistas' && (
+             <AchievementsPanel />
+          )}
+          {hubTab === 'prestagio' && (
              <QuantumPrestigePanel />
           )}
         </div>
       </div>
+      {isSettingsOpen && <HubSettingsModal onClose={() => setIsSettingsOpen(false)} />}
     </div>
   );
 };

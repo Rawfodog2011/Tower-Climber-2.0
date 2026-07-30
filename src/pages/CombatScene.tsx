@@ -12,6 +12,7 @@ import { useCombatStore } from '../store/useCombatStore';
 import { useExploration } from '../hooks/useExploration';
 import { useCombatLogic } from '../hooks/useCombatLogic';
 import { calculatePlayerStats } from '../core/entities/player';
+import { getXpRequiredForNextLevel } from '../core/math/progression';
 import { useMemo, useRef } from 'react';
 
 export const CombatScene: React.FC = () => {
@@ -41,6 +42,10 @@ export const CombatScene: React.FC = () => {
 
   const { t } = useTranslation();
 
+  const requiredXp = getXpRequiredForNextLevel(player.level);
+  const xpPercent = player.level >= 100 ? 100 : Math.min(100, (player.currentXp / requiredXp) * 100);
+
+
   return (
           <div className={`flex flex-col lg:flex-row gap-6 ${dmgPopups.some(p => p.type === 'crit') ? 'animate-screen-shake' : ''}`}>
             
@@ -48,6 +53,7 @@ export const CombatScene: React.FC = () => {
             <div className="flex flex-col w-full lg:w-[35%] space-y-4">
               <div className={`system-panel p-4 flex flex-col items-center justify-center relative ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake' : ''}`}>
                 <div className="absolute top-2 left-2 text-cyan-500/50 font-mono text-[10px] tracking-widest">{player.name}</div>
+                <div className="absolute top-2 right-2 text-yellow-500 font-mono text-xs font-bold tracking-widest">Nv. {player.level}</div>
                 {combatState && (
                   <div className="w-full space-y-3 mt-4">
                     <div className="flex justify-between text-xs font-bold font-mono">
@@ -66,12 +72,19 @@ export const CombatScene: React.FC = () => {
                       <div className="bg-indigo-500 h-full transition-all duration-300" style={{ width: `${(combatState.playerMp / pStatsMemo.mp) * 100}%` }}></div>
                     </div>
 
-                    <div className="flex justify-between text-xs font-bold font-mono mt-1">
+                                        <div className="flex justify-between text-xs font-bold font-mono mt-1">
                       <span className="text-slate-400">Escudo</span>
-                      <span className="text-slate-100">{Math.floor((combatState as any).playerShield || 0)}</span>
+                      <span className="text-slate-100">{Math.floor((combatState.playerShield) || 0)}</span>
                     </div>
                     <div className="w-full bg-slate-900 h-1.5 rounded border border-slate-700 overflow-hidden">
-                      <div className="bg-slate-400 h-full transition-all duration-300" style={{ width: `${Math.min(100, ((combatState as any).playerShield || 0 / (pStatsMemo.hp * 0.5)) * 100)}%` }}></div>
+                      <div className="bg-slate-400 h-full transition-all duration-300" style={{ width: `${Math.min(100, ((combatState.playerShield) || 0 / (pStatsMemo.hp * 0.5)) * 100)}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold font-mono mt-1">
+                      <span className="text-yellow-500/80">XP</span>
+                      <span className="text-yellow-100/80">{player.level >= 100 ? 'MÁX' : `${Math.floor(player.currentXp)} / ${requiredXp}`}</span>
+                    </div>
+                    <div className="w-full bg-slate-900 h-1.5 rounded border border-slate-700 overflow-hidden">
+                      <div className="bg-yellow-500/80 h-full transition-all duration-300" style={{ width: `${xpPercent}%` }}></div>
                     </div>
 
                     {combatState.playerStatuses && combatState.playerStatuses.length > 0 && (
@@ -118,7 +131,7 @@ export const CombatScene: React.FC = () => {
                     </button>
                     
                     {playerCombatSkills.map((skill, index) => {
-                      const isUpgraded = (player as any).skillUpgrades?.includes(skill.id);
+                      const isUpgraded = (player.skillUpgrades)?.includes(skill.id);
                       const finalMultiplier = isUpgraded ? skill.multiplier * 1.5 : skill.multiplier;
                       const cd = combatState.cooldowns[skill.id] || 0;
                       const noMp = combatState.playerMp < skill.mpCost;
@@ -170,6 +183,16 @@ export const CombatScene: React.FC = () => {
                       );
                     })}
                     
+                    {player.isFarmActive && (
+                      <button 
+                        onClick={() => {
+                          usePlayerStore.getState().setPlayer(p => ({ ...p, isFarmActive: false }));
+                        }}
+                        className="w-full bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 text-red-400 font-bold py-2 mt-4 rounded uppercase tracking-widest transition-all cursor-pointer text-xs"
+                      >
+                        {t("Parar Auto-Farm")}
+                      </button>
+                    )}
                     <div className="w-full text-center mt-3 text-[9px] font-mono text-cyan-500/40 uppercase tracking-widest border-t border-cyan-900/30 pt-2">
                       {t("[1] Atacar [2-9] Habilidades [ESC] Voltar")}
                     </div>
@@ -185,12 +208,21 @@ export const CombatScene: React.FC = () => {
                       </div>
                     )}
                     {player.isFarmActive && player.isAutoBattleActive && (
-                      <div className="text-xs w-full font-mono text-cyan-400 animate-pulse bg-cyan-950/20 border border-cyan-500/30 px-4 py-2 rounded flex items-center gap-2">
+                      <div className="text-xs w-full font-mono text-cyan-400 animate-pulse bg-cyan-950/20 border border-cyan-500/30 px-4 py-2 rounded flex items-center gap-2 mb-2">
                         <Cpu className="w-4 h-4 animate-spin-slow text-cyan-400" />
                         AUTO-FARM ATIVO: REINICIANDO EM INSTANTES...
                       </div>
                     )}
-                    
+                    {player.isFarmActive && (
+                      <button 
+                        onClick={() => {
+                          usePlayerStore.getState().setPlayer(p => ({ ...p, isFarmActive: false }));
+                        }}
+                        className="w-full bg-red-950/80 hover:bg-red-900 border border-red-500/50 text-red-50 font-bold py-3 rounded uppercase tracking-widest transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] cursor-pointer mb-2"
+                      >
+                        {t("Parar Auto-Farm")}
+                      </button>
+                    )}
                     <div className="flex flex-col gap-3 w-full">
                       {combatEndMessage?.isVictory && (
                         <button 
@@ -302,7 +334,7 @@ export const CombatScene: React.FC = () => {
                     <div className="flex flex-col items-center justify-center">
                       <div className="text-cyan-500/30 font-black italic text-4xl mb-4">VS</div>
                       <div className="w-8 h-8 rounded-full border border-cyan-900/50 flex items-center justify-center relative">
-                         {(combatState as any).isPlayerTurn ? (
+                         {(combatState.isPlayerTurn) ? (
                            <div className="w-3 h-3 bg-cyan-400 rounded-full animate-ping shadow-[0_0_10px_rgba(34,211,238,1)]"></div>
                          ) : (
                            <div className="w-3 h-3 bg-red-500 rounded-full animate-ping shadow-[0_0_10px_rgba(239,68,68,1)]"></div>
@@ -447,7 +479,7 @@ export const CombatScene: React.FC = () => {
                       <img src={`https://robohash.org/${combatState.monster.name}?set=set2&size=60x60`} alt="Target" className="w-16 h-16 bg-slate-900 rounded border border-slate-700" />
                       <div>
                         <div className="font-bold text-lg">{combatState.monster.name}</div>
-                        <div className="text-xs font-mono text-cyan-500/70">{(combatState.monster as any).description}</div>
+                        <div className="text-xs font-mono text-cyan-500/70">{combatState.monster.loreEntry || t("Nenhuma informação adicional no banco de dados.")}</div>
                       </div>
                     </div>
                     
@@ -462,19 +494,23 @@ export const CombatScene: React.FC = () => {
                       </div>
                     </div>
                     
-                    {(combatState.monster as any).skills.length > 0 && (
-                      <div className="mt-4">
-                        <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Habilidades Conhecidas</div>
-                        <div className="space-y-2">
-                          {(combatState.monster as any).skills.map((s, i) => (
-                            <div key={i} className="flex justify-between items-center bg-slate-900/30 px-3 py-2 rounded">
-                              <span className="font-mono text-xs text-indigo-300">{s.name}</span>
-                              <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">CD: {s.cooldown}</span>
-                            </div>
-                          ))}
+                    <div className="mt-4">
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">{t("Resumo de Atributos")}</div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center bg-slate-900/30 px-3 py-2 rounded">
+                          <span className="font-mono text-xs text-rose-400">{t("Ataque")} (ATK)</span>
+                          <span className="text-xs font-bold text-rose-300">{combatState.monster.stats.atk}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-slate-900/30 px-3 py-2 rounded">
+                          <span className="font-mono text-xs text-emerald-400">{t("Defesa")} (DEF)</span>
+                          <span className="text-xs font-bold text-emerald-300">{combatState.monster.stats.def}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-slate-900/30 px-3 py-2 rounded">
+                          <span className="font-mono text-xs text-yellow-400">{t("Velocidade")} (SPD)</span>
+                          <span className="text-xs font-bold text-yellow-300">{combatState.monster.stats.spd}</span>
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>

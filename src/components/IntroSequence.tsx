@@ -57,22 +57,23 @@ export const IntroSequence: React.FC = () => {
   useEffect(() => {
     if (phase === 0) {
       let currentLine = 0;
+      const speed = isContinue ? 100 : 400;
       const interval = setInterval(() => {
         setBootLines(prev => [...prev, BOOT_LINES[currentLine]]);
         playSfx('ui.boot_beep', { pitch: 800 + currentLine * 50 });
         currentLine++;
         if (currentLine >= BOOT_LINES.length) {
           clearInterval(interval);
-          setTimeout(() => setPhase(1), 1500);
+          setTimeout(() => setPhase(1), isContinue ? 200 : 1500);
         }
-      }, 400);
+      }, speed);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
   useEffect(() => {
     if (phase === 1) {
-      setTimeout(() => setPhase(2), 5000); // Matrix rain duration
+      setTimeout(() => setPhase(2), isContinue ? 1000 : 5000); // Matrix rain duration
     }
   }, [phase]);
 

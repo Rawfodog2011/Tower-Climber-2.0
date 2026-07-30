@@ -13,6 +13,8 @@ export const PuzzleScene: React.FC = () => {
 
   const { t } = useTranslation();
 
+  if (!activePuzzle) return null;
+
   return (
           <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
             <div className="system-panel max-w-2xl w-full flex flex-col overflow-hidden">

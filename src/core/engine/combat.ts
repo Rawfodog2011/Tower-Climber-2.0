@@ -4,7 +4,7 @@ import { calculatePlayerStats, applyDeathPenalty, addXpAndLevelUp } from '../ent
 import { getDropChanceForFloor, rollLootRarity, getSectorForFloor } from '../math/worldScaling';
 import { getRandomItemForFloor, getRandomCircuitModule } from '../entities/items';
 import { updateHuntContracts, updateCatalogContracts } from './contracts';
-import { NEURAL_MATRIX_DATABASE } from '../entities/neuralMatrix';
+import { NEURAL_MATRIX_DATABASE, calculateMatrixPower } from '../entities/neuralMatrix';
 import { canClassUseSkill } from '../entities/skills';
 import { SKILLS_DATABASE } from '../entities/skills';
 import { calculateDamage } from '../math/damagePipeline';
@@ -45,6 +45,8 @@ export interface CombatState {
   monsterMaxStagger: number;
   isMonsterStaggered?: boolean;
   isPlayerGuarding?: boolean;
+  playerShield?: number;
+  isPlayerTurn?: boolean;
   monster: Monster;
   monsterNextIntent?: MonsterIntent;
   logs: string[];
@@ -184,6 +186,8 @@ export function processTurn(
   currentFloor: number
 ): { nextState: CombatState; combatResult?: CombatResult } {
   const pStats = calculatePlayerStats(player);
+  const matrixPower = calculateMatrixPower(player.unlockedNodes || [], NEURAL_MATRIX_DATABASE);
+  const activeMechanics = matrixPower.activeMechanics;
   const pPassives = getPlayerPassives(player);
   const mStats = state.monster.stats;
 
@@ -293,7 +297,7 @@ export function processTurn(
     let staggerDmg = 0;
     
     if (action.type === 'attack') {
-      nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+      nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered, activeMechanics);
       nextState.adaptationTrackers.basicAttacks += 1;
       staggerDmg = 25;
     } else if (action.type === 'skill') {
@@ -308,16 +312,27 @@ export function processTurn(
       if (state.anomaly && state.anomaly.id === 'emp_field') {
         epCost = 0;
       }
-      if (nextState.playerMp < epCost) {
+      const useHpForSkill = activeMechanics.includes('overclock_termodinamico');
+
+      if (useHpForSkill && nextState.playerHp <= epCost) {
+        logs.push(`[Overclock Termodinâmico] Integridade Insuficiente para usar ${skill.name}! Atacando normalmente.`);
+        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered, activeMechanics);
+        staggerDmg = 25;
+      } else if (!useHpForSkill && nextState.playerMp < epCost) {
         logs.push(`Energia Insuficiente para usar ${skill.name}! Atacando normalmente.`);
-        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered, activeMechanics);
         staggerDmg = 25;
       } else if (nextState.cooldowns[skill.id] > 0) {
         logs.push(`${skill.name} está em recarga (${nextState.cooldowns[skill.id]} turnos)! Atacando normalmente.`);
-        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+        nextState.monsterHp = executeAttack('Jogador', pStats.atk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered, activeMechanics);
         staggerDmg = 25;
       } else {
-        nextState.playerMp -= epCost;
+        if (useHpForSkill) {
+          nextState.playerHp -= epCost;
+          logs.push(`[Overclock Termodinâmico] Drenou ${epCost} HP para energizar a habilidade!`);
+        } else {
+          nextState.playerMp -= epCost;
+        }
         nextState.adaptationTrackers.epSpent += epCost;
         nextState.adaptationTrackers.skillsUsed += 1;
         const isClassSkill = canClassUseSkill(player.currentClassId, skill);
@@ -333,7 +348,7 @@ export function processTurn(
         if (skill.type === 'damage') {
           const skillAtk = Math.floor(pStats.atk * finalMultiplier);
           logs.push(`Jogador usou ${skill.name}${upgradeTag}! (-${epCost} EP)`);
-          nextState.monsterHp = executeAttack('Jogador (Skill)', skillAtk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered);
+          nextState.monsterHp = executeAttack('Jogador (Skill)', skillAtk, mStats.def, nextState.monsterHp, logs, nextState.playerStatuses, nextState.monsterStatuses, player.level, currentFloor, state.anomaly, true, nextState.isMonsterStaggered, activeMechanics);
           staggerDmg = Math.floor(35 * finalMultiplier);
           
           if (skill.applyStatus && random() <= skill.applyStatus.chance) {
@@ -445,7 +460,7 @@ export function processTurn(
       logs.push(`O inimigo usa ${intent.skillName}!`);
     }
 
-    nextState.playerHp = executeAttack(nextState.monster.name, atkToUse, pStats.def, nextState.playerHp, logs, nextState.monsterStatuses, nextState.playerStatuses, currentFloor, player.level, state.anomaly, false);
+    nextState.playerHp = executeAttack(nextState.monster.name, atkToUse, pStats.def, nextState.playerHp, logs, nextState.monsterStatuses, nextState.playerStatuses, currentFloor, player.level, state.anomaly, false, false, activeMechanics);
     let damageTaken = prevHp - nextState.playerHp;
     if (player.originId === 'ciborgue_foragido' && damageTaken > 0) {
       const reduction = Math.floor(damageTaken * 0.05);
@@ -685,7 +700,7 @@ export function processTurn(
   return { nextState };
 }
 
-function executeAttack(attackerName: string, atk: number, def: number, targetHp: number, logs: string[], attackerStatuses: import('../../types').StatusEffect[] = [], targetStatuses: import('../../types').StatusEffect[] = [], attackerLvl: number = 1, defenderLvl: number = 1, anomaly?: import('../../types').CombatAnomaly, isPlayerAttacking: boolean = false, isTargetStaggered: boolean = false): number {
+function executeAttack(attackerName: string, atk: number, def: number, targetHp: number, logs: string[], attackerStatuses: import('../../types').StatusEffect[] = [], targetStatuses: import('../../types').StatusEffect[] = [], attackerLvl: number = 1, defenderLvl: number = 1, anomaly?: import('../../types').CombatAnomaly, isPlayerAttacking: boolean = false, isTargetStaggered: boolean = false, activeMechanics: string[] = []): number {
   if (attackerStatuses.some(s => s.type === 'shock')) {
     if (random() < 0.3) {
       logs.push(`⚠️ [Curto-Circuito] ${attackerName} sofreu uma falha no sistema e errou o ataque!`);

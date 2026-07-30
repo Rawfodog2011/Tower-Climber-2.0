@@ -16,7 +16,7 @@ import { useClassEvolution } from './useClassEvolution';
 import { useGameUIStore } from '../store/useGameUIStore';
 import { useExplorationStore } from '../store/useExplorationStore';
 import { useCombatStore } from '../store/useCombatStore';
-import { useToast } from '../hooks/useToast';
+import { useToastStore } from '../store/useToastStore';
 import { useExploration } from './useExploration';
 import { useCombatLogic } from './useCombatLogic';
 
@@ -32,7 +32,7 @@ export const useGameEffects = () => {
     combatState: combatState, combatEndMessage, combatSpeed,
     setEnrageFlash, setAttackerAnimating, setDmgPopups
   } = useCombatStore();
-  const { triggerToast } = useToast();
+  const { triggerToast } = useToastStore();
 
   const { handleStartDive, handleReturnToHub } = useExploration();
   const { handleCombatAction } = useCombatLogic();
@@ -64,10 +64,13 @@ export const useGameEffects = () => {
   }, [setSavedPlayerPreview]);
 
   useEffect(() => {
+    if (scene === 'main_menu' || scene === 'intro' || scene === 'character_creation' || scene === 'loading' || scene === 'env_intro') {
+      return; // Evita salvar por cima ao carregar o jogo
+    }
     if (player.level > 1 || player.gold > 0 || player.currentXp > 0 || player.inventory.length > 0) {
       saveGame(player);
     }
-  }, [player]);
+  }, [player, scene]);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -92,7 +95,7 @@ export const useGameEffects = () => {
     } else if (scene === 'combat' && combatEndMessage && player.isFarmActive) {
       timeout = setTimeout(() => {
         if (sceneRef.current === 'combat' && playerRef.current.isFarmActive && combatEndMessage) {
-           handleReturnToHub();
+           handleStartDive(selectedFloor, true);
         }
       }, 1500);
     }
@@ -134,24 +137,7 @@ export const useGameEffects = () => {
       if (evols.length === 1) {
         const newClass = evols[0];
         if (player.currentClassId !== newClass.id) {
-          const originId = player.originId || 'ciborgue_foragido';
-          const key = `${originId}:${newClass.id}`;
-          const firstTime = unlockMemory(key);
-          if (firstTime) {
-            setActiveMemoryKey(key);
-          } else {
-            triggerToast("Fragmento de memória já registrado");
-          }
-          setPlayer(prev => {
-            const nextPlayer = {
-              ...prev,
-              currentClassId: newClass.id,
-              learnedSkills: []
-            };
-            const text = getClassEvolutionNarrative(newClass.id, prev.originId);
-            setActiveEvolutionNarrative({ classId: newClass.id, text });
-            return nextPlayer;
-          });
+          autoEvolveClass(newClass.id);
         }
       }
     }

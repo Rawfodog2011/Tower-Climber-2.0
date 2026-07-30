@@ -36,8 +36,19 @@ export function migrateSave(data: any): Player | null {
   if (!player.achievements) player.achievements = [];
   if (!player.gameStats) player.gameStats = { monstersKilled: 0, puzzlesSolved: 0, bossesDefeated: 0, deaths: 0 };
   if (!player.runStats) player.runStats = { goldSpent: 0, totalTurns: 0 };
-  if (typeof player.matrixPoints !== 'number') player.matrixPoints = Math.max(0, player.level - 1);
-  if (!player.unlockedNodes) player.unlockedNodes = ['core_start'];
+  
+  if (!player.unlockedNodes || player.unlockedNodes.length === 0) player.unlockedNodes = ['core_start'];
+
+  if (typeof player.matrixPoints !== 'number') player.matrixPoints = 0;
+  
+  // Auto-heal matrix points if they save-edited their level
+  const expectedTotalPoints = Math.max(0, player.level - 1);
+  const spentPoints = Math.max(0, player.unlockedNodes.length - 1);
+  const currentTotalPoints = player.matrixPoints + spentPoints;
+  
+  if (currentTotalPoints < expectedTotalPoints) {
+    player.matrixPoints += (expectedTotalPoints - currentTotalPoints);
+  }
   if (!player.learnedSkills) player.learnedSkills = [];
   if (!player.autoBattleRules) player.autoBattleRules = [];
   if (player.isAutoBattleActive === undefined) player.isAutoBattleActive = false;

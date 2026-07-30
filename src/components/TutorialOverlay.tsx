@@ -305,11 +305,13 @@ export const TutorialOverlay: React.FC<{ tutorialKey: string }> = ({ tutorialKey
   const [currentStep, setCurrentStep] = useState(0);
   const { t } = useTranslation();
 
-  if (!tutorial) {
-    // If the key doesn't match any tutorial, auto-complete
-    React.useEffect(() => {
+  React.useEffect(() => {
+    if (!tutorial || !tutorial.steps[currentStep]) {
       onComplete();
-    }, [tutorialKey]);
+    }
+  }, [tutorialKey, tutorial, currentStep]);
+
+  if (!tutorial) {
     return null;
   }
 
@@ -317,9 +319,6 @@ export const TutorialOverlay: React.FC<{ tutorialKey: string }> = ({ tutorialKey
   const step = tutorial.steps[currentStep];
 
   if (!step) {
-    React.useEffect(() => {
-      onComplete();
-    }, [tutorialKey]);
     return null;
   }
 

@@ -45,6 +45,7 @@ export interface Skill {
   multiplier: number; // Multiplicador de Dano ou Cura
   type: SkillType;
   allowedClassId: string;
+  isPassive?: boolean;
   applyStatus?: {
     type: StatusEffectType;
     duration: number;
@@ -112,6 +113,7 @@ export interface AdaptationDef {
 export interface Player {
   name?: string;
   avatar?: string;
+  skillUpgrades?: string[];
   saveVersion?: number;
   campaignBeaten?: boolean;
   runStats: { goldSpent: number, totalTurns: number };

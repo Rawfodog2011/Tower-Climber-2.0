@@ -11,6 +11,8 @@ export const EventScene: React.FC = () => {
   const { activeEvent, eventLog, selectedFloor, setSelectedFloor } = useExplorationStore();
   const { handleEventOption, handleStartDive, handleReturnToHub } = useExploration();
 
+  if (!activeEvent) return null;
+
   return (
           <div className="flex flex-col items-center justify-center h-full min-h-[500px]">
             <div className="system-panel max-w-2xl w-full flex flex-col overflow-hidden">

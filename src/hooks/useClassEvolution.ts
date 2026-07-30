@@ -3,12 +3,12 @@ import { useGameUIStore } from '../store/useGameUIStore';
 import { unlockMemory } from '../core/engine/memoryArchive';
 import { getClassEvolutionNarrative } from '../core/entities/classes';
 import { Player } from '../types';
-import { useToast } from './useToast';
+import { useToastStore } from '../store/useToastStore';
 
 export function useClassEvolution() {
   const { player, setPlayer } = usePlayerStore();
   const { setActiveMemoryKey, setActiveEvolutionNarrative } = useGameUIStore();
-  const { triggerToast } = useToast();
+  const { triggerToast } = useToastStore();
 
   const handleEvolveClass = (newClassId: string) => {
     const originId = player.originId || 'ciborgue_foragido';

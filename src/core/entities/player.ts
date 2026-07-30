@@ -5,6 +5,7 @@ import { getXpRequiredForNextLevel } from '../math/progression';
 import { NEURAL_MATRIX_DATABASE } from './neuralMatrix';
 import { ORIGINS } from './origins';
 import { getTimelineMetaBonus } from '../engine/timelineCodex';
+import { calculateMatrixPower } from './neuralMatrix';
 
 /**
  * Calcula os status totais do jogador somando os atributos da Classe base (e seu crescimento por nível)
@@ -32,13 +33,9 @@ export function calculatePlayerStats(player: Player): Stats {
 
   // Soma modificadores da Matriz Neural
   if (player.unlockedNodes) {
-    player.unlockedNodes.forEach(nodeId => {
-      const node = NEURAL_MATRIX_DATABASE[nodeId];
-      if (node && node.statBonus) {
-        Object.entries(node.statBonus).forEach(([key, val]) => {
-          stats[key as keyof Stats] += val || 0;
-        });
-      }
+    const matrixPower = calculateMatrixPower(player.unlockedNodes, NEURAL_MATRIX_DATABASE);
+    Object.entries(matrixPower.bonusStats).forEach(([key, val]) => {
+      stats[key as keyof Stats] += val || 0;
     });
   }
 

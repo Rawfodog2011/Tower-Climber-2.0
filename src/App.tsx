@@ -16,6 +16,7 @@ import { EnvIntroScene } from './pages/EnvIntroScene';
 import { ClassEvolutionModal } from './components/ClassEvolutionModal';
 import { MemoryFragmentScreen } from './components/MemoryFragmentScreen';
 import { TutorialManager } from './components/TutorialManager';
+import { ToastContainer } from './components/ToastContainer';
 
 // Hooks
 import { useGameEffects } from './hooks/useGameEffects';
@@ -95,6 +96,7 @@ export default function App() {
       {['hub', 'env_intro', 'combat', 'event', 'puzzle'].includes(scene) && (
         <TutorialManager />
       )}
+      <ToastContainer />
     </>
   );
 }
