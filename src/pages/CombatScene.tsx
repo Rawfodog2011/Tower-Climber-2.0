@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Shield, Zap, Flame, Droplet, Ban, Terminal, Info, Cpu, XCircle, Crosshair } from 'lucide-react';
 import { Player } from '../types';
 import { CombatState } from '../core/engine/combat';
@@ -13,9 +13,10 @@ import { useExploration } from '../hooks/useExploration';
 import { useCombatLogic } from '../hooks/useCombatLogic';
 import { calculatePlayerStats } from '../core/entities/player';
 import { getXpRequiredForNextLevel } from '../core/math/progression';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 import { DamagePopupsCanvas } from '../components/combat/DamagePopupsCanvas';
 import { AssetDictionary } from '../core/assets';
+import { getCharacterPortrait, getMonsterPortrait } from '../core/utils/portraitPaths';
 
 export const CombatScene: React.FC = () => {
   const { player } = usePlayerStore();
@@ -37,9 +38,30 @@ export const CombatScene: React.FC = () => {
   const playerCombatSkills = useMemo(() => player.learnedSkills, [player.learnedSkills]);
   const pStatsMemo = useMemo(() => calculatePlayerStats(player), [player]);
   
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.style.display = 'none';
-  };
+  // Track image load failures for fallback logic
+  const [playerImageFailed, setPlayerImageFailed] = useState(false);
+  const [monsterImageFailed, setMonsterImageFailed] = useState(false);
+  
+  const handlePlayerImageError = useCallback(() => {
+    setPlayerImageFailed(true);
+  }, []);
+  
+  const handleMonsterImageError = useCallback(() => {
+    setMonsterImageFailed(true);
+  }, []);
+  
+  // Get portrait paths
+  const characterPortraitPath = getCharacterPortrait(player.originId);
+  const monsterPortraitPath = combatState ? getMonsterPortrait(combatState.monster.id) : '';
+  
+  // Reset failure states when combat changes
+  useMemo(() => {
+    if (combatState) {
+      setPlayerImageFailed(false);
+      setMonsterImageFailed(false);
+    }
+  }, [combatState?.monster.id]);
+  
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   const { t } = useTranslation();
@@ -318,17 +340,28 @@ export const CombatScene: React.FC = () => {
 
                   <div className="absolute inset-0 flex items-center justify-between px-8 md:px-24">
                     
-                    {/* Jogador Sprite (Placeholder Hero) */}
+                    {/* Jogador Sprite */}
                     <div className="relative">
                       <div className={`w-24 h-24 bg-cyan-900/50 rounded-full border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center overflow-hidden ${dmgPopups.some(p => p.target === 'player') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.player ? 'animate-attack-right' : ''}`} style={attackerAnimating.player || dmgPopups.some(p => p.target === 'player') ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}>
-                        {(() => {
-                          const AvatarIcon = player.avatar ? (AssetDictionary.portraits[player.avatar as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default) : AssetDictionary.portraits.default;
-                          return (
-                            <div className="w-full h-full scale-125">
-                              <AvatarIcon />
-                            </div>
-                          );
-                        })()}
+                        {/* Try portrait image first, fallback to icon */}
+                        {!playerImageFailed && characterPortraitPath ? (
+                          <img
+                            src={characterPortraitPath}
+                            alt="Player"
+                            className="w-full h-full object-cover"
+                            onError={handlePlayerImageError}
+                          />
+                        ) : (
+                          <div className="w-full h-full scale-125">
+                            {/* Use originId to get the correct portrait icon (fixed bug: was using player.avatar) */}
+                            {(() => {
+                              const AvatarIcon = player.originId 
+                                ? (AssetDictionary.portraits[player.originId as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default)
+                                : AssetDictionary.portraits.default;
+                              return <AvatarIcon />;
+                            })()}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -354,13 +387,23 @@ export const CombatScene: React.FC = () => {
                         <Info className="w-4 h-4" />
                       </button>
                       
-                      <img 
-                        src={`https://robohash.org/${combatState.monster.name}?set=set2&size=150x150`} 
-                        onError={handleImageError} 
-                        alt="Monster" 
-                        className={`w-32 h-32 drop-shadow-[0_15px_15px_rgba(255,0,0,0.3)] ${dmgPopups.some(p => p.target === 'monster') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.monster ? 'animate-attack-left' : ''} ${combatState.isBossEnraged ? 'animate-pulse drop-shadow-[0_0_40px_rgba(255,0,0,1)]' : ''}`} 
-                        style={(dmgPopups.some(p => p.target === 'monster') || attackerAnimating.monster) ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
-                      />
+                      {/* Try local portrait first, fallback to robohash */}
+                      {!monsterImageFailed && monsterPortraitPath ? (
+                        <img 
+                          src={monsterPortraitPath}
+                          alt="Monster"
+                          onError={handleMonsterImageError}
+                          className={`w-32 h-32 drop-shadow-[0_15px_15px_rgba(255,0,0,0.3)] ${dmgPopups.some(p => p.target === 'monster') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.monster ? 'animate-attack-left' : ''} ${combatState.isBossEnraged ? 'animate-pulse drop-shadow-[0_0_40px_rgba(255,0,0,1)]' : ''}`}
+                          style={(dmgPopups.some(p => p.target === 'monster') || attackerAnimating.monster) ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
+                        />
+                      ) : (
+                        <img 
+                          src={`https://robohash.org/${combatState.monster.name}?set=set2&size=150x150`} 
+                          alt="Monster" 
+                          className={`w-32 h-32 drop-shadow-[0_15px_15px_rgba(255,0,0,0.3)] ${dmgPopups.some(p => p.target === 'monster') ? 'animate-shake animate-hit-flash' : ''} ${attackerAnimating.monster ? 'animate-attack-left' : ''} ${combatState.isBossEnraged ? 'animate-pulse drop-shadow-[0_0_40px_rgba(255,0,0,1)]' : ''}`}
+                          style={(dmgPopups.some(p => p.target === 'monster') || attackerAnimating.monster) ? { animationDuration: combatSpeed === 'fast' ? '0.2s, 0.075s' : '0.4s, 0.15s' } : undefined}
+                        />
+                      )}
                       
                       {/* Barras de Status do Monstro flutuantes */}
                       <div className="absolute top-28 w-24 space-y-1">
@@ -472,7 +515,11 @@ export const CombatScene: React.FC = () => {
                   </div>
                   <div className="p-6 space-y-4">
                     <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
-                      <img src={`https://robohash.org/${combatState.monster.name}?set=set2&size=60x60`} alt="Target" className="w-16 h-16 bg-slate-900 rounded border border-slate-700" />
+                      {!monsterImageFailed && monsterPortraitPath ? (
+                        <img src={monsterPortraitPath} alt="Target" className="w-16 h-16 bg-slate-900 rounded border border-slate-700 object-cover" onError={handleMonsterImageError} />
+                      ) : (
+                        <img src={`https://robohash.org/${combatState.monster.name}?set=set2&size=60x60`} alt="Target" className="w-16 h-16 bg-slate-900 rounded border border-slate-700" />
+                      )}
                       <div>
                         <div className="font-bold text-lg">{combatState.monster.name}</div>
                         <div className="text-xs font-mono text-cyan-500/70">{combatState.monster.loreEntry || t("Nenhuma informação adicional no banco de dados.")}</div>

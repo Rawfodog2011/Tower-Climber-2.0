@@ -19,6 +19,14 @@ const getAvatarIcon = (id?: string) => {
   </div>;
 };
 
+// Use originId to get the correct portrait icon
+const getOriginIcon = (originId?: string) => {
+  const Icon = AssetDictionary.portraits[originId as keyof typeof AssetDictionary.portraits] || AssetDictionary.portraits.default;
+  return <div className="w-16 h-16 rounded-md overflow-hidden bg-slate-900 border border-slate-700 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+    <Icon />
+  </div>;
+};
+
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useClassEvolution } from '../hooks/useClassEvolution';
 import { CLASSES } from '../core/entities/classes';
@@ -62,7 +70,7 @@ export const PlayerProfilePanel: React.FC = () => {
           <div className="p-4 space-y-4 text-sm font-mono">
             <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded border border-cyan-900/50">
               <div className="p-2 bg-slate-950 border border-slate-800 rounded">
-                {getAvatarIcon(player.avatar)}
+                {getOriginIcon(player.originId)}
               </div>
               <div className="flex flex-col">
                 <span className="text-cyan-200/60 uppercase text-xs tracking-wider">{t("Identificação")}</span>
