@@ -117,6 +117,54 @@ export const AssetDictionary = {
         <path d="M 90 90 L 110 90 M 100 80 L 100 100" stroke="#475569" strokeWidth="2" />
       </svg>
     ),
+    // Origin IDs aliases
+    ciborgue_foragido: () => (
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="200" height="200" fill="#0f172a" />
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#ef4444" strokeWidth="4" opacity="0.3" />
+        <path d="M 60 180 L 60 120 L 100 80 L 140 120 L 140 180 Z" fill="#7f1d1d" />
+        <circle cx="100" cy="70" r="30" fill="#450a0a" stroke="#f87171" strokeWidth="2" />
+        <rect x="80" y="60" width="40" height="10" fill="#ef4444" />
+      </svg>
+    ),
+    nomade_silicio: () => (
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="200" height="200" fill="#0f172a" />
+        <path d="M 0 200 L 100 100 L 200 200 Z" fill="#78350f" opacity="0.5" />
+        <path d="M 40 180 L 100 90 L 160 180 Z" fill="#451a03" />
+        <circle cx="100" cy="80" r="30" fill="#f59e0b" opacity="0.2" />
+        <circle cx="100" cy="80" r="25" fill="#1c1917" stroke="#d97706" strokeWidth="2" />
+        <path d="M 75 80 Q 100 100 125 80" fill="none" stroke="#d97706" strokeWidth="3" />
+      </svg>
+    ),
+    quimico_sintetico: () => (
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="200" height="200" fill="#0f172a" />
+        <polygon points="100,20 180,100 100,180 20,100" fill="none" stroke="#a855f7" strokeWidth="2" opacity="0.2" />
+        <path d="M 70 180 L 70 110 L 100 140 L 130 110 L 130 180 Z" fill="#3b0764" />
+        <circle cx="100" cy="70" r="25" fill="#17012a" stroke="#d8b4fe" strokeWidth="1" />
+        <polygon points="90,60 110,60 100,45" fill="#a855f7" />
+      </svg>
+    ),
+    mercenario_elite: () => (
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="200" height="200" fill="#0f172a" />
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#ef4444" strokeWidth="4" opacity="0.3" />
+        <path d="M 60 180 L 60 120 L 100 80 L 140 120 L 140 180 Z" fill="#7f1d1d" />
+        <circle cx="100" cy="70" r="30" fill="#450a0a" stroke="#f87171" strokeWidth="2" />
+        <rect x="80" y="60" width="40" height="10" fill="#ef4444" />
+      </svg>
+    ),
+    nucleo_matriz_origin: () => (
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <rect width="200" height="200" fill="#0f172a" />
+        <path d="M 60 180 Q 100 80 140 180 Z" fill="#1e1b4b" />
+        <circle cx="100" cy="90" r="30" fill="none" stroke="#818cf8" strokeWidth="1" opacity="0.4" filter="blur(2px)" />
+        <circle cx="100" cy="90" r="20" fill="#0f172a" />
+        <circle cx="90" cy="85" r="4" fill="#818cf8" />
+        <circle cx="110" cy="85" r="4" fill="#818cf8" />
+      </svg>
+    ),
   },
   icons: {
     weapon: () => (
